@@ -3453,12 +3453,16 @@ static void catsearch_db_unspread(AFPObj *obj, uint16_t vid, cnid_t did,
  * @param[in] search      the name the search asks for, at most 32 bytes
  * @param[in] n           files, at most CNID_FIND_MIN_RESULTS + 1
  * @param[in] reqmatches  matches a reply holds at most
- * @returns 0, 1 when the search misses a file, repeats one, does not end or
+ * @param[in] walks       true when the search walks the volume, as a name of
+ *                        more files than a search of the database holds does
+ * @returns 0, 1 when the search misses a file, repeats one, does not end,
+ *          walks the volume where walks is false or not where it is true, or
  *          the setup fails
  */
 static int catsearch_db_each(AFPObj *obj, struct vol *vol, uint16_t vid,
                              const char *folder, const char *want,
-                             const char *search, int n, uint32_t reqmatches)
+                             const char *search, int n, uint32_t reqmatches,
+                             bool walks)
 {
     unsigned char spec[12 + 32];
     const uint16_t speclen = catsearch_db_spec(spec, search);
@@ -3467,6 +3471,7 @@ static int catsearch_db_each(AFPObj *obj, struct vol *vol, uint16_t vid,
     const int searchdb = vol->v_flags & AFPVOL_SEARCHDB;
     uint32_t nids = 0;
     uint32_t nrecs = 0;
+    uint32_t walked = 0;
     cnid_t did;
     int made = 0;
     int ret;
@@ -3484,11 +3489,13 @@ static int catsearch_db_each(AFPObj *obj, struct vol *vol, uint16_t vid,
 
     ret = catsearch_ext_ids(obj, vid, reqmatches, 1U << FILPBIT_PDINFO, spec,
                             spec, speclen, ids, (uint32_t)n + 1, &nids,
-                            &nrecs);
+                            &nrecs, &walked);
 
-    if (ret != AFPERR_EOF || nids != (uint32_t)n || nrecs != nids) {
+    if (ret != AFPERR_EOF || nids != (uint32_t)n || nrecs != nids
+            || (walked != 0) != walks) {
         fprintf(stderr, "catsearch: exact name '%s': result %d, %u files in "
-                        "%u matches\n", search, ret, nids, nrecs);
+                        "%u matches, %u replies of a walk\n", search, ret,
+                nids, nrecs, walked);
         goto out;
     }
 
@@ -3502,14 +3509,16 @@ out:
 
 /*!
  * @brief A search of the database by exact name returns every file of that
- *        name once, more of them than one query returns
+ *        name once, more of them than one query returns, without walking the
+ *        volume
  *
- * @returns 0, 1 when the search misses a file, repeats one or the setup fails
+ * @returns 0, 1 when the search misses a file, repeats one, does not end,
+ *          walks the volume or the setup fails
  */
 int utest_catsearch_db_exact_many(AFPObj *obj, struct vol *vol, uint16_t vid)
 {
     return catsearch_db_each(obj, vol, vid, "cx", "ce many", "ce many",
-                             CNID_FIND_MIN_RESULTS + 1, 10);
+                             CNID_FIND_MIN_RESULTS + 1, 10, false);
 }
 
 /*!
@@ -3522,7 +3531,8 @@ int utest_catsearch_db_exact_many(AFPObj *obj, struct vol *vol, uint16_t vid)
 int utest_catsearch_db_one_at_a_time(AFPObj *obj, struct vol *vol,
                                      uint16_t vid)
 {
-    return catsearch_db_each(obj, vol, vid, "co", "co one", "co one", 3, 1);
+    return catsearch_db_each(obj, vol, vid, "co", "co one", "co one", 3, 1,
+                             false);
 }
 
 /*!
@@ -3538,9 +3548,9 @@ int utest_catsearch_db_exact_dotted(AFPObj *obj, struct vol *vol,
                                     uint16_t vid)
 {
     return catsearch_db_each(obj, vol, vid, "ci", "\xc4\xb0stanbul",
-                             "\xc4\xb0stanbul", 1, 10)
+                             "\xc4\xb0stanbul", 1, 10, false)
            || catsearch_db_each(obj, vol, vid, "cj", "istanbul",
-                                "\xc4\xb0STANBUL", 2, 10);
+                                "\xc4\xb0STANBUL", 2, 10, false);
 }
 
 /*!
@@ -3614,8 +3624,9 @@ int utest_catsearch_db_new_search(AFPObj *obj, struct vol *vol, uint16_t vid)
 
     memset(pos, 0, sizeof(pos));
 
+    /* the CNIDs taken alike, the search's number its own */
     if (catsearch_db_two(obj, vid, many, pos, &nrecs) != AFP_OK
-            || memcmp(pos, paused, sizeof(pos)) != 0) {
+            || memcmp(pos, paused, 4) != 0 || memcmp(pos, paused, 8) == 0) {
         fprintf(stderr, "catsearch: '%s' again does not pause alike\n", many);
         goto out;
     }
@@ -3635,6 +3646,225 @@ out:
     delete (obj, vid, did, one);
     catsearch_db_unspread(obj, vid, did, many, made, dids);
     delete (obj, vid, DIRDID_ROOT, "cn");
+    return result;
+}
+
+/*!
+ * @brief Continue a paused search by exact name to its end
+ *
+ * @param[in]     obj   AFP session
+ * @param[in]     vid   volume ID
+ * @param[in]     want  the name
+ * @param[in,out] pos   catalog position of the paused search
+ * @param[in]     left  matches the search has left
+ * @returns 0, 1 when the search does not end with that many matches
+ */
+static int catsearch_db_finish(AFPObj *obj, uint16_t vid, const char *want,
+                               unsigned char pos[16], uint32_t left)
+{
+    uint32_t nrecs = 0;
+    uint32_t got = 0;
+    int ret;
+
+    do {
+        ret = catsearch_db_two(obj, vid, want, pos, &nrecs);
+        got += nrecs;
+    } while (ret == AFP_OK && got <= left);
+
+    if (ret != AFPERR_EOF || got != left) {
+        fprintf(stderr, "catsearch: '%s' continued: result %d, %u of %u "
+                        "matches\n", want, ret, got, left);
+        return 1;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Two paused searches by exact name continue each its own, of two
+ *        names or of one name searched twice
+ *
+ * A file of the name made between the two searches of one name is in the
+ * second's list alone, so the position of either continues its own list only
+ * if it holds its search's number.
+ *
+ * @returns 0, 1 when a position continues the other search, ends either
+ *          early or the setup fails
+ */
+int utest_catsearch_db_interleaved(AFPObj *obj, struct vol *vol, uint16_t vid)
+{
+    static const char a[] = "ci a";
+    static const char b[] = "ci b";
+    unsigned char pos_a[16] = { 0 };
+    unsigned char pos_b[16] = { 0 };
+    cnid_t dids_a[3];
+    cnid_t dids_b[3];
+    const int searchdb = vol->v_flags & AFPVOL_SEARCHDB;
+    uint32_t nrecs = 0;
+    cnid_t did_a;
+    cnid_t did_b;
+    int made_a = 0;
+    int made_b = 0;
+    int result = 1;
+
+    if ((did_a = make_folder(obj, vid, "ci")) == CNID_INVALID) {
+        return 1;
+    }
+
+    if ((did_b = make_folder(obj, vid, "cj")) == CNID_INVALID) {
+        delete (obj, vid, DIRDID_ROOT, "ci");
+        return 1;
+    }
+
+    vol->v_flags |= AFPVOL_SEARCHDB;
+
+    if (catsearch_db_spread(obj, vid, did_a, a, 3, dids_a, &made_a) != 0
+            || catsearch_db_spread(obj, vid, did_b, b, 3, dids_b, &made_b) != 0
+            || catsearch_db_two(obj, vid, a, pos_a, &nrecs) != AFP_OK
+            || catsearch_db_two(obj, vid, b, pos_b, &nrecs) != AFP_OK
+            || catsearch_db_finish(obj, vid, a, pos_a, 1) != 0
+            || catsearch_db_finish(obj, vid, b, pos_b, 1) != 0) {
+        goto out;
+    }
+
+    memset(pos_a, 0, sizeof(pos_a));
+    memset(pos_b, 0, sizeof(pos_b));
+
+    if (catsearch_db_two(obj, vid, a, pos_a, &nrecs) != AFP_OK
+            || createfile(obj, vid, did_a, a) != AFP_OK
+            || catsearch_db_two(obj, vid, a, pos_b, &nrecs) != AFP_OK
+            || memcmp(pos_a, pos_b, sizeof(pos_a)) == 0
+            || catsearch_db_finish(obj, vid, a, pos_b, 2) != 0
+            || catsearch_db_finish(obj, vid, a, pos_a, 1) != 0) {
+        goto out;
+    }
+
+    result = 0;
+out:
+    vol->v_flags = (vol->v_flags & ~AFPVOL_SEARCHDB) | searchdb;
+    delete (obj, vid, did_a, a);
+    catsearch_db_unspread(obj, vid, did_b, b, made_b, dids_b);
+    catsearch_db_unspread(obj, vid, did_a, a, made_a, dids_a);
+    delete (obj, vid, DIRDID_ROOT, "cj");
+    delete (obj, vid, DIRDID_ROOT, "ci");
+    return result;
+}
+
+/*!
+ * @brief A new search by exact name that ends in its first reply leaves the
+ *        four paused searches their slots
+ *
+ * Two searches of each of two names pause, then a search of a name no file
+ * holds ends at once, and each paused search continues to its end.
+ *
+ * @returns 0, 1 when a paused search lost its slot, ends early, or the setup
+ *          fails
+ */
+int utest_catsearch_db_fifth(AFPObj *obj, struct vol *vol, uint16_t vid)
+{
+    static const char a[] = "cf a";
+    static const char b[] = "cf b";
+    unsigned char pos[4][16] = { { 0 } };
+    unsigned char none[16] = { 0 };
+    cnid_t dids_a[3];
+    cnid_t dids_b[3];
+    const int searchdb = vol->v_flags & AFPVOL_SEARCHDB;
+    uint32_t nrecs = 0;
+    cnid_t did_a;
+    cnid_t did_b;
+    int made_a = 0;
+    int made_b = 0;
+    int result = 1;
+
+    if ((did_a = make_folder(obj, vid, "cf")) == CNID_INVALID) {
+        return 1;
+    }
+
+    if ((did_b = make_folder(obj, vid, "cfb")) == CNID_INVALID) {
+        delete (obj, vid, DIRDID_ROOT, "cf");
+        return 1;
+    }
+
+    vol->v_flags |= AFPVOL_SEARCHDB;
+
+    if (catsearch_db_spread(obj, vid, did_a, a, 3, dids_a, &made_a) == 0
+            && catsearch_db_spread(obj, vid, did_b, b, 3, dids_b, &made_b) == 0
+            && catsearch_db_two(obj, vid, a, pos[0], &nrecs) == AFP_OK
+            && catsearch_db_two(obj, vid, b, pos[1], &nrecs) == AFP_OK
+            && catsearch_db_two(obj, vid, a, pos[2], &nrecs) == AFP_OK
+            && catsearch_db_two(obj, vid, b, pos[3], &nrecs) == AFP_OK
+            && catsearch_db_two(obj, vid, "cf none", none, &nrecs)
+            == AFPERR_EOF
+            && catsearch_db_finish(obj, vid, a, pos[0], 1) == 0
+            && catsearch_db_finish(obj, vid, b, pos[1], 1) == 0
+            && catsearch_db_finish(obj, vid, a, pos[2], 1) == 0
+            && catsearch_db_finish(obj, vid, b, pos[3], 1) == 0) {
+        result = 0;
+    }
+
+    vol->v_flags = (vol->v_flags & ~AFPVOL_SEARCHDB) | searchdb;
+    catsearch_db_unspread(obj, vid, did_b, b, made_b, dids_b);
+    catsearch_db_unspread(obj, vid, did_a, a, made_a, dids_a);
+    delete (obj, vid, DIRDID_ROOT, "cfb");
+    delete (obj, vid, DIRDID_ROOT, "cf");
+    return result;
+}
+
+/*!
+ * @brief A search by exact name passes over a file removed outside AFP,
+ *        whose row the database keeps
+ *
+ * @returns 0, 1 when the search fails, misses a file or the setup fails
+ */
+int utest_catsearch_db_file_gone(AFPObj *obj, struct vol *vol, uint16_t vid)
+{
+    static const char want[] = "cg gone";
+    unsigned char pos[16] = { 0 };
+    char path[MAXPATHLEN + 1];
+    cnid_t dids[3];
+    const int searchdb = vol->v_flags & AFPVOL_SEARCHDB;
+    cnid_t did;
+    int made = 0;
+    int result = 1;
+
+    if ((did = make_folder(obj, vid, "cg")) == CNID_INVALID) {
+        return 1;
+    }
+
+    vol->v_flags |= AFPVOL_SEARCHDB;
+
+    if (catsearch_db_spread(obj, vid, did, want, 3, dids, &made) != 0
+            || snprintf(path, sizeof(path), "%s/cg/d001/%s", vol->v_path,
+                        want) >= (int)sizeof(path)
+            || unlink(path) != 0
+            || catsearch_db_finish(obj, vid, want, pos, 2) != 0) {
+        goto out;
+    }
+
+    result = 0;
+out:
+    vol->v_flags = (vol->v_flags & ~AFPVOL_SEARCHDB) | searchdb;
+    catsearch_db_unspread(obj, vid, did, want, made, dids);
+    delete (obj, vid, DIRDID_ROOT, "cg");
+    return result;
+}
+
+/*!
+ * @brief A name of more files than a search of the database holds walks the
+ *        volume, and finds every one of them
+ *
+ * @returns 0, 1 when the search misses a file, repeats one, does not end, does
+ *          not walk the volume or the setup fails
+ */
+int utest_catsearch_db_walks_past_cap(AFPObj *obj, struct vol *vol,
+                                      uint16_t vid)
+{
+    const unsigned int cap = catsearch_db_max_results;
+    int result;
+    catsearch_db_max_results = CNID_FIND_MIN_RESULTS;
+    result = catsearch_db_each(obj, vol, vid, "cw", "cw past", "cw past",
+                               CNID_FIND_MIN_RESULTS + 1, 10, true);
+    catsearch_db_max_results = cap;
     return result;
 }
 

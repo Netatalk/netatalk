@@ -1686,21 +1686,26 @@ int catsearch_ext(AFPObj *obj, uint16_t vid, uint16_t dbitmap,
  * @param[out] ids         receives the file IDs
  * @param[in]  max         room in ids
  * @param[out] nids        distinct file IDs, max at most
- * @param[out] nrecs       records of every reply
- * @returns AFPERR_EOF at the end of the search, AFPERR_MISC for a search that
- *          does not end, or the result that stopped it
+ * @param[out] nrecs       records of all the replies
+ * @param[out] walked      paused replies of a volume walk: 0 in the
+ *                         position's second word, where a database search
+ *                         puts its number
+ * @returns AFPERR_EOF at the end of the search, AFPERR_MISC for one not done
+ *          in 4 * max + 17 replies, or the result that stopped it
  */
 int catsearch_ext_ids(AFPObj *obj, uint16_t vid, uint32_t reqmatches,
                       uint32_t rbitmap, const void *spec1, const void *spec2,
                       uint16_t speclen, cnid_t *ids, uint32_t max,
-                      uint32_t *nids, uint32_t *nrecs)
+                      uint32_t *nids, uint32_t *nrecs, uint32_t *walked)
 {
     unsigned char pos[16] = { 0 };
     uint32_t replies = 0;
+    uint32_t search;
     uint32_t got;
     int ret;
     *nids = 0;
     *nrecs = 0;
+    *walked = 0;
 
     do {
         /* a record is its size, the kind byte, a pad, and the file ID */
@@ -1713,6 +1718,11 @@ int catsearch_ext_ids(AFPObj *obj, uint16_t vid, uint32_t reqmatches,
         ret = catsearch_ext_at(obj, vid, reqmatches, 1 << FILPBIT_FNUM, 0,
                                rbitmap, spec1, spec2, speclen, pos, &got);
         *nrecs += got;
+        memcpy(&search, pos + 4, sizeof(search));
+
+        if (ret == AFP_OK && search == 0) {
+            (*walked)++;
+        }
 
         for (uint32_t k = 0; k < got; k++) {
             uint16_t size;

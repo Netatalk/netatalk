@@ -127,6 +127,14 @@ extern int utest_catsearch_db_one_at_a_time(AFPObj *obj, struct vol *vol,
                                             uint16_t vid);
 extern int utest_catsearch_db_new_search(AFPObj *obj, struct vol *vol,
                                          uint16_t vid);
+extern int utest_catsearch_db_interleaved(AFPObj *obj, struct vol *vol,
+                                          uint16_t vid);
+extern int utest_catsearch_db_fifth(AFPObj *obj, struct vol *vol,
+                                    uint16_t vid);
+extern int utest_catsearch_db_file_gone(AFPObj *obj, struct vol *vol,
+                                        uint16_t vid);
+extern int utest_catsearch_db_walks_past_cap(AFPObj *obj, struct vol *vol,
+                                             uint16_t vid);
 extern int utest_createfile_registers_in_its_folder(AFPObj *obj,
                                                     struct vol *vol,
                                                     uint16_t vid);

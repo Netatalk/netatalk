@@ -79,7 +79,8 @@ extern int catsearch_ext(AFPObj *obj, uint16_t vid, uint16_t dbitmap,
 extern int catsearch_ext_ids(AFPObj *obj, uint16_t vid, uint32_t reqmatches,
                              uint32_t rbitmap, const void *spec1,
                              const void *spec2, uint16_t speclen, cnid_t *ids,
-                             uint32_t max, uint32_t *nids, uint32_t *nrecs);
+                             uint32_t max, uint32_t *nids, uint32_t *nrecs,
+                             uint32_t *walked);
 extern int createdir(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int createfile(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int createfile_soft(AFPObj *obj, uint16_t vid, cnid_t did,

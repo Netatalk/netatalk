@@ -6077,11 +6077,22 @@ int main(int argc, char *argv[])
                      "whole, and a casefold volume keeps the comparisons");
 #endif
     TEST_int(utest_catsearch_db_exact_many(&obj, vol, vid), 0,
-             "catsearch: more than 100 files of one name are all found once");
+             "catsearch: more than 100 files of one name are all found once "
+             "in the database");
     TEST_int(utest_catsearch_db_one_at_a_time(&obj, vol, vid), 0,
              "catsearch: one match a reply reaches the end of the search");
     TEST_int(utest_catsearch_db_new_search(&obj, vol, vid), 0,
              "catsearch: a paused search's position continues no other search");
+    TEST_int(utest_catsearch_db_interleaved(&obj, vol, vid), 0,
+             "catsearch: two paused searches continue each its own");
+    TEST_int(utest_catsearch_db_fifth(&obj, vol, vid), 0,
+             "catsearch: a new search that ends at once leaves four paused "
+             "ones their slots");
+    TEST_int(utest_catsearch_db_file_gone(&obj, vol, vid), 0,
+             "catsearch: a file removed outside AFP drops out of the search");
+    TEST_int(utest_catsearch_db_walks_past_cap(&obj, vol, vid), 0,
+             "catsearch: a name of more files than a search holds walks the "
+             "volume");
     TEST_int(utest_createfile_registers_in_its_folder(&obj, vol, vid), 0,
              "create: a file made through a path registers in its folder");
     TEST_int(utest_openfork_registers_in_its_folder(&obj, vol, vid), 0,
