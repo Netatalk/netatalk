@@ -2301,8 +2301,8 @@ int utest_cname_step_refuses_another_device(AFPObj *obj, struct vol *vol)
         int rc;
         snprintf(bpath, sizeof(bpath), "%s/%s", vol->v_path, t.path[STEP_B]);
         arm_walk_count(vol);
-        fi.stat_dev_name = bname;
-        fi.stat_dev = vol->v_dev + 1;
+        fi.stat_dev.path = bname;
+        fi.stat_dev.dev = vol->v_dev + 1;
         rc = getfiledirparms(obj, vol->v_vid, DIRDID_ROOT, t.path[STEP_B]);
         walks = fi.chdir_abs_calls + fi.openat_fd_calls;
         fault_inject_reset();

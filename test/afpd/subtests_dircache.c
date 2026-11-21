@@ -39,6 +39,7 @@
 #include <atalk/directory.h>
 #include <atalk/globals.h>
 #include <atalk/server_ipc.h>
+#include <atalk/util.h>
 #include <atalk/volume.h>
 
 #include "acls.h"
@@ -46,9 +47,12 @@
 #include "afpfunc_helpers.h"
 #include "dircache.h"
 #include "directory.h"
+#include "faultinject.h"
+#include "fork.h"
 #include "pfd_cache.h"
 #include "subtests_dircache.h"
 #include "test.h"
+#include "test_capabilities.h"
 
 #define DC_FOLDER "dc-folder"
 #define DC_CHILD  "dc-child"
@@ -533,6 +537,7 @@ int utest_dircache_rowed_file_takes_folder_name(AFPObj *obj, struct vol *vol,
     char from[MAXPATHLEN + 1];
     struct stat st;
     cnid_t row = CNID_INVALID;
+    cnid_t gone;
     int ret = -1;
     dc_setup(obj, vol, &fx);
     folder_path(vol, from, file);
@@ -549,8 +554,13 @@ int utest_dircache_rowed_file_takes_folder_name(AFPObj *obj, struct vol *vol,
 
     /* the lookup by the folder's CNID validates its entry */
     obj->options.dircache_validation_freq = 1;
+    gone = fx.child_id;
 
-    if (dirlookup(vol, fx.child_id) == NULL
+    /* the validation, not dirlookup()'s check, deletes the folder's row */
+    if (dircache_search_by_did(vol, fx.child_id) == NULL
+            && cnid_resolve(vol->v_cdb, &gone, buf, sizeof(buf)) == NULL
+            && CNID_ERRNO() == CNID_ERR_NOTFOUND
+            && dirlookup(vol, fx.child_id) == NULL
             && cnid_resolve(vol->v_cdb, &row, buf, sizeof(buf)) != NULL) {
         ret = 0;
     }
@@ -2053,6 +2063,2342 @@ int utest_dircache_orphan_move_fails(AFPObj *obj, struct vol *vol,
         }
     }
 
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief Create the test folder through FPCreateDir and drop its entry
+ *
+ * @param[in]     obj  the test session
+ * @param[in]     vol  the open volume
+ * @param[in]     vid  the volume's id
+ * @param[in,out] fx   takes the folder's CNID
+ * @returns 0, -1 when the setup fails
+ */
+static int uncached_folder(AFPObj *obj, const struct vol *vol, uint16_t vid,
+                           struct dc_fixture *fx)
+{
+    char name[] = DC_FOLDER;
+
+    if (createdir(obj, vid, DIRDID_ROOT, DC_FOLDER) != AFP_OK) {
+        return -1;
+    }
+
+    fx->did = curdir->d_did;
+
+    if (movecwd(vol, vol->v_root) != 0) {
+        return -1;
+    }
+
+    drop_entry(vol, DIRDID_ROOT, name);
+    return 0;
+}
+
+/*!
+ * @brief Arm the shim to fail every stat() and lstat() of path with EACCES
+ *
+ * @param[in] vol   the volume of path
+ * @param[in] path  the path to deny
+ * @returns 1 when the call afpd makes for path fails so, 0 otherwise
+ */
+static int deny_stat(const struct vol *vol, const char *path)
+{
+    struct stat st;
+    fault_inject_reset();
+    fi.stat_name = path;
+    fi.stat_errno = EACCES;
+    return ostat(path, &st, vol_syml_opt(vol)) != 0 && errno == EACCES
+           && fi.stat_calls == 1;
+}
+
+/*!
+ * @brief An uncached folder a folder replaced answers kFPObjectNotFound by DID
+ */
+int utest_dircache_replaced_folder_by_did(AFPObj *obj, struct vol *vol,
+                                          uint16_t vid)
+{
+    static char buf[CNID_MAX_PATH_LEN];
+    char name[] = DC_FOLDER;
+    struct dc_fixture fx;
+    cnid_t gone;
+    int err;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+
+    if (uncached_folder(obj, vol, vid, &fx) != 0
+            || getfiledirparms(obj, vid, fx.did, "") != AFP_OK
+            || movecwd(vol, vol->v_root) != 0) {
+        goto out;
+    }
+
+    drop_entry(vol, DIRDID_ROOT, name);
+
+    if (replace_folder(fx.path, fx.aside) != 0) {
+        goto out;
+    }
+
+    fx.moved = 1;
+    err = getfiledirparms(obj, vid, fx.did, "");
+    gone = fx.did;
+
+    if (err == AFPERR_NOOBJ && dircache_lookup_did(vol, fx.did) == NULL
+            && cnid_resolve(vol->v_cdb, &gone, buf, sizeof(buf)) == NULL
+            && CNID_ERRNO() == CNID_ERR_NOTFOUND) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "replaced folder by its DID: %d\n", err);
+    }
+
+out:
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief A replaced file answers kFPObjectNotFound by CNID and loses its row
+ */
+int utest_dircache_replaced_file_by_cnid(AFPObj *obj, struct vol *vol,
+                                         uint16_t vid)
+{
+    static char buf[CNID_MAX_PATH_LEN];
+    struct dc_fixture fx;
+    cnid_t gone;
+    int err;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+
+    if (cached_pair(obj, vol, vid, 0, &fx) == NULL
+            || getfiledirparms(obj, vid, fx.child_id, "") != AFP_OK
+            || replace_file(fx.child, fx.child_aside) != 0) {
+        goto out;
+    }
+
+    err = getfiledirparms(obj, vid, fx.child_id, "");
+    gone = fx.child_id;
+
+    if (err == AFPERR_NOOBJ
+            && cnid_resolve(vol->v_cdb, &gone, buf, sizeof(buf)) == NULL
+            && CNID_ERRNO() == CNID_ERR_NOTFOUND) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "replaced file by its CNID: %d\n", err);
+    }
+
+out:
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief An uncached folder whose stat is denied answers kFPAccessDenied by DID
+ */
+int utest_dircache_stat_denied_by_did(AFPObj *obj, struct vol *vol,
+                                      uint16_t vid)
+{
+    struct dc_fixture fx;
+    int err;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    dc_setup(obj, vol, &fx);
+
+    if (uncached_folder(obj, vol, vid, &fx) != 0) {
+        goto out;
+    }
+
+    if (!deny_stat(vol, fx.path)) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    if ((err = getfiledirparms(obj, vid, fx.did, "")) == AFPERR_ACCESS) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "denied stat by the DID: %d\n", err);
+    }
+
+out:
+    fault_inject_reset();
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief ID requests in an uncached denied folder answer kFPAccessDenied
+ */
+int utest_dircache_ids_under_denied_folder(AFPObj *obj, struct vol *vol,
+                                           uint16_t vid)
+{
+    static char buf[CNID_MAX_PATH_LEN];
+    char folder[] = DC_FOLDER;
+    struct dc_fixture fx;
+    cnid_t kept;
+    int resolved = -1;
+    int deleted = -1;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    dc_setup(obj, vol, &fx);
+
+    if (cached_pair(obj, vol, vid, 0, &fx) == NULL) {
+        goto out;
+    }
+
+    drop_entry(vol, DIRDID_ROOT, folder);
+
+    if (!deny_stat(vol, fx.path)) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    resolved = resolveid(obj, vid, fx.child_id);
+    deleted = deleteid(obj, vid, fx.child_id);
+    fault_inject_reset();
+    kept = fx.child_id;
+
+    if (resolved == AFPERR_ACCESS && deleted == AFPERR_ACCESS
+            && cnid_resolve(vol->v_cdb, &kept, buf, sizeof(buf)) != NULL) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "IDs under a denied folder: resolve %d, delete %d\n",
+                resolved, deleted);
+    }
+
+out:
+    fault_inject_reset();
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief Move the child and its row aside, as another session's FPMoveAndRename
+ *
+ * @param[in] vol  the open volume
+ * @param[in] fx   the fixture, its child a cached folder
+ * @returns 0, -1 when a call fails
+ */
+static int move_child_with_row(const struct vol *vol,
+                               const struct dc_fixture *fx)
+{
+    char aside[] = DC_CHILD_ASIDE;
+    struct stat st;
+
+    if (rename(fx->child, fx->child_aside) != 0
+            || stat(fx->child_aside, &st) != 0
+            || cnid_update(vol->v_cdb, fx->child_id, &st, fx->did, aside,
+                           strlen(aside)) != 0) {
+        return -1;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief A cached folder moved with its row to a denied name: kFPAccessDenied
+ */
+int utest_dircache_moved_folder_stat_denied(AFPObj *obj, struct vol *vol,
+                                            uint16_t vid)
+{
+    struct dc_fixture fx;
+    int err = AFP_OK;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    dc_setup(obj, vol, &fx);
+
+    if (cached_pair(obj, vol, vid, 1, &fx) == NULL
+            || move_child_with_row(vol, &fx) != 0) {
+        goto out;
+    }
+
+    if (!deny_stat(vol, fx.child_aside)) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    if ((err = getfiledirparms(obj, vid, fx.child_id, "")) == AFPERR_ACCESS) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "moved folder, stat denied: %d\n", err);
+    }
+
+out:
+    fault_inject_reset();
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief A cached folder a file replaced answers kFPObjectNotFound by its DID
+ */
+int utest_dircache_folder_became_file_by_did(AFPObj *obj, struct vol *vol,
+                                             uint16_t vid)
+{
+    struct dc_fixture fx;
+    int err = AFP_OK;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+
+    if (cached_pair(obj, vol, vid, 1, &fx) == NULL
+            || rename(fx.child, fx.child_aside) != 0
+            || create_disk_file(fx.child) != 0) {
+        goto out;
+    }
+
+    if ((err = getfiledirparms(obj, vid, fx.child_id, "")) == AFPERR_NOOBJ) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "cached folder a file replaced: %d\n", err);
+    }
+
+out:
+    unlink(fx.child);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief A cached folder moved with its row answers by DID, a file at its name
+ */
+int utest_dircache_moved_folder_file_at_name(AFPObj *obj, struct vol *vol,
+                                             uint16_t vid)
+{
+    struct dc_fixture fx;
+    const char *head;
+    const char *params;
+    size_t hlen;
+    size_t len;
+    cnid_t did = CNID_INVALID;
+    int err = -1;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+
+    if (cached_pair(obj, vol, vid, 1, &fx) == NULL
+            || move_child_with_row(vol, &fx) != 0
+            || create_disk_file(fx.child) != 0) {
+        goto out;
+    }
+
+    err = getfiledirparms(obj, vid, fx.child_id, "");
+    head = reply_params(2 * sizeof(uint16_t), &hlen);
+    params = reply_params(REPLY_FILEDIRPARMS, &len);
+
+    if (err == AFP_OK && hlen > 0 && (head[0] & FILDIRBIT_ISDIR)
+            && len >= sizeof(did)) {
+        memcpy(&did, params, sizeof(did));
+    }
+
+    if (did == fx.child_id) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "moved folder, a file at its name: %d, DID %u\n", err,
+                ntohl(did));
+    }
+
+out:
+    unlink(fx.child);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief One ID request in a cached folder moved to a name whose stat is denied
+ *
+ * @param[in]  obj   the test session
+ * @param[in]  vol   the open volume
+ * @param[in]  vid   the volume's id
+ * @param[in]  call  resolveid() or deleteid()
+ * @param[out] kept  1 when the file keeps its ID afterwards
+ * @returns the request's AFP result, TEST_SKIP when the stat cannot be
+ *          denied, -1 when the setup fails
+ */
+static int id_under_moved_folder(AFPObj *obj, struct vol *vol, uint16_t vid,
+                                 int (*call)(AFPObj *, uint16_t, cnid_t),
+                                 int *kept)
+{
+    static char buf[CNID_MAX_PATH_LEN];
+    char leaf[] = DC_LEAF;
+    struct dc_fixture fx;
+    cnid_t id = CNID_INVALID;
+    cnid_t left;
+    int err = -1;
+    dc_setup(obj, vol, &fx);
+    *kept = 0;
+
+    if (cached_pair(obj, vol, vid, 1, &fx) == NULL
+            || createfile(obj, vid, fx.child_id, leaf) != AFP_OK
+            || (id = cnid_get(vol->v_cdb, fx.child_id, leaf, strlen(leaf)))
+            == CNID_INVALID
+            || movecwd(vol, vol->v_root) != 0
+            || move_child_with_row(vol, &fx) != 0) {
+        goto out;
+    }
+
+    if (!deny_stat(vol, fx.child_aside)) {
+        err = TEST_SKIP;
+        goto out;
+    }
+
+    err = call(obj, vid, id);
+    fault_inject_reset();
+    left = id;
+    *kept = cnid_resolve(vol->v_cdb, &left, buf, sizeof(buf)) != NULL;
+out:
+    fault_inject_reset();
+    /* the file is in the child under either name, as far as the setup got */
+    delete (obj, vid, DIRDID_ROOT, DC_FOLDER "/" DC_CHILD "/" DC_LEAF);
+    delete (obj, vid, DIRDID_ROOT, DC_FOLDER "/" DC_CHILD_ASIDE "/" DC_LEAF);
+    dc_teardown(obj, vid, &fx);
+    return err;
+}
+
+/*!
+ * @brief ID requests in a cached, moved and denied folder: kFPAccessDenied
+ */
+int utest_dircache_ids_in_moved_denied_folder(AFPObj *obj, struct vol *vol,
+                                              uint16_t vid)
+{
+    int kept[2];
+    int resolved;
+    int deleted;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    resolved = id_under_moved_folder(obj, vol, vid, resolveid, &kept[0]);
+    deleted = id_under_moved_folder(obj, vol, vid, deleteid, &kept[1]);
+
+    if (resolved == TEST_SKIP || deleted == TEST_SKIP) {
+        return TEST_SKIP;
+    }
+
+    if (resolved == AFPERR_ACCESS && deleted == AFPERR_ACCESS && kept[0]
+            && kept[1]) {
+        return 0;
+    }
+
+    fprintf(stderr, "IDs under a moved denied folder: resolve %d, delete %d, "
+                    "kept %d %d\n", resolved, deleted, kept[0], kept[1]);
+    return -1;
+}
+
+/*!
+ * @brief A cached folder whose uncached parent was replaced: kFPObjectNotFound
+ */
+int utest_dircache_child_of_replaced_folder(AFPObj *obj, struct vol *vol,
+                                            uint16_t vid)
+{
+    static char buf[CNID_MAX_PATH_LEN];
+    char folder[] = DC_FOLDER;
+    struct dc_fixture fx;
+    cnid_t gone;
+    bool kept;
+    int err = AFP_OK;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+
+    if (replaced_folder(obj, vol, vid, 1, &fx) == NULL
+            || movecwd(vol, vol->v_root) != 0) {
+        goto out;
+    }
+
+    drop_entry(vol, DIRDID_ROOT, folder);
+    err = getfiledirparms(obj, vid, fx.child_id, "");
+    gone = fx.did;
+    kept = cnid_resolve(vol->v_cdb, &gone, buf, sizeof(buf)) != NULL
+           || CNID_ERRNO() != CNID_ERR_NOTFOUND;
+
+    if (err == AFPERR_NOOBJ && !kept) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "child of a replaced folder: %d, the folder's row %s\n",
+                err, kept ? "kept or unread" : "gone");
+    }
+
+out:
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+static char *(*rewrite_real_resolve)(struct _cnid_db *, cnid_t *, void *,
+                                     size_t, uint64_t *, uint64_t *);
+static const struct dc_fixture *rewrite_fx;
+static int rewrite_done;
+
+/*!
+ * @brief Resolve, then rewrite the child's row as a symlink conversion does
+ *
+ * @param[in]     cdb     the database
+ * @param[in,out] id      the CNID to resolve, receives its parent's
+ * @param[out]    buffer  receives the name
+ * @param[in]     len     size of buffer
+ * @param[out]    dev     receives the row's device
+ * @param[out]    ino     receives the row's inode
+ * @returns what the backend's cnid_resolve() returns
+ */
+static char *resolve_then_rewrite(struct _cnid_db *cdb, cnid_t *id,
+                                  void *buffer, size_t len, uint64_t *dev,
+                                  uint64_t *ino)
+{
+    char child[] = DC_CHILD;
+    const cnid_t asked = *id;
+    char *name = rewrite_real_resolve(cdb, id, buffer, len, dev, ino);
+    struct stat st;
+
+    if (name != NULL && asked == rewrite_fx->child_id
+            && lstat(rewrite_fx->child, &st) == 0) {
+        cdb->cnid_resolve = rewrite_real_resolve;
+        rewrite_done = cnid_update(cdb, rewrite_fx->child_id, &st,
+                                   rewrite_fx->did, child, strlen(child)) == 0;
+    }
+
+    return name;
+}
+
+/*!
+ * @brief A row rewritten for a symlink between resolve and stat answers by CNID
+ */
+int utest_dircache_row_rewritten_after_resolve(AFPObj *obj, struct vol *vol,
+                                               uint16_t vid)
+{
+    static char buf[CNID_MAX_PATH_LEN];
+    struct dc_fixture fx;
+    struct stat lst;
+    cnid_t kept;
+    uint64_t dev = 0;
+    uint64_t ino = 0;
+    int err = -1;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    dc_setup(obj, vol, &fx);
+
+    if (cached_pair(obj, vol, vid, 0, &fx) == NULL
+            || symlink(DC_LEAF, fx.child_aside) != 0
+            || rename(fx.child_aside, fx.child) != 0) {
+        goto out;
+    }
+
+    rewrite_fx = &fx;
+    rewrite_done = 0;
+    rewrite_real_resolve = vol->v_cdb->cnid_resolve;
+    vol->v_cdb->cnid_resolve = resolve_then_rewrite;
+    err = getfiledirparms(obj, vid, fx.child_id, "");
+    vol->v_cdb->cnid_resolve = rewrite_real_resolve;
+    kept = fx.child_id;
+
+    if (rewrite_done && err == AFP_OK
+            && cnid_resolve_row(vol->v_cdb, &kept, buf, sizeof(buf), &dev,
+                                &ino) != NULL
+            && lstat(fx.child, &lst) == 0
+            && cnid_row_holds(vol->v_cdb, dev, ino, &lst)) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "row rewritten after the resolve: %d, the rewrite "
+                        "%s\n", err, rewrite_done ? "ran" : "never ran");
+    }
+
+out:
+
+    /* FPDelete refuses a symlink whose lock state it cannot read */
+    if (fx.child_id != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, fx.child_id);
+    }
+
+    unlink(fx.child);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief Replace the child by a file with a row of its own and check the rows
+ *
+ * @param[in]     obj  the test session
+ * @param[in]     vol  the open volume
+ * @param[in]     vid  the volume's id
+ * @param[in,out] fx   the fixture, set up
+ * @param[out]    own  receives the replacement's CNID, whose row the caller
+ *                     deletes: no file stays at the name the row records
+ * @returns 0, 1 when the request or the rows answer otherwise, -1 when the
+ *          setup failed
+ */
+static int replaced_by_rowed_file(AFPObj *obj, const struct vol *vol,
+                                  uint16_t vid, struct dc_fixture *fx,
+                                  cnid_t *own)
+{
+    static char buf[CNID_MAX_PATH_LEN];
+    char aside[] = DC_CHILD_ASIDE;
+    char child[] = DC_CHILD;
+    const struct dir *parent;
+    const struct dir *entry;
+    cnid_t probe;
+    cnid_t gone;
+    int err;
+
+    if (cached_pair(obj, vol, vid, 0, fx) == NULL
+            || getfiledirparms(obj, vid, fx->child_id, "") != AFP_OK
+            || createfile(obj, vid, fx->did, aside) != AFP_OK
+            || movecwd(vol, vol->v_root) != 0
+            || (parent = dirlookup(vol, fx->did)) == NULL
+            || (entry = dircache_search_by_name(vol, parent, aside,
+                                                strlen(aside))) == NULL) {
+        return -1;
+    }
+
+    *own = entry->d_did;
+
+    if (rename(fx->child_aside, fx->child) != 0) {
+        return -1;
+    }
+
+    err = getfiledirparms(obj, vid, fx->child_id, "");
+    probe = *own;
+    gone = fx->child_id;
+
+    if (err != AFPERR_NOOBJ
+            || cnid_resolve(vol->v_cdb, &probe, buf, sizeof(buf)) == NULL
+            || cnid_resolve(vol->v_cdb, &gone, buf, sizeof(buf)) != NULL
+            || CNID_ERRNO() != CNID_ERR_NOTFOUND
+            || cnid_get(vol->v_cdb, fx->did, child, strlen(child))
+            == fx->child_id) {
+        fprintf(stderr, "replaced by a file with a row: %d\n", err);
+        return 1;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief A file replaced by one with a row: the replacement keeps its row
+ */
+int utest_dircache_replacement_keeps_its_row(AFPObj *obj, struct vol *vol,
+                                             uint16_t vid)
+{
+    struct dc_fixture fx;
+    cnid_t own = CNID_INVALID;
+    int ret;
+    dc_setup(obj, vol, &fx);
+    ret = replaced_by_rowed_file(obj, vol, vid, &fx, &own);
+    dc_teardown(obj, vid, &fx);
+
+    if (own != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, own);
+    }
+
+    return ret;
+}
+
+/*!
+ * @brief On ea=sys a replacement keeps its own CNID by its name
+ */
+int utest_dircache_replacement_keeps_its_cnid(AFPObj *obj, struct vol *vol,
+                                              uint16_t vid)
+{
+    char child[] = DC_CHILD;
+    struct dc_fixture fx;
+    const char *params;
+    size_t len = 0;
+    cnid_t own = CNID_INVALID;
+    cnid_t now = CNID_INVALID;
+    int err = -1;
+    int ret;
+    dc_setup(obj, vol, &fx);
+
+    if ((ret = replaced_by_rowed_file(obj, vol, vid, &fx, &own)) == 0) {
+        err = getfiledirparms(obj, vid, fx.did, child);
+        params = reply_params(REPLY_FILEDIRPARMS, &len);
+
+        if (err == AFP_OK && len >= sizeof(now)) {
+            memcpy(&now, params, sizeof(now));
+        }
+
+        if (now != own) {
+            fprintf(stderr, "the replacement by its name: %d, CNID %u of "
+                            "%u\n", err, ntohl(now), ntohl(own));
+            ret = 1;
+        }
+    }
+
+    dc_teardown(obj, vid, &fx);
+
+    if (own != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, own);
+    }
+
+    return ret;
+}
+
+/* the stand-ins' fixture, the stat another session writes into the refused
+ * row, whether a stand-in ran, and the backend's conditional delete */
+static const struct dc_fixture *race_fx;
+static struct stat race_st;
+static int race_fired;
+static int (*race_real_delete_row)(struct _cnid_db *, cnid_t, cnid_t,
+                                   const char *, size_t, uint64_t, uint64_t);
+
+/*!
+ * @brief Rewrite the row as another session would, then run the real delete
+ *
+ * @returns what the backend's conditional delete returns
+ */
+static int rewrite_then_delete_row(struct _cnid_db *cdb, cnid_t id,
+                                   cnid_t did, const char *name, size_t len,
+                                   uint64_t dev, uint64_t ino)
+{
+    char child[] = DC_CHILD;
+    cdb->cnid_delete_row = race_real_delete_row;
+    race_fired = 1;
+    (void)cnid_update(cdb, race_fx->child_id, &race_st, race_fx->did, child,
+                      strlen(child));
+    return race_real_delete_row(cdb, id, did, name, len, dev, ino);
+}
+
+/*!
+ * @brief A row rewritten as the refusal deletes it stays and answers by CNID
+ */
+int utest_dircache_row_rewritten_at_retirement(AFPObj *obj, struct vol *vol,
+                                               uint16_t vid)
+{
+    static char buf[CNID_MAX_PATH_LEN];
+    struct dc_fixture fx;
+    cnid_t kept;
+    uint64_t dev = 0;
+    uint64_t ino = 0;
+    int err = -1;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+
+    if (cached_pair(obj, vol, vid, 0, &fx) == NULL
+            || getfiledirparms(obj, vid, fx.child_id, "") != AFP_OK
+            || replace_file(fx.child, fx.child_aside) != 0
+            || lstat(fx.child, &race_st) != 0) {
+        goto out;
+    }
+
+    race_fx = &fx;
+    race_fired = 0;
+    race_real_delete_row = vol->v_cdb->cnid_delete_row;
+    vol->v_cdb->cnid_delete_row = rewrite_then_delete_row;
+    err = getfiledirparms(obj, vid, fx.child_id, "");
+    vol->v_cdb->cnid_delete_row = race_real_delete_row;
+    kept = fx.child_id;
+
+    if (race_fired && err == AFP_OK
+            && cnid_resolve_row(vol->v_cdb, &kept, buf, sizeof(buf), &dev,
+                                &ino) != NULL
+            && cnid_row_holds(vol->v_cdb, dev, ino, &race_st)) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "row rewritten as the refusal deletes: %d, the "
+                        "delete %s\n", err, race_fired ? "ran" : "never ran");
+    }
+
+out:
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief Move the row to the file's new name, then run the real delete
+ *
+ * @returns what the backend's conditional delete returns
+ */
+static int move_then_delete_row(struct _cnid_db *cdb, cnid_t id, cnid_t did,
+                                const char *name, size_t len, uint64_t dev,
+                                uint64_t ino)
+{
+    char aside[] = DC_CHILD_ASIDE;
+    cdb->cnid_delete_row = race_real_delete_row;
+    race_fired = 1;
+    (void)cnid_update(cdb, race_fx->child_id, &race_st, race_fx->did, aside,
+                      strlen(aside));
+    return race_real_delete_row(cdb, id, did, name, len, dev, ino);
+}
+
+/*!
+ * @brief A row moved as the refusal deletes it stays at its new name
+ */
+int utest_dircache_row_moved_at_retirement(AFPObj *obj, struct vol *vol,
+                                           uint16_t vid)
+{
+    static char buf[CNID_MAX_PATH_LEN];
+    char aside[] = DC_CHILD_ASIDE;
+    struct dc_fixture fx;
+    const char *name = NULL;
+    cnid_t kept;
+    uint64_t dev = 0;
+    uint64_t ino = 0;
+    int err = -1;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+
+    if (cached_pair(obj, vol, vid, 0, &fx) == NULL
+            || getfiledirparms(obj, vid, fx.child_id, "") != AFP_OK
+            || rename(fx.child, fx.child_aside) != 0
+            || lstat(fx.child_aside, &race_st) != 0
+            || create_disk_file(fx.child) != 0) {
+        goto out;
+    }
+
+    race_fx = &fx;
+    race_fired = 0;
+    race_real_delete_row = vol->v_cdb->cnid_delete_row;
+    vol->v_cdb->cnid_delete_row = move_then_delete_row;
+    err = getfiledirparms(obj, vid, fx.child_id, "");
+    vol->v_cdb->cnid_delete_row = race_real_delete_row;
+    kept = fx.child_id;
+    name = cnid_resolve_row(vol->v_cdb, &kept, buf, sizeof(buf), &dev, &ino);
+
+    if (race_fired && err == AFPERR_NOOBJ && name != NULL
+            && strcmp(name, aside) == 0
+            && cnid_row_holds(vol->v_cdb, dev, ino, &race_st)) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "row moved as the refusal deletes: %d, the row %s, "
+                        "the delete %s\n", err, name ? name : "gone",
+                race_fired ? "ran" : "never ran");
+    }
+
+out:
+    unlink(fx.child);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+static char *(*race_real_resolve)(struct _cnid_db *, cnid_t *, void *, size_t,
+                                  uint64_t *, uint64_t *);
+
+static int resolve_busy_fired;
+
+/*!
+ * @brief Stand in for the backend's resolve, once: it cannot answer
+ *
+ * @returns NULL with errno CNID_ERR_BUSY
+ */
+static char *resolve_busy_once(struct _cnid_db *cdb, cnid_t *id _U_,
+                               void *buffer _U_, size_t len _U_,
+                               uint64_t *dev _U_, uint64_t *ino _U_)
+{
+    cdb->cnid_resolve = race_real_resolve;
+    resolve_busy_fired = 1;
+    errno = CNID_ERR_BUSY;
+    return NULL;
+}
+
+static int race_resolves_left;
+static int resolve_busy_later_fired;
+
+/*!
+ * @brief Pass race_resolves_left resolves to the backend, then fail one busy
+ *
+ * @returns what the backend's resolve returns, then NULL with errno
+ *          CNID_ERR_BUSY
+ */
+static char *resolve_busy_later(struct _cnid_db *cdb, cnid_t *id,
+                                void *buffer, size_t len, uint64_t *dev,
+                                uint64_t *ino)
+{
+    if (race_resolves_left-- > 0) {
+        return race_real_resolve(cdb, id, buffer, len, dev, ino);
+    }
+
+    cdb->cnid_resolve = race_real_resolve;
+    resolve_busy_later_fired = 1;
+    errno = CNID_ERR_BUSY;
+    return NULL;
+}
+
+/*!
+ * @brief One ID request in a moved cached folder whose self-heal resolve fails
+ *
+ * @param[in]  obj   the test session
+ * @param[in]  vol   the open volume
+ * @param[in]  vid   the volume's id
+ * @param[in]  call  resolveid() or deleteid()
+ * @param[out] kept  1 when the self-heal resolve failed and the file keeps
+ *                   its ID afterwards
+ * @returns the request's AFP result, -1 when the setup fails
+ */
+static int id_under_moved_folder_busy(AFPObj *obj, struct vol *vol,
+                                      uint16_t vid,
+                                      int (*call)(AFPObj *, uint16_t, cnid_t),
+                                      int *kept)
+{
+    static char buf[CNID_MAX_PATH_LEN];
+    char leaf[] = DC_LEAF;
+    char *(*real_resolve)(struct _cnid_db *, cnid_t *, void *, size_t,
+                          uint64_t *, uint64_t *);
+    struct dc_fixture fx;
+    cnid_t id = CNID_INVALID;
+    cnid_t left;
+    int err = -1;
+    dc_setup(obj, vol, &fx);
+    real_resolve = vol->v_cdb->cnid_resolve;
+    *kept = 0;
+
+    if (cached_pair(obj, vol, vid, 1, &fx) == NULL
+            || createfile(obj, vid, fx.child_id, leaf) != AFP_OK
+            || (id = cnid_get(vol->v_cdb, fx.child_id, leaf, strlen(leaf)))
+            == CNID_INVALID
+            || movecwd(vol, vol->v_root) != 0
+            || move_child_with_row(vol, &fx) != 0
+            || dircache_lookup_did(vol, fx.child_id) == NULL) {
+        goto out;
+    }
+
+    /* the file's resolve passes and the self-heal's fails: the folder's
+     * cached entry takes no resolve */
+    race_real_resolve = real_resolve;
+    race_resolves_left = 1;
+    resolve_busy_later_fired = 0;
+    vol->v_cdb->cnid_resolve = resolve_busy_later;
+    err = call(obj, vid, id);
+    vol->v_cdb->cnid_resolve = real_resolve;
+    left = id;
+    *kept = resolve_busy_later_fired
+            && cnid_resolve(vol->v_cdb, &left, buf, sizeof(buf)) != NULL;
+out:
+    vol->v_cdb->cnid_resolve = real_resolve;
+    /* the file is in the child under either name, as far as the setup got */
+    delete (obj, vid, DIRDID_ROOT, DC_FOLDER "/" DC_CHILD "/" DC_LEAF);
+    delete (obj, vid, DIRDID_ROOT, DC_FOLDER "/" DC_CHILD_ASIDE "/" DC_LEAF);
+    dc_teardown(obj, vid, &fx);
+    return err;
+}
+
+/*!
+ * @brief ID requests in a moved cached folder whose lookup fails: kFPMiscErr
+ */
+int utest_dircache_moved_folder_ids_backend_failure(AFPObj *obj,
+                                                    struct vol *vol,
+                                                    uint16_t vid)
+{
+    int kept[2];
+    const int resolved = id_under_moved_folder_busy(obj, vol, vid, resolveid,
+                                                    &kept[0]);
+    const int deleted = id_under_moved_folder_busy(obj, vol, vid, deleteid,
+                                                   &kept[1]);
+
+    if (resolved == AFPERR_MISC && deleted == AFPERR_MISC && kept[0]
+            && kept[1]) {
+        return 0;
+    }
+
+    fprintf(stderr, "IDs in a moved folder the backend cannot look up: "
+                    "resolve %d, delete %d, kept %d %d\n", resolved, deleted,
+            kept[0], kept[1]);
+    return -1;
+}
+
+static int delete_row_busy_calls;
+
+/*!
+ * @brief Stand in for the backend's conditional delete: it cannot answer
+ *
+ * @returns -1 with errno CNID_ERR_BUSY
+ */
+static int delete_row_busy(struct _cnid_db *cdb _U_, cnid_t id _U_,
+                           cnid_t did _U_, const char *name _U_,
+                           size_t len _U_, uint64_t dev _U_, uint64_t ino _U_)
+{
+    delete_row_busy_calls++;
+    errno = CNID_ERR_BUSY;
+    return -1;
+}
+
+/*!
+ * @brief Delete nothing, as for a changed row, and fail the next resolve busy
+ *
+ * @returns 0
+ */
+static int delete_row_changed(struct _cnid_db *cdb, cnid_t id _U_,
+                              cnid_t did _U_, const char *name _U_,
+                              size_t len _U_, uint64_t dev _U_,
+                              uint64_t ino _U_)
+{
+    race_fired = 1;
+    race_real_resolve = cdb->cnid_resolve;
+    cdb->cnid_resolve = resolve_busy_once;
+    return 0;
+}
+
+/*!
+ * @brief A refusal the backend fails answers kFPMiscErr and keeps the row
+ */
+int utest_dircache_retirement_backend_failure(AFPObj *obj, struct vol *vol,
+                                              uint16_t vid)
+{
+    static char buf[CNID_MAX_PATH_LEN];
+    struct dc_fixture fx;
+    int (*real_delete_row)(struct _cnid_db *, cnid_t, cnid_t, const char *,
+                           size_t, uint64_t, uint64_t);
+    char *(*real_resolve)(struct _cnid_db *, cnid_t *, void *, size_t,
+                          uint64_t *, uint64_t *);
+    cnid_t kept;
+    int failed = -1;
+    int changed = -1;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+    real_delete_row = vol->v_cdb->cnid_delete_row;
+    real_resolve = vol->v_cdb->cnid_resolve;
+
+    if (cached_pair(obj, vol, vid, 0, &fx) == NULL
+            || getfiledirparms(obj, vid, fx.child_id, "") != AFP_OK
+            || replace_file(fx.child, fx.child_aside) != 0) {
+        goto out;
+    }
+
+    vol->v_cdb->cnid_delete_row = delete_row_busy;
+    delete_row_busy_calls = 0;
+    failed = getfiledirparms(obj, vid, fx.child_id, "");
+    race_fired = 0;
+    resolve_busy_fired = 0;
+    vol->v_cdb->cnid_delete_row = delete_row_changed;
+    changed = getfiledirparms(obj, vid, fx.child_id, "");
+    vol->v_cdb->cnid_delete_row = real_delete_row;
+    vol->v_cdb->cnid_resolve = real_resolve;
+    kept = fx.child_id;
+
+    if (failed == AFPERR_MISC && delete_row_busy_calls > 0 && race_fired
+            && resolve_busy_fired && changed == AFPERR_MISC
+            && cnid_resolve(vol->v_cdb, &kept, buf, sizeof(buf)) != NULL) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "retirement the backend cannot answer: the delete "
+                        "%d after %d calls, the second resolve %d%s%s\n",
+                failed, delete_row_busy_calls, changed,
+                race_fired ? "" : ", the delete never ran",
+                resolve_busy_fired ? "" : ", no resolve after the delete");
+    }
+
+out:
+    vol->v_cdb->cnid_delete_row = real_delete_row;
+    vol->v_cdb->cnid_resolve = real_resolve;
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief An uncached folder a followed link replaced answers kFPObjectNotFound
+ */
+int utest_dircache_followed_link_replacement(AFPObj *obj, struct vol *vol,
+                                             uint16_t vid)
+{
+    char child[] = DC_CHILD;
+    const int flags = vol->v_flags;
+    struct dc_fixture fx;
+    int err = -1;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+
+    if (cached_pair(obj, vol, vid, 1, &fx) == NULL
+            || createdir(obj, vid, fx.did, DC_LEAF) != AFP_OK
+            || movecwd(vol, vol->v_root) != 0
+            || rename(fx.child, fx.child_aside) != 0
+            || symlink(DC_LEAF, fx.child) != 0) {
+        goto out;
+    }
+
+    drop_entry(vol, fx.did, child);
+    vol->v_flags |= AFPVOL_FOLLOWSYM;
+    err = getfiledirparms(obj, vid, fx.child_id, "");
+    vol->v_flags = flags;
+
+    if (err == AFPERR_NOOBJ) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "a folder a followed link replaced: %d\n", err);
+    }
+
+out:
+    vol->v_flags = flags;
+    movecwd(vol, vol->v_root);
+    unlink(fx.child);
+    delete (obj, vid, DIRDID_ROOT, DC_FOLDER "/" DC_LEAF);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief A row rewritten for a followed link as the refusal deletes it stays
+ */
+int utest_dircache_link_row_rewritten_at_retirement(AFPObj *obj,
+                                                    struct vol *vol,
+                                                    uint16_t vid)
+{
+    static char buf[CNID_MAX_PATH_LEN];
+    char child[] = DC_CHILD;
+    const int flags = vol->v_flags;
+    struct dc_fixture fx;
+    cnid_t kept;
+    uint64_t dev = 0;
+    uint64_t ino = 0;
+    int err = -1;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+
+    if (cached_pair(obj, vol, vid, 1, &fx) == NULL
+            || createdir(obj, vid, fx.did, DC_LEAF) != AFP_OK
+            || movecwd(vol, vol->v_root) != 0
+            || rename(fx.child, fx.child_aside) != 0
+            || symlink(DC_LEAF, fx.child) != 0
+            || lstat(fx.child, &race_st) != 0) {
+        goto out;
+    }
+
+    drop_entry(vol, fx.did, child);
+    race_fx = &fx;
+    race_fired = 0;
+    race_real_delete_row = vol->v_cdb->cnid_delete_row;
+    vol->v_cdb->cnid_delete_row = rewrite_then_delete_row;
+    vol->v_flags |= AFPVOL_FOLLOWSYM;
+    err = getfiledirparms(obj, vid, fx.child_id, "");
+    vol->v_flags = flags;
+    vol->v_cdb->cnid_delete_row = race_real_delete_row;
+    kept = fx.child_id;
+
+    if (race_fired && err == AFP_OK
+            && cnid_resolve_row(vol->v_cdb, &kept, buf, sizeof(buf), &dev,
+                                &ino) != NULL
+            && cnid_row_holds(vol->v_cdb, dev, ino, &race_st)) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "link row rewritten as the refusal deletes: %d, the "
+                        "delete %s\n", err, race_fired ? "ran" : "never ran");
+    }
+
+out:
+    vol->v_flags = flags;
+    movecwd(vol, vol->v_root);
+    unlink(fx.child);
+
+    /* the row the stand-in gave the link */
+    if (fx.child_id != CNID_INVALID) {
+        drop_entry(vol, fx.did, child);
+        cnid_delete(vol->v_cdb, fx.child_id);
+    }
+
+    delete (obj, vid, DIRDID_ROOT, DC_FOLDER "/" DC_LEAF);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief A followed link's rewritten row answers kFPMiscErr if lstat() fails
+ */
+int utest_dircache_rewritten_link_unreadable(AFPObj *obj, struct vol *vol,
+                                             uint16_t vid)
+{
+    static char buf[CNID_MAX_PATH_LEN];
+    char child[] = DC_CHILD;
+    const int flags = vol->v_flags;
+    struct dc_fixture fx;
+    struct stat st;
+    struct stat lst;
+    cnid_t kept;
+    uint64_t dev = 0;
+    uint64_t ino = 0;
+    int probe[3];
+    int calls = 0;
+    int err = -1;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    dc_setup(obj, vol, &fx);
+
+    if (cached_pair(obj, vol, vid, 1, &fx) == NULL
+            || createdir(obj, vid, fx.did, DC_LEAF) != AFP_OK
+            || movecwd(vol, vol->v_root) != 0
+            || rename(fx.child, fx.child_aside) != 0
+            || symlink(DC_LEAF, fx.child) != 0
+            || lstat(fx.child, &race_st) != 0) {
+        goto out;
+    }
+
+    /* the shim lets the lookup's stat() of the link and the refusal's
+     * lstat() pass, and fails the lstat() after the rewrite */
+    fault_inject_reset();
+    fi.stat_name = fx.child;
+    fi.stat_errno = EIO;
+    fi.stat_pass = 2;
+    probe[0] = stat(fx.child, &st);
+    probe[1] = lstat(fx.child, &lst);
+    probe[2] = lstat(fx.child, &lst);
+
+    if (probe[0] != 0 || probe[1] != 0 || probe[2] == 0 || errno != EIO
+            || fi.stat_calls != 3) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    fi.stat_calls = 0;
+    drop_entry(vol, fx.did, child);
+    race_fx = &fx;
+    race_fired = 0;
+    race_real_delete_row = vol->v_cdb->cnid_delete_row;
+    vol->v_cdb->cnid_delete_row = rewrite_then_delete_row;
+    vol->v_flags |= AFPVOL_FOLLOWSYM;
+    err = getfiledirparms(obj, vid, fx.child_id, "");
+    vol->v_flags = flags;
+    vol->v_cdb->cnid_delete_row = race_real_delete_row;
+    calls = fi.stat_calls;
+    fault_inject_reset();
+    kept = fx.child_id;
+
+    if (race_fired && calls >= 3 && err == AFPERR_MISC
+            && cnid_resolve_row(vol->v_cdb, &kept, buf, sizeof(buf), &dev,
+                                &ino) != NULL
+            && cnid_row_holds(vol->v_cdb, dev, ino, &race_st)) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "rewritten link whose lstat() fails: %d after %d "
+                        "stats, the delete %s\n", err, calls,
+                race_fired ? "ran" : "never ran");
+    }
+
+out:
+    fault_inject_reset();
+    vol->v_flags = flags;
+    movecwd(vol, vol->v_root);
+    unlink(fx.child);
+
+    /* the row the stand-in gave the link */
+    if (fx.child_id != CNID_INVALID) {
+        drop_entry(vol, fx.did, child);
+        cnid_delete(vol->v_cdb, fx.child_id);
+    }
+
+    delete (obj, vid, DIRDID_ROOT, DC_FOLDER "/" DC_LEAF);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief A followed link with its own row answers kFPMiscErr if lstat() fails
+ */
+int utest_dircache_followed_link_unreadable(AFPObj *obj, struct vol *vol,
+                                            uint16_t vid)
+{
+    static char buf[CNID_MAX_PATH_LEN];
+    char link[] = DC_CHILD;
+    const int flags = vol->v_flags;
+    struct dc_fixture fx;
+    struct stat st;
+    struct stat lst;
+    cnid_t id = CNID_INVALID;
+    cnid_t kept;
+    bool row = false;
+    int calls = 0;
+    int err = -1;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    dc_setup(obj, vol, &fx);
+
+    if (createdir(obj, vid, DIRDID_ROOT, DC_FOLDER) != AFP_OK) {
+        goto out;
+    }
+
+    fx.did = curdir->d_did;
+
+    if (createdir(obj, vid, fx.did, DC_LEAF) != AFP_OK
+            || symlink(DC_LEAF, fx.child) != 0 || lstat(fx.child, &lst) != 0
+            || (id = cnid_add(vol->v_cdb, &lst, fx.did, link, strlen(link),
+                              CNID_INVALID)) == CNID_INVALID
+            || movecwd(vol, vol->v_root) != 0) {
+        goto out;
+    }
+
+    /* the shim must fail the link's lstat() after a stat() passes */
+    fault_inject_reset();
+    fi.stat_name = fx.child;
+    fi.stat_errno = EIO;
+    fi.stat_pass = 1;
+
+    if (stat(fx.child, &st) != 0 || lstat(fx.child, &lst) == 0
+            || errno != EIO || fi.stat_calls != 2) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    fi.stat_calls = 0;
+    vol->v_flags |= AFPVOL_FOLLOWSYM;
+    err = getfiledirparms(obj, vid, id, "");
+    vol->v_flags = flags;
+    calls = fi.stat_calls;
+    fault_inject_reset();
+    kept = id;
+    row = cnid_resolve(vol->v_cdb, &kept, buf, sizeof(buf)) != NULL;
+
+    if (err == AFPERR_MISC && row && calls >= 2) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "followed link whose lstat() fails: %d after %d "
+                        "stats, its row %s\n", err, calls,
+                row ? "kept" : "gone");
+    }
+
+out:
+    fault_inject_reset();
+    vol->v_flags = flags;
+    movecwd(vol, vol->v_root);
+    unlink(fx.child);
+
+    if (id != CNID_INVALID) {
+        drop_entry(vol, fx.did, link);
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    delete (obj, vid, DIRDID_ROOT, DC_FOLDER "/" DC_LEAF);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief An uncached folder whose stat fails ENOTDIR answers kFPObjectNotFound
+ */
+int utest_dircache_path_crosses_file_by_did(AFPObj *obj, struct vol *vol,
+                                            uint16_t vid)
+{
+    struct dc_fixture fx;
+    struct stat st;
+    int err = -1;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    dc_setup(obj, vol, &fx);
+
+    if (uncached_folder(obj, vol, vid, &fx) != 0) {
+        goto out;
+    }
+
+    /* the call afpd makes for the folder's path must fail so */
+    fault_inject_reset();
+    fi.stat_name = fx.path;
+    fi.stat_errno = ENOTDIR;
+
+    if (ostat(fx.path, &st, vol_syml_opt(vol)) == 0 || errno != ENOTDIR
+            || fi.stat_calls != 1) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    err = getfiledirparms(obj, vid, fx.did, "");
+
+    if (err == AFPERR_NOOBJ && fi.stat_calls > 1) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "a folder whose stat answers ENOTDIR: %d after %d "
+                        "stats\n", err, fi.stat_calls);
+    }
+
+out:
+    fault_inject_reset();
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief FPEnumerate of a cached folder that vanished answers kFPDirNotFound
+ */
+int utest_dircache_enumerate_vanished_folder(AFPObj *obj, struct vol *vol,
+                                             uint16_t vid)
+{
+    struct dc_fixture fx;
+    int err = -1;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+
+    if (cached_pair(obj, vol, vid, 1, &fx) == NULL
+            || rename(fx.child, fx.child_aside) != 0) {
+        goto out;
+    }
+
+    err = enumerate_range(obj, vid, fx.child_id, 1 << FILPBIT_FNUM, 0, 1, 40);
+
+    if (err == AFPERR_NODIR) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "FPEnumerate of a cached folder that vanished: %d\n",
+                err);
+    }
+
+out:
+
+    if (fx.child_id != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, fx.child_id);
+    }
+
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+#define DC_WALK_A     "dc-walk-a"
+#define DC_WALK_B     "dc-walk-b"
+#define DC_WALK_LEAF  "dc-walk-leaf"
+#define DC_WALK_MOVED "dc-walk-moved"
+
+/* a volume-walking catalog search paused at its first match: the two
+ * folders' CNIDs and paths, the one still to enter, and the position */
+struct dc_walk {
+    cnid_t did[2];
+    char path[2][MAXPATHLEN + 1];
+    int pending;
+    unsigned char pos[16];
+};
+
+static const char *const dc_walk_name[2] = { DC_WALK_A, DC_WALK_B };
+
+/*!
+ * @brief Run the walk on to its next match or its end, past the clock's pauses
+ *
+ * @returns the AFP result, AFP_OK with the match's parent in pdid
+ */
+static int dc_walk_on(AFPObj *obj, uint16_t vid, struct dc_walk *w,
+                      uint32_t *nrecs, cnid_t *pdid)
+{
+    int err = AFP_OK;
+    *nrecs = 0;
+
+    for (int i = 0; i < 256 && *nrecs == 0 && err == AFP_OK; i++) {
+        err = catsearch_from(obj, vid, 1, w->pos, DC_WALK_LEAF, nrecs, pdid);
+    }
+
+    return err;
+}
+
+/*!
+ * @brief Two folders with a same-named file each, and a walk paused at one
+ *
+ * The other folder waits on the walk's stack, its entry cached.
+ *
+ * @param[in]     obj  the test session
+ * @param[in]     vol  the open volume, its searches through the CNID
+ *                     database off
+ * @param[in]     vid  the volume's id
+ * @param[in,out] fx   takes the test folder's CNID
+ * @param[out]    w    the walk
+ * @returns 0, -1 when the setup failed
+ */
+static int dc_walk_paused(AFPObj *obj, const struct vol *vol, uint16_t vid,
+                          struct dc_fixture *fx, struct dc_walk *w)
+{
+    uint32_t nrecs = 0;
+    cnid_t pdid = CNID_INVALID;
+    int err;
+    memset(w, 0, sizeof(*w));
+
+    if (createdir(obj, vid, DIRDID_ROOT, DC_FOLDER) != AFP_OK) {
+        return -1;
+    }
+
+    fx->did = curdir->d_did;
+
+    for (int i = 0; i < 2; i++) {
+        folder_path(vol, w->path[i], dc_walk_name[i]);
+
+        if (createdir(obj, vid, fx->did, dc_walk_name[i]) != AFP_OK) {
+            return -1;
+        }
+
+        w->did[i] = curdir->d_did;
+
+        if (createfile(obj, vid, w->did[i], DC_WALK_LEAF) != AFP_OK) {
+            return -1;
+        }
+    }
+
+    if (movecwd(vol, vol->v_root) != 0) {
+        return -1;
+    }
+
+    err = dc_walk_on(obj, vid, w, &nrecs, &pdid);
+
+    if (err != AFP_OK || nrecs != 1
+            || (pdid != w->did[0] && pdid != w->did[1])) {
+        fprintf(stderr, "a walking search's first match: %d, %u found\n",
+                err, nrecs);
+        return -1;
+    }
+
+    w->pending = pdid == w->did[0] ? 1 : 0;
+    return 0;
+}
+
+/*!
+ * @brief Remove the walk's files and folders, moved or replaced ones included
+ */
+static void dc_walk_done(AFPObj *obj, uint16_t vid)
+{
+    delete (obj, vid, DIRDID_ROOT, DC_FOLDER "/" DC_WALK_A "/" DC_WALK_LEAF);
+    delete (obj, vid, DIRDID_ROOT, DC_FOLDER "/" DC_WALK_B "/" DC_WALK_LEAF);
+    delete (obj, vid, DIRDID_ROOT,
+            DC_FOLDER "/" DC_WALK_MOVED "/" DC_WALK_LEAF);
+    delete (obj, vid, DIRDID_ROOT, DC_FOLDER "/" DC_WALK_A);
+    delete (obj, vid, DIRDID_ROOT, DC_FOLDER "/" DC_WALK_B);
+    delete (obj, vid, DIRDID_ROOT, DC_FOLDER "/" DC_WALK_MOVED);
+}
+
+/*!
+ * @brief Move a walk folder and its row, as another session's FPMoveAndRename
+ *
+ * @param[in] vol    the open volume
+ * @param[in] fx     the fixture
+ * @param[in] w      the walk
+ * @param[in] which  the folder: w->pending, which the walk has still to
+ *                   enter, or the other, which it paused in
+ * @param[in] mpath  the folder's new path
+ * @returns 0, -1 when a call fails
+ */
+static int dc_walk_move(const struct vol *vol, const struct dc_fixture *fx,
+                        const struct dc_walk *w, int which, const char *mpath)
+{
+    char moved[] = DC_WALK_MOVED;
+    struct stat st;
+
+    if (rename(w->path[which], mpath) != 0 || stat(mpath, &st) != 0
+            || cnid_update(vol->v_cdb, w->did[which], &st, fx->did, moved,
+                           strlen(moved)) != 0) {
+        return -1;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief A paused walk finds a folder's file under its DID once its row moved
+ */
+int utest_dircache_walk_after_self_heal(AFPObj *obj, struct vol *vol,
+                                        uint16_t vid)
+{
+    char mpath[MAXPATHLEN + 1];
+    const int searchdb = vol->v_flags & AFPVOL_SEARCHDB;
+    struct dc_fixture fx;
+    struct dc_walk w;
+    uint32_t nrecs = 0;
+    cnid_t pdid = CNID_INVALID;
+    int err = -1;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+    folder_path(vol, mpath, DC_WALK_MOVED);
+    vol->v_flags &= ~AFPVOL_SEARCHDB;
+
+    if (dc_walk_paused(obj, vol, vid, &fx, &w) != 0
+            || dc_walk_move(vol, &fx, &w, w.pending, mpath) != 0
+            || create_disk_file(w.path[w.pending]) != 0) {
+        goto out;
+    }
+
+    err = dc_walk_on(obj, vid, &w, &nrecs, &pdid);
+
+    if (err == AFP_OK && nrecs == 1 && pdid == w.did[w.pending]) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "a walking search after a self-heal: %d, %u found "
+                        "under %u, the folder %u\n", err, nrecs, ntohl(pdid),
+                ntohl(w.did[w.pending]));
+    }
+
+out:
+    vol->v_flags = (vol->v_flags & ~AFPVOL_SEARCHDB) | searchdb;
+    movecwd(vol, vol->v_root);
+    dc_walk_done(obj, vid);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief A paused walk skips a cached folder moved to a denied place and ends
+ */
+int utest_dircache_walk_skips_denied_folder(AFPObj *obj, struct vol *vol,
+                                            uint16_t vid)
+{
+    char mpath[MAXPATHLEN + 1];
+    const int searchdb = vol->v_flags & AFPVOL_SEARCHDB;
+    struct dc_fixture fx;
+    struct dc_walk w;
+    uint32_t nrecs = 0;
+    cnid_t pdid = CNID_INVALID;
+    int calls = 0;
+    int err = -1;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    dc_setup(obj, vol, &fx);
+    folder_path(vol, mpath, DC_WALK_MOVED);
+    vol->v_flags &= ~AFPVOL_SEARCHDB;
+
+    if (dc_walk_paused(obj, vol, vid, &fx, &w) != 0
+            || dc_walk_move(vol, &fx, &w, w.pending, mpath) != 0
+            || create_disk_file(w.path[w.pending]) != 0) {
+        goto out;
+    }
+
+    if (!deny_stat(vol, mpath)) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    err = dc_walk_on(obj, vid, &w, &nrecs, &pdid);
+    calls = fi.stat_calls;
+    fault_inject_reset();
+
+    /* the self-heal's lookup met the denied stat */
+    if (calls > 1 && err == AFPERR_EOF && nrecs == 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "a walking search past a denied folder: %d, %u "
+                        "found, %d stats denied\n", err, nrecs, calls - 1);
+    }
+
+out:
+    fault_inject_reset();
+    vol->v_flags = (vol->v_flags & ~AFPVOL_SEARCHDB) | searchdb;
+    movecwd(vol, vol->v_root);
+    dc_walk_done(obj, vid);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief A paused walk whose self-heal the backend cannot answer: kFPMiscErr
+ */
+int utest_dircache_walk_backend_failure(AFPObj *obj, struct vol *vol,
+                                        uint16_t vid)
+{
+    char mpath[MAXPATHLEN + 1];
+    const int searchdb = vol->v_flags & AFPVOL_SEARCHDB;
+    char *(*real_resolve)(struct _cnid_db *, cnid_t *, void *, size_t,
+                          uint64_t *, uint64_t *);
+    struct dc_fixture fx;
+    struct dc_walk w;
+    uint32_t nrecs = 0;
+    cnid_t pdid = CNID_INVALID;
+    int err = -1;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+    folder_path(vol, mpath, DC_WALK_MOVED);
+    real_resolve = vol->v_cdb->cnid_resolve;
+    vol->v_flags &= ~AFPVOL_SEARCHDB;
+
+    /* with the entry cached and nothing at the old name, the first resolve,
+     * the busy one, is the self-heal's */
+    if (dc_walk_paused(obj, vol, vid, &fx, &w) != 0
+            || dc_walk_move(vol, &fx, &w, w.pending, mpath) != 0
+            || dircache_lookup_did(vol, w.did[w.pending]) == NULL) {
+        goto out;
+    }
+
+    race_real_resolve = real_resolve;
+    resolve_busy_fired = 0;
+    vol->v_cdb->cnid_resolve = resolve_busy_once;
+    err = dc_walk_on(obj, vid, &w, &nrecs, &pdid);
+    vol->v_cdb->cnid_resolve = real_resolve;
+
+    if (err == AFPERR_MISC && resolve_busy_fired) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "a walking search whose self-heal the backend "
+                        "cannot answer: %d, %u found, the stand-in %s\n", err,
+                nrecs, resolve_busy_fired ? "ran" : "never ran");
+    }
+
+out:
+    vol->v_cdb->cnid_resolve = real_resolve;
+    vol->v_flags = (vol->v_flags & ~AFPVOL_SEARCHDB) | searchdb;
+    movecwd(vol, vol->v_root);
+    dc_walk_done(obj, vid);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief A walk skips the moved, denied folder it paused in and lists the other
+ */
+int utest_dircache_walk_paused_folder_denied(AFPObj *obj, struct vol *vol,
+                                             uint16_t vid)
+{
+    char mpath[MAXPATHLEN + 1];
+    const int searchdb = vol->v_flags & AFPVOL_SEARCHDB;
+    struct dc_fixture fx;
+    struct dc_walk w;
+    uint32_t nrecs = 0;
+    cnid_t pdid = CNID_INVALID;
+    int calls = 0;
+    int err = -1;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    dc_setup(obj, vol, &fx);
+    folder_path(vol, mpath, DC_WALK_MOVED);
+    vol->v_flags &= ~AFPVOL_SEARCHDB;
+
+    /* the folder the walk paused in moves, its listing left open */
+    if (dc_walk_paused(obj, vol, vid, &fx, &w) != 0
+            || dc_walk_move(vol, &fx, &w, 1 - w.pending, mpath) != 0) {
+        goto out;
+    }
+
+    if (!deny_stat(vol, mpath)) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    err = dc_walk_on(obj, vid, &w, &nrecs, &pdid);
+    calls = fi.stat_calls;
+    fault_inject_reset();
+
+    /* the self-heal's lookup met the denied stat */
+    if (calls > 1 && err == AFP_OK && nrecs == 1
+            && pdid == w.did[w.pending]) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "a walking search past the folder it paused in: %d, "
+                        "%u found under %u, the other folder %u, %d stats "
+                        "denied\n", err, nrecs, ntohl(pdid),
+                ntohl(w.did[w.pending]), calls - 1);
+    }
+
+out:
+    fault_inject_reset();
+    vol->v_flags = (vol->v_flags & ~AFPVOL_SEARCHDB) | searchdb;
+    movecwd(vol, vol->v_root);
+    dc_walk_done(obj, vid);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief A file in the cached child folder, which a file then replaces on disk
+ *
+ * @param[in]     obj  the test session
+ * @param[in]     vol  the open volume
+ * @param[in]     vid  the volume's id
+ * @param[in,out] fx   the fixture, set up
+ * @returns the file's CNID, or CNID_INVALID when the setup failed
+ */
+static cnid_t file_in_folder_a_file_took(AFPObj *obj, const struct vol *vol,
+                                         uint16_t vid, struct dc_fixture *fx)
+{
+    char leaf[] = DC_LEAF;
+    const struct dir *parent;
+    const struct dir *entry;
+    cnid_t id;
+
+    if (cached_pair(obj, vol, vid, 1, fx) == NULL
+            || createfile(obj, vid, fx->child_id, leaf) != AFP_OK
+            || movecwd(vol, vol->v_root) != 0
+            || (parent = dirlookup(vol, fx->child_id)) == NULL
+            || (entry = dircache_search_by_name(vol, parent, leaf,
+                                                strlen(leaf))) == NULL) {
+        return CNID_INVALID;
+    }
+
+    id = entry->d_did;
+
+    if (rename(fx->child, fx->child_aside) != 0
+            || create_disk_file(fx->child) != 0) {
+        return CNID_INVALID;
+    }
+
+    return id;
+}
+
+/*!
+ * @brief Remove file_in_folder_a_file_took()'s objects and rows, wherever left
+ */
+static void file_in_folder_a_file_took_done(const struct vol *vol,
+                                            const struct dc_fixture *fx,
+                                            cnid_t id)
+{
+    char name[] = DC_LEAF;
+    char leaf[MAXPATHLEN + 1];
+    char unmoved[MAXPATHLEN + 1];
+    snprintf(leaf, sizeof(leaf), "%s/" DC_LEAF, fx->child_aside);
+    snprintf(unmoved, sizeof(unmoved), "%s/" DC_LEAF, fx->child);
+
+    if (id == CNID_INVALID && fx->child_id != CNID_INVALID) {
+        id = cnid_get(vol->v_cdb, fx->child_id, name, strlen(name));
+    }
+
+    unlink(unmoved);
+    unlink(fx->child);
+    rmdir(fx->child);
+    unlink(leaf);
+    rmdir(fx->child_aside);
+
+    if (id != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    cnid_delete(vol->v_cdb, fx->child_id);
+}
+
+/*!
+ * @brief FPResolveID in a cached folder a file replaced answers kFPIDNotFound
+ */
+int utest_dircache_resolveid_folder_a_file_took(AFPObj *obj, struct vol *vol,
+                                                uint16_t vid)
+{
+    struct dc_fixture fx;
+    cnid_t id;
+    int err = -1;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+
+    if ((id = file_in_folder_a_file_took(obj, vol, vid, &fx))
+            != CNID_INVALID) {
+        if ((err = resolveid(obj, vid, id)) == AFPERR_NOID) {
+            ret = 0;
+        } else {
+            fprintf(stderr, "FPResolveID in a folder a file took: %d\n", err);
+        }
+    }
+
+    movecwd(vol, vol->v_root);
+    file_in_folder_a_file_took_done(vol, &fx, id);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief FPDeleteID in a cached folder a file replaced deletes the ID
+ */
+int utest_dircache_deleteid_folder_a_file_took(AFPObj *obj, struct vol *vol,
+                                               uint16_t vid)
+{
+    static char buf[CNID_MAX_PATH_LEN];
+    struct dc_fixture fx;
+    cnid_t id;
+    cnid_t probe;
+    int err = -1;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+
+    if ((id = file_in_folder_a_file_took(obj, vol, vid, &fx))
+            != CNID_INVALID) {
+        err = deleteid(obj, vid, id);
+        probe = id;
+
+        if (err == AFPERR_NOOBJ
+                && cnid_resolve(vol->v_cdb, &probe, buf, sizeof(buf)) == NULL
+                && CNID_ERRNO() == CNID_ERR_NOTFOUND) {
+            ret = 0;
+        } else {
+            fprintf(stderr, "FPDeleteID in a folder a file took: %d\n", err);
+        }
+    }
+
+    movecwd(vol, vol->v_root);
+    file_in_folder_a_file_took_done(vol, &fx, id);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief FPResolveID answers kFPAccessDenied if the chdir's getcwd() is denied
+ */
+int utest_dircache_resolveid_getcwd_denied(AFPObj *obj, struct vol *vol,
+                                           uint16_t vid)
+{
+    char leaf[] = DC_LEAF;
+    struct dc_fixture fx;
+    const struct dir *parent;
+    const struct dir *entry;
+    int calls = 0;
+    int err = -1;
+    int ret = -1;
+
+    /* a volume that walks enters a folder without a getcwd() */
+    if (vol->v_rootfd >= 0 || !test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    dc_setup(obj, vol, &fx);
+
+    if (cached_pair(obj, vol, vid, 1, &fx) == NULL
+            || createfile(obj, vid, fx.child_id, leaf) != AFP_OK
+            || movecwd(vol, vol->v_root) != 0
+            || (parent = dirlookup(vol, fx.child_id)) == NULL
+            || (entry = dircache_search_by_name(vol, parent, leaf,
+                                                strlen(leaf))) == NULL) {
+        goto out;
+    }
+
+    /* every getcwd() fails, so that an earlier call that tolerates a
+     * failure cannot take the only one */
+    fault_inject_reset();
+    fi.getcwd.armed = 1;
+    fi.getcwd.fail_after = 0;
+    fi.getcwd.fail_more = INT_MAX;
+    fi.getcwd.errnum = EACCES;
+    err = resolveid(obj, vid, entry->d_did);
+    calls = fi.getcwd.calls;
+    fault_inject_reset();
+
+    /* the interposer saw no call, as where libc renames getcwd() */
+    if (calls == 0) {
+        ret = TEST_SKIP;
+    } else if (err == AFPERR_ACCESS) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "FPResolveID with getcwd() denied: %d\n", err);
+    }
+
+out:
+    fault_inject_reset();
+    movecwd(vol, vol->v_root);
+    delete (obj, vid, fx.child_id, leaf);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/* the backend's find, and the calls find_counted() passed on */
+static int (*search_real_find)(struct _cnid_db *, const char *, size_t,
+                               cnid_t, void *, size_t, bool *);
+static int search_find_calls;
+
+/*!
+ * @brief Count a CNID-database search, then run the backend's
+ *
+ * @returns what the backend's find returns
+ */
+static int find_counted(struct _cnid_db *cdb, const char *name,
+                        size_t namelen, cnid_t scope_did, void *buffer,
+                        size_t buflen, bool *more_available)
+{
+    search_find_calls++;
+    return search_real_find(cdb, name, namelen, scope_did, buffer, buflen,
+                            more_available);
+}
+
+/*!
+ * @brief A CNID-database search finds a file once its cached folder's row moved
+ */
+int utest_dircache_search_after_self_heal(AFPObj *obj, struct vol *vol,
+                                          uint16_t vid)
+{
+    char leaf[] = DC_LEAF;
+    unsigned char pos[16] = { 0 };
+    const int searchdb = vol->v_flags & AFPVOL_SEARCHDB;
+    struct dc_fixture fx;
+    cnid_t pdid[2] = { CNID_INVALID, CNID_INVALID };
+    uint32_t nrecs = 0;
+    int moved = 0;
+    int err = -1;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+    vol->v_flags |= AFPVOL_SEARCHDB;
+
+    if (cached_pair(obj, vol, vid, 1, &fx) == NULL
+            || createfile(obj, vid, fx.child_id, leaf) != AFP_OK
+            || movecwd(vol, vol->v_root) != 0
+            || (moved = move_child_with_row(vol, &fx)) != 0
+            || create_disk_file(fx.child) != 0) {
+        goto out;
+    }
+
+    search_real_find = vol->v_cdb->cnid_find;
+    search_find_calls = 0;
+    vol->v_cdb->cnid_find = find_counted;
+    err = catsearch_from(obj, vid, 2, pos, DC_LEAF, &nrecs, pdid);
+    vol->v_cdb->cnid_find = search_real_find;
+
+    if ((err == AFP_OK || err == AFPERR_EOF) && nrecs == 1
+            && pdid[0] == fx.child_id && search_find_calls > 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "a catalog search after a self-heal: %d, %u found, "
+                        "the first in %u, %d database searches\n", err,
+                nrecs, ntohl(pdid[0]), search_find_calls);
+    }
+
+out:
+    vol->v_flags = (vol->v_flags & ~AFPVOL_SEARCHDB) | searchdb;
+
+    /* a move whose stat or row update failed leaves the folder aside under
+     * a row that still names its old place, where the delete looks */
+    if (moved != 0) {
+        (void)rename(fx.child_aside, fx.child);
+    }
+
+    movecwd(vol, vol->v_root);
+    delete (obj, vid, fx.child_id, leaf);
+    unlink(fx.child);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief FPGetForkParms of a link names its folder once the folder's row moved
+ */
+int utest_dircache_forkparms_after_self_heal(AFPObj *obj, struct vol *vol,
+                                             uint16_t vid)
+{
+    static char link[] = "dc-link";
+    char lpath[MAXPATHLEN + 1];
+    struct dc_fixture fx;
+    const char *params;
+    size_t len = 0;
+    const struct dir *healed;
+    uint16_t refnum = 0;
+    cnid_t pdid = CNID_INVALID;
+    cnid_t fnum = CNID_INVALID;
+    cnid_t lid;
+    int err = -1;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    dc_setup(obj, vol, &fx);
+    snprintf(lpath, sizeof(lpath), "%s/%s", fx.child, link);
+
+    if (cached_pair(obj, vol, vid, 1, &fx) == NULL
+            || symlink(DC_LEAF, lpath) != 0
+            || openfork(obj, vid, fx.child_id, link, OPENFORK_DATA, OPENACC_RD,
+                        &refnum) != AFP_OK
+            || movecwd(vol, vol->v_root) != 0
+            || move_child_with_row(vol, &fx) != 0
+            || create_disk_file(fx.child) != 0) {
+        goto out;
+    }
+
+    /* the file number needs a stat, which enters the folder first */
+    err = getforkparams(obj, refnum,
+                        (1 << FILPBIT_PDID) | (1 << FILPBIT_FNUM));
+    params = reply_params(sizeof(uint16_t), &len);
+
+    if (err == AFP_OK && len >= sizeof(pdid) + sizeof(fnum)) {
+        memcpy(&pdid, params, sizeof(pdid));
+        memcpy(&fnum, params + sizeof(pdid), sizeof(fnum));
+    }
+
+    healed = dirlookup(vol, fx.child_id);
+
+    if (pdid == fx.child_id && fnum != CNID_INVALID
+            && fnum == cnid_get(vol->v_cdb, fx.child_id, link, strlen(link))
+            && healed != NULL
+            && strcmp(cfrombstr(healed->d_u_name), DC_CHILD_ASIDE) == 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "fork parameters after a self-heal: %d, parent %u "
+                        "of %u, file %u\n", err, ntohl(pdid),
+                ntohl(fx.child_id), ntohl(fnum));
+    }
+
+out:
+
+    if (refnum != 0) {
+        closefork(obj, refnum);
+    }
+
+    movecwd(vol, vol->v_root);
+    /* the file number gave the link a row */
+    lid = cnid_get(vol->v_cdb, fx.child_id, link, strlen(link));
+
+    if (lid != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, lid);
+    }
+
+    /* the link is in the child under either name, as far as the setup got */
+    snprintf(lpath, sizeof(lpath), "%s/%s", fx.child, link);
+    unlink(lpath);
+    unlink(fx.child);
+    snprintf(lpath, sizeof(lpath), "%s/%s", fx.child_aside, link);
+    unlink(lpath);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief A followed folder link whose row records the link answers by its DID
+ */
+int utest_dircache_followed_link_row(AFPObj *obj, struct vol *vol,
+                                     uint16_t vid)
+{
+    char link[] = DC_CHILD;
+    const int flags = vol->v_flags;
+    struct dc_fixture fx;
+    struct stat lst;
+    cnid_t id = CNID_INVALID;
+    int err = -1;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+
+    if (createdir(obj, vid, DIRDID_ROOT, DC_FOLDER) != AFP_OK) {
+        goto out;
+    }
+
+    fx.did = curdir->d_did;
+
+    if (createdir(obj, vid, fx.did, DC_LEAF) != AFP_OK
+            || symlink(DC_LEAF, fx.child) != 0 || lstat(fx.child, &lst) != 0
+            || (id = cnid_add(vol->v_cdb, &lst, fx.did, link, strlen(link),
+                              CNID_INVALID)) == CNID_INVALID
+            || movecwd(vol, vol->v_root) != 0) {
+        goto out;
+    }
+
+    vol->v_flags |= AFPVOL_FOLLOWSYM;
+    err = getfiledirparms(obj, vid, id, "");
+    vol->v_flags = flags;
+
+    if (err == AFP_OK) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "followed link, its own row: %d\n", err);
+    }
+
+out:
+    vol->v_flags = flags;
+    movecwd(vol, vol->v_root);
+    unlink(fx.child);
+
+    if (id != CNID_INVALID) {
+        drop_entry(vol, fx.did, link);
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    delete (obj, vid, DIRDID_ROOT, DC_FOLDER "/" DC_LEAF);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief movecwd() refuses a file entry, also one whose name a folder took
+ */
+int utest_dircache_file_entry_not_entered(AFPObj *obj, struct vol *vol,
+                                          uint16_t vid)
+{
+    char child[] = DC_CHILD;
+    struct dc_fixture fx;
+    const struct dir *before;
+    struct dir *entry;
+    int rc = 0;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+
+    if (cached_pair(obj, vol, vid, 0, &fx) == NULL
+            || (entry = dirlookup(vol, fx.child_id)) == NULL
+            || !(entry->d_flags & DIRF_ISFILE) || unlink(fx.child) != 0) {
+        goto out;
+    }
+
+    if (mkdir(fx.child, 0750) != 0) { // NOSONAR (the scenario under test)
+        goto out;
+    }
+
+    before = curdir;
+    rc = movecwd(vol, entry);
+
+    if (rc == -1 && afp_errno == AFPERR_NOOBJ && curdir == before) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "file entry, a folder at its name: movecwd %d, "
+                        "afp_errno %d\n", rc, afp_errno);
+    }
+
+out:
+    movecwd(vol, vol->v_root);
+    drop_entry(vol, fx.did, child);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief cname() refuses a file entry whose uncached folder was replaced
+ */
+int utest_dircache_file_of_replaced_folder(AFPObj *obj, struct vol *vol,
+                                           uint16_t vid)
+{
+    static char buf[CNID_MAX_PATH_LEN];
+    char folder[] = DC_FOLDER;
+    cnid_t gone;
+    struct dc_fixture fx;
+    struct dir *entry = NULL;
+    const struct path *named;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+
+    /* the lookup by the CNID builds the file's entry */
+    if (cached_pair(obj, vol, vid, 0, &fx) == NULL
+            || (entry = dirlookup(vol, fx.child_id)) == NULL
+            || movecwd(vol, vol->v_root) != 0) {
+        goto out;
+    }
+
+    drop_entry(vol, DIRDID_ROOT, folder);
+
+    if (replace_folder(fx.path, fx.aside) != 0) {
+        goto out;
+    }
+
+    fx.moved = 1;
+    named = cname(vol, entry, cnamewrap(""));
+    gone = fx.did;
+
+    if (named == NULL && afp_errno == AFPERR_NOOBJ
+            && dircache_lookup_did(vol, fx.did) == NULL
+            && cnid_resolve(vol->v_cdb, &gone, buf, sizeof(buf)) == NULL
+            && CNID_ERRNO() == CNID_ERR_NOTFOUND) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "file of a replaced folder: %s, afp_errno %d\n",
+                named == NULL ? "no path" : "a path", afp_errno);
+    }
+
+out:
+    movecwd(vol, vol->v_root);
+
+    if (entry != NULL && entry->d_did != CNID_INVALID) {
+        dir_remove(vol, entry, 0);
+    }
+
+    dir_free_invalid_q();
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief A folder symlink by its CNID answers as the link, as it does by name
+ */
+int utest_dircache_folder_link_by_cnid(AFPObj *obj, struct vol *vol,
+                                       uint16_t vid)
+{
+    char name[] = DC_LEAF;
+    char path[MAXPATHLEN + 1];
+    struct dc_fixture fx;
+    struct stat st;
+    const char *head;
+    const char *params;
+    size_t hlen = 0;
+    size_t len = 0;
+    cnid_t id = CNID_INVALID;
+    cnid_t fnum = CNID_INVALID;
+    int err;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    dc_setup(obj, vol, &fx);
+    folder_path(vol, path, DC_LEAF);
+
+    if (cached_pair(obj, vol, vid, 1, &fx) == NULL
+            || symlink(DC_CHILD, path) != 0 || lstat(path, &st) != 0
+            || (id = cnid_add(vol->v_cdb, &st, fx.did, name, strlen(name),
+                              CNID_INVALID)) == CNID_INVALID
+            || getfiledirparms(obj, vid, fx.did, name) != AFP_OK) {
+        goto out;
+    }
+
+    err = getfiledirparms(obj, vid, id, "");
+    head = reply_params(2 * sizeof(uint16_t), &hlen);
+    params = reply_params(REPLY_FILEDIRPARMS, &len);
+
+    if (err == AFP_OK && len >= sizeof(fnum)) {
+        memcpy(&fnum, params, sizeof(fnum));
+    }
+
+    /* a file's reply, whose first parameter is the file's number */
+    if (err == AFP_OK && hlen > 0 && !(head[0] & FILDIRBIT_ISDIR)
+            && fnum == id) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "folder link by its CNID: %d\n", err);
+    }
+
+out:
+
+    if (id != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    unlink(path);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief An uncached folder on another device than its row: kFPObjectNotFound
+ */
+int utest_dircache_other_device_by_did(AFPObj *obj, struct vol *vol,
+                                       uint16_t vid)
+{
+    static char buf[CNID_MAX_PATH_LEN];
+    struct dc_fixture fx;
+    struct stat st;
+    cnid_t gone;
+    int err = AFP_OK;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)
+            || (vol->v_cdb->cnid_db_flags & CNID_FLAG_NODEV)) {
+        return TEST_SKIP;
+    }
+
+    dc_setup(obj, vol, &fx);
+
+    if (uncached_folder(obj, vol, vid, &fx) != 0 || stat(fx.path, &st) != 0) {
+        goto out;
+    }
+
+    fault_inject_reset();
+    fi.stat_dev.path = fx.path;
+    fi.stat_dev.dev = st.st_dev + 1;
+
+    if (ostat(fx.path, &st, vol_syml_opt(vol)) != 0
+            || st.st_dev != fi.stat_dev.dev) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    err = getfiledirparms(obj, vid, fx.did, "");
+    fault_inject_reset();
+    gone = fx.did;
+
+    if (err == AFPERR_NOOBJ
+            && cnid_resolve(vol->v_cdb, &gone, buf, sizeof(buf)) == NULL
+            && CNID_ERRNO() == CNID_ERR_NOTFOUND) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "another device by the DID: %d\n", err);
+    }
+
+out:
+    fault_inject_reset();
     dc_teardown(obj, vid, &fx);
     return ret;
 }

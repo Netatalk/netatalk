@@ -154,8 +154,10 @@ static int push_eaname(char **bufp, const char *attr)
 char **cnamewrap(const char *name)
 {
     static char buf[256] = { 0 };
-    static char *p = buf;
+    static char *p;
     int len = 0;
+    /* cname() moved p past the path the last call handed out */
+    p = buf;
     PUSHVAL(p, uint8_t, 3, len); /* path type */
     PUSHVAL(p, uint32_t, htonl(kTextEncodingUTF8), len); /* text encoding hint */
     size_t avail = sizeof(buf) - len - sizeof(uint16_t);
@@ -963,6 +965,25 @@ int resolveid(AFPObj *obj, uint16_t vid, cnid_t cnid)
 }
 
 /*!
+ * @brief FPDeleteID of a CNID
+ *
+ * @param[in] obj   the test session
+ * @param[in] vid   the open volume
+ * @param[in] cnid  the file's ID
+ * @returns the AFP result
+ */
+int deleteid(AFPObj *obj, uint16_t vid, cnid_t cnid)
+{
+    static char buf[256] = { 0 };
+    char *p = buf;
+    int len = 0;
+    ADD(p, len, 2);
+    PUSHVAL(p, uint16_t, vid, len);
+    PUSHVAL(p, cnid_t, cnid, len);
+    return afp_deleteid(obj, buf, len, rbuf, &rbuflen);
+}
+
+/*!
  * @brief FPCreateID of the file a path from did names
  *
  * @param[in]  obj   the test session
@@ -1664,6 +1685,79 @@ int catsearch_ext(AFPObj *obj, uint16_t vid, uint16_t dbitmap,
         if (copy_lname(lname, params + ntohs(off)) != 0) {
             return AFPERR_PARAM;
         }
+    }
+
+    return ret;
+}
+
+/*!
+ * @brief FPCatSearchExt over the volume for a name, from a catalog position
+ *
+ * @param[in]     obj         session
+ * @param[in]     vid         volume
+ * @param[in]     reqmatches  matches the reply may carry, 1 to 8
+ * @param[in,out] pos         the catalog position, all zero for a new
+ *                            search; the reply's on return
+ * @param[in]     name        the files' name, at most 32 bytes
+ * @param[out]    nrecs       matches in the reply, 0 for a rejected request
+ * @param[out]    pdid        the matches' parent DIDs, room for reqmatches
+ * @returns the AFP result, or AFPERR_PARAM for a longer name or a match
+ *          count outside 1 to 8
+ */
+int catsearch_from(AFPObj *obj, uint16_t vid, uint32_t reqmatches,
+                   unsigned char pos[16], const char *name, uint32_t *nrecs,
+                   cnid_t *pdid)
+{
+    static char buf[256] = { 0 };
+    /* the UTF-8 name's offset past the record's fixed part, then an
+     * encoding hint, the name's length and its bytes */
+    unsigned char spec[12 + 32] = { 0, 6 };
+    const size_t namelen = strnlen(name, 33);
+    const unsigned char *rec;
+    char *p = buf;
+    uint16_t speclen;
+    uint16_t size;
+    int len = 0;
+    int ret;
+    *nrecs = 0;
+
+    if (namelen > 32 || reqmatches == 0 || reqmatches > 8) {
+        return AFPERR_PARAM;
+    }
+
+    spec[11] = (unsigned char)namelen;
+    memcpy(spec + 12, name, namelen);
+    speclen = (uint16_t)(12 + namelen);
+    ADD(p, len, 2);
+    PUSHVAL(p, uint16_t, vid, len);
+    PUSHVAL(p, uint32_t, htonl(reqmatches), len);
+    PUSHVAL(p, uint32_t, 0, len);
+    PUSHBUF(p, pos, 16, len);
+    PUSHVAL(p, uint16_t, htons(1 << FILPBIT_PDID), len);
+    PUSHVAL(p, uint16_t, 0, len);
+    PUSHVAL(p, uint32_t, htonl(1U << FILPBIT_PDINFO), len);
+    PUSHVAL(p, uint16_t, htons(speclen), len);
+    PUSHBUF(p, spec, speclen, len);
+    PUSHVAL(p, uint16_t, htons(speclen), len);
+    PUSHBUF(p, spec, speclen, len);
+    rbuflen = 0;
+    ret = afp_catsearch_ext(obj, buf, len, rbuf, &rbuflen);
+
+    if (ret != AFP_OK && ret != AFPERR_EOF) {
+        return ret;
+    }
+
+    /* the position, the two bitmaps and the count, then the records: a
+     * length, the kind byte, a pad, and the parent's DID */
+    memcpy(pos, rbuf, 16);
+    memcpy(nrecs, rbuf + 20, sizeof(*nrecs));
+    *nrecs = ntohl(*nrecs);
+    rec = (const unsigned char *)rbuf + 24;
+
+    for (uint32_t i = 0; i < *nrecs && i < reqmatches; i++) {
+        memcpy(&size, rec, sizeof(size));
+        memcpy(&pdid[i], rec + 4, sizeof(pdid[i]));
+        rec += 4 + ntohs(size);
     }
 
     return ret;

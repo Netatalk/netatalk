@@ -71,6 +71,9 @@ extern int catsearch_ext(AFPObj *obj, uint16_t vid, uint16_t dbitmap,
                          uint32_t rbitmap, const void *spec1,
                          const void *spec2, uint16_t speclen, uint32_t *nrecs,
                          char lname[MACFILELEN + 1]);
+extern int catsearch_from(AFPObj *obj, uint16_t vid, uint32_t reqmatches,
+                          unsigned char pos[16], const char *name,
+                          uint32_t *nrecs, cnid_t *pdid);
 extern int createdir(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int createfile(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int createfile_soft(AFPObj *obj, uint16_t vid, cnid_t did,
@@ -136,6 +139,7 @@ extern int bytelock_ext(AFPObj *obj, uint16_t refnum, int end, int clear,
 extern int checkaccess(AFPObj *obj, uint16_t vid, cnid_t did,
                        const char *name, uint32_t rights);
 extern int resolveid(AFPObj *obj, uint16_t vid, cnid_t cnid);
+extern int deleteid(AFPObj *obj, uint16_t vid, cnid_t cnid);
 extern int createid(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
                     cnid_t *id);
 extern int next_second(const char *path);

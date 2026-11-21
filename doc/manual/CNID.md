@@ -69,6 +69,7 @@ and is recommended for large deployments with many concurrent users.
 
 The SQL server must be provisioned by the system administrator,
 and Netatalk configured to connect to it over a Unix socket or a network interface.
+A MySQL setup should use the default InnoDB engine.
 
 ## sqlite
 

@@ -1204,11 +1204,115 @@ out:
 }
 
 /*!
+ * @brief A cached root folder moved aside, a dangling symlink at its name
+ */
+struct linked_folder {
+    char *name;               /*!< the folder's name, which the link took */
+    char aside[40];           /*!< the name it moved to */
+    struct dir *saved_curdir; /*!< curdir before the fixture */
+    struct dir *dir;          /*!< the folder's cached entry */
+    cnid_t did;               /*!< the folder's DID */
+    int cwd_fd;               /*!< the working directory before the fixture */
+    int vfd;                  /*!< the volume root */
+    int created;              /*!< the folder was made */
+    int linked;               /*!< the link took its name */
+};
+
+/*!
+ * @brief Make name by FPCreateDir, move it aside, and link its name to nowhere
+ *
+ * @param[in]  obj   session object
+ * @param[in]  vol   volume whose root takes the folder
+ * @param[in]  name  the folder's name
+ * @param[in]  tag   the test's prefix of the aside name and the link target
+ * @param[out] lf    the fixture, which linked_folder_done() undoes
+ * @returns 0, -1 when a step failed
+ */
+static int linked_folder(AFPObj *obj, struct vol *vol, char *name,
+                         const char *tag, struct linked_folder *lf)
+{
+    char target[40];
+    memset(lf, 0, sizeof(*lf));
+    lf->name = name;
+    lf->did = CNID_INVALID;
+    lf->saved_curdir = curdir;
+    lf->cwd_fd = open(".", O_RDONLY);
+    lf->vfd = open(vol->v_path, O_RDONLY | O_DIRECTORY);
+    /* this run's names: what another run left keeps its own */
+    snprintf(lf->aside, sizeof(lf->aside), "%s_aside.%d", tag, (int)getpid());
+    snprintf(target, sizeof(target), "%s_nowhere", tag);
+
+    if (lf->cwd_fd < 0 || lf->vfd < 0
+            || createdir(obj, vol->v_vid, DIRDID_ROOT, name) != AFP_OK) {
+        return -1;
+    }
+
+    lf->created = 1;
+    /* afp_createdir() leaves curdir in the folder it made */
+    lf->dir = curdir;
+    lf->did = lf->dir->d_did;
+
+    if (movecwd(vol, vol->v_root) != 0) {
+        return -1;
+    }
+
+    /* a move keeps whatever metadata the folder holds; a failed one leaves
+     * the folder, and the symlink below fails */
+    renameat(lf->vfd, name, lf->vfd, lf->aside);
+
+    if (symlinkat(target, lf->vfd, name) != 0) {
+        return -1;
+    }
+
+    lf->linked = 1;
+    return 0;
+}
+
+/*!
+ * @brief Undo linked_folder(): the folder goes back to its name for FPDelete
+ *
+ * @param[in] obj  session object
+ * @param[in] vol  the volume
+ * @param[in] lf   the fixture
+ * @param[in] ret  the test's result
+ * @returns ret, or -1 where it was 0 and the working directory did not
+ *          come back
+ */
+static int linked_folder_done(AFPObj *obj, struct vol *vol,
+                              const struct linked_folder *lf, int ret)
+{
+    if (lf->created) {
+        if (lf->linked) {
+            unlinkat(lf->vfd, lf->name, 0);
+        }
+
+        renameat(lf->vfd, lf->aside, lf->vfd, lf->name);
+        drop_entry(vol, DIRDID_ROOT, lf->name);
+        delete (obj, vol->v_vid, DIRDID_ROOT, lf->name);
+        cnid_delete(vol->v_cdb, lf->did);
+    }
+
+    if (lf->vfd >= 0) {
+        close(lf->vfd);
+    }
+
+    if (lf->cwd_fd >= 0) {
+        if (fchdir(lf->cwd_fd) != 0 && ret == 0) {
+            ret = -1;
+        }
+
+        close(lf->cwd_fd);
+    }
+
+    curdir = lf->saved_curdir;
+    return ret;
+}
+
+/*!
  * @brief A failed CNID retry in movecwd() logs the directory it tried
  *
- * The directory moves aside and a dangling symlink takes its name: the
- * cached path fails with ENOENT, and the CNID rebuild lstat()s the same
- * path, so the retry reaches its chdir and fails as well.
+ * The folder's row takes the stat of the dangling link at its name: the
+ * retry finds the link and refuses it as no directory.
  *
  * @param[in] obj  session object
  * @param[in] vol  volume whose root takes the directory
@@ -1217,54 +1321,31 @@ out:
 int test012_movecwd_retry_names_directory(AFPObj *obj, struct vol *vol)
 {
     static char dname[] = "t012_dir";
-    char aside[32];
     char logpath[MAXPATHLEN + 1];
     char needle[MAXPATHLEN + 64];
-    struct dir *saved_curdir = curdir;
-    struct dir *dir;
-    cnid_t did = CNID_INVALID;
-    int cwd_fd = open(".", O_RDONLY);
-    int vfd = open(vol->v_path, O_RDONLY | O_DIRECTORY);
-    int created = 0;
-    int linked = 0;
+    struct linked_folder lf;
+    struct stat lst;
     int logged = 0;
     int ret = -1;
     int rc;
-    /* this run's names: what another run left keeps its own */
-    snprintf(aside, sizeof(aside), "t012_aside.%d", (int)getpid());
     /* absolute: movecwd() changes the working directory */
     snprintf(logpath, sizeof(logpath), "%s/t012_log.%d", vol->v_path,
              (int)getpid());
 
-    if (cwd_fd < 0 || vfd < 0
-            || createdir(obj, vol->v_vid, DIRDID_ROOT, dname) != AFP_OK) {
+    /* the lookup by the DID takes only the object its row records */
+    if (linked_folder(obj, vol, dname, "t012", &lf) != 0
+            || fstatat(lf.vfd, dname, &lst, AT_SYMLINK_NOFOLLOW) != 0
+            || cnid_update(vol->v_cdb, lf.did, &lst, DIRDID_ROOT, dname,
+                           strlen(dname)) != 0) {
         goto out;
     }
 
-    created = 1;
-    /* afp_createdir() leaves curdir in the directory it made */
-    dir = curdir;
-    did = dir->d_did;
-
-    if (movecwd(vol, vol->v_root) != 0) {
-        goto out;
-    }
-
-    /* a move keeps whatever metadata the directory holds; a failed one
-     * leaves the directory, and the symlink below fails */
-    renameat(vfd, dname, vfd, aside);
-
-    if (symlinkat("t012_nowhere", vfd, dname) != 0) {
-        goto out;
-    }
-
-    linked = 1;
     setuplog("default:info", logpath, true);
     logged = 1;
-    rc = movecwd(vol, dir);
+    rc = movecwd(vol, lf.dir);
     setuplog("default:note", "/dev/stderr", true);
-    snprintf(needle, sizeof(needle), "\"%s/%s\" (did:%u) failed:", vol->v_path,
-             dname, ntohl(did));
+    snprintf(needle, sizeof(needle), "\"%s/%s\" (did:%u) failed: %s",
+             vol->v_path, dname, ntohl(lf.did), strerror(ENOTDIR));
 
     if (rc == -1 && file_contains(logpath, needle)) {
         ret = 0;
@@ -1279,33 +1360,7 @@ out:
         unlink(logpath);
     }
 
-    /* the directory back under its name, for FPDelete to remove it and
-     * whatever metadata it holds */
-    if (created) {
-        if (linked) {
-            unlinkat(vfd, dname, 0);
-        }
-
-        renameat(vfd, aside, vfd, dname);
-        drop_entry(vol, DIRDID_ROOT, dname);
-        delete (obj, vol->v_vid, DIRDID_ROOT, dname);
-        cnid_delete(vol->v_cdb, did);
-    }
-
-    if (vfd >= 0) {
-        close(vfd);
-    }
-
-    if (cwd_fd >= 0) {
-        if (fchdir(cwd_fd) != 0 && ret == 0) {
-            ret = -1;
-        }
-
-        close(cwd_fd);
-    }
-
-    curdir = saved_curdir;
-    return ret;
+    return linked_folder_done(obj, vol, &lf, ret);
 }
 
 /*!
@@ -3415,4 +3470,109 @@ int utest_createid_registers_in_its_folder(AFPObj *obj, struct vol *vol,
     delete (obj, vid, did, name);
     delete (obj, vid, DIRDID_ROOT, "pi");
     return result;
+}
+
+/*!
+ * @brief A dangling symlink by its CNID answers and resolves the CNID once
+ *
+ * @param[in] obj  session object
+ * @param[in] vol  volume whose root takes the test folder
+ * @param[in] vid  the open volume
+ * @returns 0, 1 when the reply or the resolve count is wrong, -1 when the
+ *          setup failed, or TEST_SKIP on a volume that follows symlinks
+ */
+int utest_dangling_link_by_cnid_resolves_once(AFPObj *obj, struct vol *vol,
+                                              uint16_t vid)
+{
+    char name[] = "dangling by its CNID";
+    char path[MAXPATHLEN + 1];
+    cnid_t did;
+    cnid_t id;
+    int err;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if ((did = make_folder(obj, vid, "dl")) == CNID_INVALID) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/dl/%s", vol->v_path, name);
+
+    /* the link has its row from a lookup by its name */
+    if (symlink("dl nowhere", path) != 0
+            || getfiledirparms(obj, vid, did, name) != AFP_OK
+            || (id = cnid_get(vol->v_cdb, did, name, strlen(name)))
+            == CNID_INVALID) {
+        goto out;
+    }
+
+    err = watched_getfiledirparms(obj, vol, vid, id, "");
+
+    if (err == AFP_OK && cnid_resolves == 1) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "dangling link by its CNID: error %d, %d resolves\n",
+                err, cnid_resolves);
+        ret = 1;
+    }
+
+out:
+    id = cnid_get(vol->v_cdb, did, name, strlen(name));
+
+    if (id != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    unlink(path);
+    delete (obj, vid, DIRDID_ROOT, "dl");
+    return ret;
+}
+
+/*!
+ * @brief movecwd()'s retry refuses a dangling link at a cached folder's name
+ *
+ * @param[in] obj  session object
+ * @param[in] vol  volume whose root takes the folder
+ * @returns 0, 1 when the retry took the link or kept the row or the row is
+ *          unreadable, -1 when the setup failed
+ */
+int utest_movecwd_retry_refuses_link(AFPObj *obj, struct vol *vol)
+{
+    static char buf[CNID_MAX_PATH_LEN];
+    static char dname[] = "retry_link_dir";
+    struct linked_folder lf;
+    cnid_t gone;
+    bool entry;
+    bool row;
+    int err;
+    int ret = -1;
+    int rc;
+
+    if (linked_folder(obj, vol, dname, "retry_link", &lf) != 0) {
+        return linked_folder_done(obj, vol, &lf, ret);
+    }
+
+    rc = movecwd(vol, lf.dir);
+    err = afp_errno;
+    gone = lf.did;
+    entry = dircache_lookup_did(vol, lf.did) != NULL;
+    row = cnid_resolve(vol->v_cdb, &gone, buf, sizeof(buf)) != NULL;
+
+    if (!row && CNID_ERRNO() != CNID_ERR_NOTFOUND) {
+        fprintf(stderr, "retry against a link: the row unreadable, "
+                        "errno %#x\n", CNID_ERRNO());
+        ret = 1;
+    } else if (rc == -1 && err == AFPERR_NOOBJ && !entry && !row) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "retry against a link: movecwd %d, afp_errno %d, "
+                        "the entry %s, the row %s\n", rc, err,
+                entry ? "kept" : "gone", row ? "kept" : "gone");
+        ret = 1;
+    }
+
+    return linked_folder_done(obj, vol, &lf, ret);
 }

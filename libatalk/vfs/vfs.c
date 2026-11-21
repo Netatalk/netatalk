@@ -145,17 +145,62 @@ static int other_name(const struct vol *vol, const char *name,
 }
 
 /*!
- * @brief Whether name differs from the netatalk database directory names
+ * @brief Whether name has the form of a symlink conversion's staged link
+ *
+ * The form is VFS_SYMLINK_STAGE, in either case where the volume's filesystem
+ * ignores case, then the staging process's ID, a dash and a serial, each in
+ * decimal without a leading zero.
  *
  * @param[in] vol   volume
  * @param[in] name  directory entry name
- * @returns 0 for .AppleDB and .AppleDesktop, in either case where the
- *          volume's filesystem ignores case, else 1
+ * @returns 1 for a staged link's name, else 0
+ */
+static int staged_link_name(const struct vol *vol, const char *name)
+{
+    const char *stage = VFS_SYMLINK_STAGE;
+    size_t n;
+
+    for (; *stage != '\0'; name++, stage++) {
+        int a = (unsigned char)name[0];
+        int b = (unsigned char)stage[0];
+
+        if (vol->v_ignorecase) {
+            a = ascii_tolower(a);
+            b = ascii_tolower(b);
+        }
+
+        if (a != b) {
+            return 0;
+        }
+    }
+
+    n = strspn(name, "0123456789");
+
+    if (n == 0 || name[0] == '0' || name[n] != '-') {
+        return 0;
+    }
+
+    name += n + 1;
+    n = strspn(name, "0123456789");
+    return n > 0 && (n == 1 || name[0] != '0') && name[n] == '\0';
+}
+
+/*!
+ * @brief Whether name is not a netatalk database directory or a staged link
+ *
+ * A staged link listed or named under its own name would get a CNID of its
+ * own while the conversion waits to give it the file's.
+ *
+ * @param[in] vol   volume
+ * @param[in] name  directory entry name
+ * @returns 0 for .AppleDB, .AppleDesktop and a staged link's name, in either
+ *          case where the volume's filesystem ignores case, else 1
  */
 static int netatalk_name(const struct vol *vol, const char *name)
 {
     return other_name(vol, name, ".AppleDB")
-           && other_name(vol, name, ".AppleDesktop");
+           && other_name(vol, name, ".AppleDesktop")
+           && !staged_link_name(vol, name);
 }
 
 /*******************************************************************************
@@ -166,9 +211,9 @@ static int netatalk_name(const struct vol *vol, const char *name)
  * @brief Whether clients may see name on a version 2 AppleDouble volume
  *
  * Names without a leading dot always pass. The netatalk directories
- * .AppleDB, .AppleDesktop, and .AppleDouble stay hidden, in either case where
- * the volume's filesystem ignores case, and so does .Parent in any letter
- * case.
+ * .AppleDB, .AppleDesktop, and .AppleDouble, and a symlink conversion's
+ * staged link, stay hidden, in either case where the volume's filesystem
+ * ignores case, and so does .Parent in any letter case.
  *
  * @param[in] vol   volume
  * @param[in] name  directory entry name
@@ -790,8 +835,9 @@ EC_CLEANUP:
  *
  * Names without a leading dot always pass. Of the dot names, .AppleDB and
  * .AppleDesktop stay hidden, in either case where the volume's filesystem
- * ignores case. Without HAVE_EAFD a ._ file stays hidden when it carries a
- * netatalk AppleDouble header, because it is a resource fork sidecar.
+ * ignores case, and so does a symlink conversion's staged link. Without
+ * HAVE_EAFD a ._ file stays hidden when it carries a netatalk AppleDouble
+ * header, because it is a resource fork sidecar.
  *
  * @param[in] vol   volume
  * @param[in] name  directory entry name

@@ -1217,6 +1217,34 @@ int renameat(int olddirfd, const char *oldpath, int newdirfd,
     return real_renameat(olddirfd, oldpath, newdirfd, newpath);
 }
 
+typedef int (*rename_fn)(const char *, const char *);
+static rename_fn real_rename;
+
+/*!
+ * @brief rename() interposer that runs fi.rename_hook.fn after its rename
+ */
+int rename(const char *oldpath, const char *newpath)
+{
+    int ret;
+
+    if (!real_rename) {
+        real_rename = (rename_fn)dlsym(RTLD_NEXT, "rename");
+    }
+
+    ret = real_rename(oldpath, newpath);
+
+    if (ret == 0 && fi.rename_hook.fn != NULL && fi.rename_hook.to != NULL
+            && newpath != NULL && strcmp(newpath, fi.rename_hook.to) == 0) {
+        const int saved_errno = errno;
+        void (*fn)(void) = fi.rename_hook.fn;
+        fi.rename_hook.fn = NULL;
+        fn();
+        errno = saved_errno;
+    }
+
+    return ret;
+}
+
 typedef int (*unlink_fn)(const char *);
 static unlink_fn real_unlink;
 
@@ -1259,10 +1287,7 @@ static void stat_watched(const char *path)
 }
 
 /*!
- * @brief The stat() and lstat() interposers' shared body: every call on
- *        fi.stat_name fails with fi.stat_errno, as a stale mount's would,
- *        and counts in fi.stat_calls; a call on fi.stat_dev_name reports
- *        fi.stat_dev as the device, as a mount point's would
+ * @brief The stat()/lstat() interposers' body for fi.stat_name and fi.stat_dev
  *
  * <sys/stat.h> renames the definitions where libc versions the calls (glibc
  * stat64 under 64-bit offsets, NetBSD __stat50), so the real function is
@@ -1299,15 +1324,18 @@ static int fi_stat_call(stat_fn *real, void *self, const char *name64,
 
     if (fi.stat_name != NULL && strcmp(path, fi.stat_name) == 0) {
         fi.stat_calls++;
-        errno = fi.stat_errno;
-        return -1;
+
+        if (fi.stat_calls > fi.stat_pass) {
+            errno = fi.stat_errno;
+            return -1;
+        }
     }
 
     int ret = (*real)(path, buf);
 
-    if (ret == 0 && fi.stat_dev_name != NULL
-            && strcmp(path, fi.stat_dev_name) == 0) {
-        buf->st_dev = fi.stat_dev;
+    if (ret == 0 && fi.stat_dev.path != NULL
+            && strcmp(path, fi.stat_dev.path) == 0) {
+        buf->st_dev = fi.stat_dev.dev;
     }
 
     return ret;

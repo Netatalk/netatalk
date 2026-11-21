@@ -57,6 +57,10 @@ extern int test010_full_cache_accepts_adds(struct vol *vol,
 extern int test011_stat_refresh_drops_rights(struct vol *vol);
 extern int test012_movecwd_retry_names_directory(AFPObj *obj,
                                                  struct vol *vol);
+extern int utest_movecwd_retry_refuses_link(AFPObj *obj, struct vol *vol);
+extern int utest_dangling_link_by_cnid_resolves_once(AFPObj *obj,
+                                                     struct vol *vol,
+                                                     uint16_t vid);
 extern int test013_movecwd_refuses_symlinked_path(struct vol *vol);
 extern int test014_movecwd_folder_became_file(struct vol *vol);
 extern int test015_movecwd_refuses_dotdot(struct vol *vol);

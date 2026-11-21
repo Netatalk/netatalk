@@ -430,6 +430,16 @@ static int fio_set_attr(const struct vol *vol, const char *path,
 }
 
 /*!
+ * @brief Release the session
+ */
+static void fio_release(void)
+{
+    dir_free_invalid_q();
+    dsi_test_cleanup(&fio.dsi);
+    close(fio.peer);
+}
+
+/*!
  * @brief Close refnum when open, delete name and release the session
  */
 static void fio_done(const struct vol *vol, uint16_t refnum, const char *name)
@@ -439,9 +449,7 @@ static void fio_done(const struct vol *vol, uint16_t refnum, const char *name)
     }
 
     delete (&fio.obj, vol->v_vid, DIRDID_ROOT, name);
-    dir_free_invalid_q();
-    dsi_test_cleanup(&fio.dsi);
-    close(fio.peer);
+    fio_release();
 }
 
 #ifdef WITH_FCE
@@ -2132,12 +2140,19 @@ out:
     return ret;
 }
 
-/*! @brief A CNID backend's add that fails as a busy backend's does */
+static int rq_cnid_add_busy_calls;
+
+/*!
+ * @brief A CNID add that fails busy, counted in rq_cnid_add_busy_calls
+ *
+ * @returns CNID_INVALID with errno CNID_ERR_BUSY
+ */
 static cnid_t rq_cnid_add_busy(struct _cnid_db *cdb _U_,
                                const struct stat *st _U_, cnid_t did _U_,
                                const char *name _U_, size_t len _U_,
                                cnid_t hint _U_)
 {
+    rq_cnid_add_busy_calls++;
     errno = CNID_ERR_BUSY;
     return CNID_INVALID;
 }
@@ -11669,5 +11684,2255 @@ int utest_tmplock_refused_stretch_undoes_the_taken(AFPObj *obj,
 out:
     fault_inject_reset();
     fio_done(vol, w, name);
+    return ret;
+}
+
+/* what link_source() made, which link_source_done() removes */
+#define LINK_SOURCE_TARGET 1
+#define LINK_SOURCE_FILE   2
+
+/*!
+ * @brief Make a file whose content names an empty target file beside it
+ *
+ * @param[in]  vol     the open volume
+ * @param[in]  name    the file's name
+ * @param[in]  target  the target's name
+ * @param[out] id      receives the file's CNID
+ * @param[out] made    receives LINK_SOURCE_TARGET and LINK_SOURCE_FILE for
+ *                     what the call made
+ * @returns 0, -1 when the fixture failed
+ */
+static int link_source(const struct vol *vol, char *name, const char *target,
+                       cnid_t *id, int *made)
+{
+    char tpath[MAXPATHLEN + 1];
+    uint16_t w = 0;
+    int written;
+    int closed;
+    int fd;
+    *made = 0;
+    snprintf(tpath, sizeof(tpath), "%s/%s", vol->v_path, target);
+
+    if ((fd = open(tpath, O_RDWR | O_CREAT | O_EXCL, 0640)) < 0) {
+        return -1;
+    }
+
+    close(fd);
+    *made |= LINK_SOURCE_TARGET;
+
+    if (createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, name) != AFP_OK) {
+        return -1;
+    }
+
+    *made |= LINK_SOURCE_FILE;
+
+    if (openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_DATA,
+                 OPENACC_RD | OPENACC_WR, &w) != AFP_OK) {
+        return -1;
+    }
+
+    written = fio_write(w, 0, 0, target, (uint32_t)strlen(target));
+    closed = closefork(&fio.obj, w);
+
+    if (written != AFP_OK || closed != AFP_OK
+            || (*id = cnid_get(vol->v_cdb, DIRDID_ROOT, name, strlen(name)))
+            == CNID_INVALID) {
+        return -1;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Remove what link_source() made, file or link, and release the session
+ *
+ * @param[in] vol     the open volume
+ * @param[in] name    the file's name
+ * @param[in] target  the target's name
+ * @param[in] made    what link_source() made
+ */
+static void link_source_done(const struct vol *vol, char *name,
+                             const char *target, int made)
+{
+    char path[MAXPATHLEN + 1];
+    char tpath[MAXPATHLEN + 1];
+
+    if (made & LINK_SOURCE_FILE) {
+        const cnid_t id = cnid_get(vol->v_cdb, DIRDID_ROOT, name,
+                                   strlen(name));
+
+        /* FPDelete refuses a symlink whose lock state it cannot read */
+        if (id != CNID_INVALID) {
+            cnid_delete(vol->v_cdb, id);
+        }
+
+        snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+        unlink(path);
+        /* a version 2 volume made the name's metadata file with the file */
+        snprintf(path, sizeof(path), "%s/.AppleDouble/%s", vol->v_path, name);
+        unlink(path);
+    }
+
+    if (made & LINK_SOURCE_TARGET) {
+        snprintf(tpath, sizeof(tpath), "%s/%s", vol->v_path, target);
+        unlink(tpath);
+    }
+
+    fio_release();
+}
+
+/*!
+ * @brief A symlink conversion keeps the file's CNID, which then names the link
+ *
+ * @returns 0, 1 otherwise, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks
+ */
+int utest_symlink_conversion_keeps_cnid(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_slid";
+    static const char target[] = "rq_slidt";
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    const char *params;
+    struct stat lst;
+    size_t len = 0;
+    cnid_t id = CNID_INVALID;
+    cnid_t fnum = CNID_INVALID;
+    int made = 0;
+    int rc = -1;
+    int by_cnid = -1;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (link_source(vol, name, target, &id, &made) != 0) {
+        goto out;
+    }
+
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    by_cnid = getfiledirparms(&fio.obj, vol->v_vid, id, "");
+    params = reply_params(REPLY_FILEDIRPARMS, &len);
+
+    if (by_cnid == AFP_OK && len >= sizeof(fnum)) {
+        memcpy(&fnum, params, sizeof(fnum));
+    }
+
+    /* the file became the link, which the CNID names */
+    if (rc == AFP_OK && lstat(path, &lst) == 0 && S_ISLNK(lst.st_mode)
+            && fnum == id) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion: %d, the file's CNID: %d, "
+                        "file number %u of %u\n", rc, by_cnid, ntohl(fnum),
+                ntohl(id));
+        ret = 1;
+    }
+
+out:
+    link_source_done(vol, name, target, made);
+    return ret;
+}
+
+static int update_busy_calls;
+static int hold_busy_calls;
+
+/*!
+ * @brief cnid_update_row() that runs the replace, then fails busy
+ *
+ * @returns -1 with errno CNID_ERR_BUSY
+ */
+static int update_busy(struct _cnid_db *cdb _U_, cnid_t id _U_,
+                       cnid_t did _U_, const char *name _U_, size_t len _U_,
+                       uint64_t dev _U_, uint64_t ino _U_,
+                       const struct stat *st _U_, cnid_replace_fn replace,
+                       void *arg)
+{
+    update_busy_calls++;
+
+    if (replace != NULL) {
+        (void)replace(arg);
+    }
+
+    errno = CNID_ERR_BUSY;
+    return -1;
+}
+
+/*!
+ * @brief cnid_update_row() of a backend that cannot hold the row
+ *
+ * @returns -1 with errno CNID_ERR_BUSY, before the replace
+ */
+static int hold_busy(struct _cnid_db *cdb _U_, cnid_t id _U_, cnid_t did _U_,
+                     const char *name _U_, size_t len _U_, uint64_t dev _U_,
+                     uint64_t ino _U_, const struct stat *st _U_,
+                     cnid_replace_fn replace _U_, void *arg _U_)
+{
+    hold_busy_calls++;
+    errno = CNID_ERR_BUSY;
+    return -1;
+}
+
+/*!
+ * @brief A symlink conversion whose row cannot take the link answers kFPMiscErr
+ *
+ * @returns 0, 1 when the conversion answered otherwise, -1 when the fixture
+ *          failed, or TEST_SKIP on a volume that follows symlinks
+ */
+int utest_symlink_conversion_update_fails(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_slup";
+    static const char target[] = "rq_slupt";
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    int (*real_update)(struct _cnid_db *, cnid_t, cnid_t, const char *,
+                       size_t, uint64_t, uint64_t, const struct stat *,
+                       cnid_replace_fn, void *);
+    struct stat lst;
+    cnid_t id = CNID_INVALID;
+    int made = 0;
+    int rc = -1;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    if (link_source(vol, name, target, &id, &made) != 0) {
+        goto out;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    real_update = vol->v_cdb->cnid_update_row;
+    vol->v_cdb->cnid_update_row = update_busy;
+    update_busy_calls = 0;
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    vol->v_cdb->cnid_update_row = real_update;
+
+    if (rc == AFPERR_MISC && update_busy_calls > 0
+            && lstat(path, &lst) == 0 && S_ISLNK(lst.st_mode)) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion, its row refused: %d after %d "
+                        "updates\n", rc, update_busy_calls);
+        ret = 1;
+    }
+
+out:
+    link_source_done(vol, name, target, made);
+    return ret;
+}
+
+/*!
+ * @brief A conversion failing late on v2 metadata leaves no entry for the file
+ *
+ * @returns 0, 1 when the CNID's entry records the file, -1 when the fixture
+ *          failed or the conversion answered otherwise, or TEST_SKIP on a
+ *          volume that follows symlinks or where the conversion reads no
+ *          CNID
+ */
+int utest_symlink_conversion_late_failure(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_slaf";
+    static const char target[] = "rq_slaft";
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    char addir[MAXPATHLEN + 1];
+    char adpath[MAXPATHLEN + 1];
+    const int adouble = vol->v_adouble;
+    cnid_t (*real_add)(struct _cnid_db *, const struct stat *, cnid_t,
+                       const char *, size_t, cnid_t);
+    struct stat st;
+    struct stat lst;
+    const struct dir *entry;
+    cnid_t id = CNID_INVALID;
+    int made = 0;
+    int rc = -1;
+    int ret = -1;
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(addir, sizeof(addir), "%s/.AppleDouble", vol->v_path);
+    snprintf(adpath, sizeof(adpath), "%s/%s", addir, name);
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    if (link_source(vol, name, target, &id, &made) != 0
+            || getfiledirparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name)
+            != AFP_OK
+            || stat(path, &st) != 0
+            || (entry = dircache_lookup_did(vol, id)) == NULL
+            || entry->dcache_ino != st.st_ino) {
+        goto out;
+    }
+
+    /* the conversion must make the link's own version 2 metadata file */
+    unlink(adpath);
+    vol->v_adouble = AD_VERSION2;
+    initvol_vfs(vol);
+    real_add = vol->v_cdb->cnid_add;
+    vol->v_cdb->cnid_add = rq_cnid_add_busy;
+    rq_cnid_add_busy_calls = 0;
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    vol->v_cdb->cnid_add = real_add;
+    entry = dircache_lookup_did(vol, id);
+
+    /* a conversion that makes no metadata file never reaches the CNID read */
+    if (rq_cnid_add_busy_calls == 0) {
+        if (rc == AFP_OK && lstat(path, &lst) == 0 && S_ISLNK(lst.st_mode)) {
+            ret = TEST_SKIP;
+        } else {
+            fprintf(stderr, "symlink conversion that fails late: %d before "
+                            "the CNID read\n", rc);
+        }
+    } else if (rc != AFPERR_MISC || lstat(path, &lst) != 0
+               || !S_ISLNK(lst.st_mode)) {
+        fprintf(stderr, "symlink conversion that fails late: %d\n", rc);
+    } else if (entry == NULL || entry->dcache_ino == lst.st_ino) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion that fails late: the entry "
+                        "of the CNID records inode %llu, the link %llu\n",
+                (unsigned long long)entry->dcache_ino,
+                (unsigned long long)lst.st_ino);
+        ret = 1;
+    }
+
+out:
+    vol->v_adouble = adouble;
+    initvol_vfs(vol);
+
+    /* the metadata folder goes only where empty; netatalk makes it again */
+    if (made & LINK_SOURCE_FILE) {
+        unlink(adpath);
+        (void)rmdir(addir);
+    }
+
+    link_source_done(vol, name, target, made);
+    return ret;
+}
+
+static int get_busy_calls;
+
+/*!
+ * @brief cnid_get() of a backend that cannot answer
+ *
+ * @returns CNID_INVALID with errno CNID_ERR_BUSY
+ */
+static cnid_t get_busy(struct _cnid_db *cdb _U_, cnid_t did _U_,
+                       const char *name _U_, size_t len _U_)
+{
+    get_busy_calls++;
+    errno = CNID_ERR_BUSY;
+    return CNID_INVALID;
+}
+
+static int resolve_busy_calls;
+
+/*!
+ * @brief cnid_resolve() of a backend that cannot answer
+ *
+ * @returns NULL with errno CNID_ERR_BUSY
+ */
+static char *resolve_busy(struct _cnid_db *cdb _U_, cnid_t *id _U_,
+                          void *buffer _U_, size_t len _U_,
+                          uint64_t *dev _U_, uint64_t *ino _U_)
+{
+    resolve_busy_calls++;
+    errno = CNID_ERR_BUSY;
+    return NULL;
+}
+
+/* the stand-ins' real update, paths, the file's or its replacement's stat,
+ * a peer's lock, and whether a stand-in acted, the row changed for
+ * update_row_answer_lost(), or update_row_fails_once()'s calls */
+static int (*conv_real_update_row)(struct _cnid_db *, cnid_t, cnid_t,
+                                   const char *, size_t, uint64_t, uint64_t,
+                                   const struct stat *, cnid_replace_fn,
+                                   void *);
+static const char *conv_path;
+static const char *conv_other;
+static struct stat conv_st;
+static struct peer conv_peer;
+static int conv_fired;
+
+/* the name another session moves the file's row to */
+#define CONV_MOVED "rq_slmv-moved"
+
+/*!
+ * @brief From the rename on, report another device for every stat of the name
+ */
+static void other_device_after_rename(void)
+{
+    fi.stat_dev.path = conv_path;
+    fi.stat_dev.dev = conv_st.st_dev + 1;
+    fi.stat_name = conv_path;
+    fi.stat_pass = INT_MAX;
+    fi.stat_calls = 0;
+    conv_fired = 1;
+}
+
+/*!
+ * @brief From the rename on, fail every stat of the name with ENOENT
+ */
+static void unstatable_after_rename(void)
+{
+    fi.stat_name = conv_path;
+    fi.stat_errno = ENOENT;
+    fi.stat_pass = 0;
+    fi.stat_calls = 0;
+    conv_fired = 1;
+}
+
+/*!
+ * @brief A conversion gives the row the link's lstat(), whatever a stat shows
+ *
+ * @returns 0, 1 otherwise, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks, a backend that records no device,
+ *          or without the fault-injection shim
+ */
+int utest_symlink_conversion_link_identity(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_slii";
+    static const char target[] = "rq_sliit";
+    static char buf[CNID_MAX_PATH_LEN];
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    struct stat lst;
+    cnid_t id = CNID_INVALID;
+    cnid_t row;
+    uint64_t dev = 0;
+    uint64_t ino = 0;
+    int seen = 0;
+    int made = 0;
+    int rc = -1;
+    int ret = -1;
+
+    /* the override changes the device alone, which such a backend ignores */
+    if ((vol->v_flags & AFPVOL_FOLLOWSYM)
+            || (vol->v_cdb->cnid_db_flags & CNID_FLAG_NODEV)
+            || !test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (link_source(vol, name, target, &id, &made) != 0
+            || stat(path, &conv_st) != 0) {
+        goto out;
+    }
+
+    /* afpd renames and stats the bare name: the request's cwd is the root */
+    fault_inject_reset();
+    conv_path = name;
+    conv_fired = 0;
+    fi.rename_hook.fn = other_device_after_rename;
+    fi.rename_hook.to = name;
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    seen = fi.stat_calls;
+    fault_inject_reset();
+    row = id;
+
+    if (conv_fired && seen > 0 && rc == AFP_OK && lstat(path, &lst) == 0
+            && S_ISLNK(lst.st_mode)
+            && cnid_resolve_row(vol->v_cdb, &row, buf, sizeof(buf), &dev,
+                                &ino) != NULL
+            && cnid_row_holds(vol->v_cdb, dev, ino, &lst)) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion, the name's stat on another "
+                        "device: %d after %d stats, the rename hook %s\n",
+                rc, seen, conv_fired ? "ran" : "never ran");
+        ret = 1;
+    }
+
+out:
+    fault_inject_reset();
+    link_source_done(vol, name, target, made);
+    return ret;
+}
+
+/*!
+ * @brief Whether a name has the form stage_symlink() gives a staged link
+ */
+static bool staged_form(const char *name)
+{
+    static const char prefix[] = ".netatalk-symlink-";
+    size_t n;
+
+    if (strncmp(name, prefix, sizeof(prefix) - 1) != 0) {
+        return false;
+    }
+
+    name += sizeof(prefix) - 1;
+    n = strspn(name, "0123456789");
+
+    if (n == 0 || name[n] != '-') {
+        return false;
+    }
+
+    name += n + 1;
+    n = strspn(name, "0123456789");
+    return n > 0 && name[n] == '\0';
+}
+
+/*!
+ * @brief Count and remove the staged links a conversion left in the volume root
+ *
+ * @param[in] vol  the open volume
+ * @returns the count, or -1 when the root cannot be read
+ */
+static int staged_links(const struct vol *vol)
+{
+    char path[MAXPATHLEN + 1];
+    const struct dirent *de;
+    DIR *dir = opendir(vol->v_path);
+    int n = 0;
+
+    if (dir == NULL) {
+        return -1;
+    }
+
+    while ((de = readdir(dir)) != NULL) {
+        if (staged_form(de->d_name)) {
+            snprintf(path, sizeof(path), "%s/%s", vol->v_path, de->d_name);
+            (void)unlink(path);
+            n++;
+        }
+    }
+
+    closedir(dir);
+    return n;
+}
+
+/*!
+ * @brief Move the row to CONV_MOVED, as another session would, then update
+ *
+ * @returns what the backend's conditional update returns
+ */
+static int update_row_after_move(struct _cnid_db *cdb, cnid_t id, cnid_t did,
+                                 const char *name, size_t len, uint64_t dev,
+                                 uint64_t ino, const struct stat *st,
+                                 cnid_replace_fn replace, void *arg)
+{
+    char moved[] = CONV_MOVED;
+    cdb->cnid_update_row = conv_real_update_row;
+    conv_fired = 1;
+    (void)cnid_update(cdb, id, &conv_st, did, moved, strlen(moved));
+    return conv_real_update_row(cdb, id, did, name, len, dev, ino, st,
+                                replace, arg);
+}
+
+/*!
+ * @brief A conversion whose row moved before its hold answers kFPMiscErr
+ *
+ * @returns 0, 1 otherwise, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks
+ */
+int utest_symlink_conversion_row_moved(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_slmv";
+    static const char target[] = "rq_slmvt";
+    static char buf[CNID_MAX_PATH_LEN];
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    int (*real_update_row)(struct _cnid_db *, cnid_t, cnid_t, const char *,
+                           size_t, uint64_t, uint64_t, const struct stat *,
+                           cnid_replace_fn, void *)
+        = vol->v_cdb->cnid_update_row;
+    const char *now = NULL;
+    struct stat st;
+    cnid_t id = CNID_INVALID;
+    cnid_t row;
+    uint64_t dev = 0;
+    uint64_t ino = 0;
+    bool kept = false;
+    int staged = -1;
+    int made = 0;
+    int rc = -1;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (link_source(vol, name, target, &id, &made) != 0
+            || stat(path, &conv_st) != 0) {
+        goto out;
+    }
+
+    conv_real_update_row = real_update_row;
+    conv_fired = 0;
+    vol->v_cdb->cnid_update_row = update_row_after_move;
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    vol->v_cdb->cnid_update_row = real_update_row;
+    kept = lstat(path, &st) == 0 && S_ISREG(st.st_mode);
+    staged = staged_links(vol);
+    row = id;
+    now = cnid_resolve_row(vol->v_cdb, &row, buf, sizeof(buf), &dev, &ino);
+
+    if (conv_fired && rc == AFPERR_MISC && kept && staged == 0 && now != NULL
+            && strcmp(now, CONV_MOVED) == 0
+            && cnid_row_holds(vol->v_cdb, dev, ino, &conv_st)) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion, its row moved meanwhile: %d, "
+                        "the file %s, %d staged links left, the row at %s, "
+                        "the stand-in %s\n", rc, kept ? "kept" : "replaced",
+                staged, now != NULL ? now : "no name",
+                conv_fired ? "ran" : "never ran");
+        ret = 1;
+    }
+
+out:
+    vol->v_cdb->cnid_update_row = real_update_row;
+
+    /* the moved row, which names no file */
+    if (id != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    link_source_done(vol, name, target, made);
+    return ret;
+}
+
+/*!
+ * @brief Drop the row as another session would, then run the update
+ *
+ * @returns what the backend's conditional update returns
+ */
+static int delete_row_then_update(struct _cnid_db *cdb, cnid_t id,
+                                  cnid_t did, const char *name, size_t len,
+                                  uint64_t dev, uint64_t ino,
+                                  const struct stat *st,
+                                  cnid_replace_fn replace, void *arg)
+{
+    cdb->cnid_update_row = conv_real_update_row;
+    conv_fired = 1;
+    (void)cnid_delete(cdb, id);
+    return conv_real_update_row(cdb, id, did, name, len, dev, ino, st,
+                                replace, arg);
+}
+
+/*!
+ * @brief A conversion whose row was dropped answers AFP_OK without the CNID
+ *
+ * @returns 0, 1 otherwise, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks
+ */
+int utest_symlink_conversion_row_dropped(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_sldr";
+    static const char target[] = "rq_sldrt";
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    int (*real_update_row)(struct _cnid_db *, cnid_t, cnid_t, const char *,
+                           size_t, uint64_t, uint64_t, const struct stat *,
+                           cnid_replace_fn, void *)
+        = vol->v_cdb->cnid_update_row;
+    struct stat lst;
+    cnid_t id = CNID_INVALID;
+    int made = 0;
+    int rc = -1;
+    int err = -1;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (link_source(vol, name, target, &id, &made) != 0) {
+        goto out;
+    }
+
+    conv_real_update_row = real_update_row;
+    conv_fired = 0;
+    vol->v_cdb->cnid_update_row = delete_row_then_update;
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    vol->v_cdb->cnid_update_row = real_update_row;
+    err = getfiledirparms(&fio.obj, vol->v_vid, id, "");
+
+    if (conv_fired && rc == AFP_OK && lstat(path, &lst) == 0
+            && S_ISLNK(lst.st_mode) && err == AFPERR_NOOBJ) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion, its row dropped meanwhile: %d, "
+                        "the old CNID %d, the stand-in %s\n", rc, err,
+                conv_fired ? "ran" : "never ran");
+        ret = 1;
+    }
+
+out:
+    vol->v_cdb->cnid_update_row = real_update_row;
+    link_source_done(vol, name, target, made);
+    return ret;
+}
+
+/*!
+ * @brief Run the update, then lose its answer, as a dropped connection does
+ *
+ * @returns -1 with errno CNID_ERR_DB
+ */
+static int update_row_answer_lost(struct _cnid_db *cdb, cnid_t id,
+                                  cnid_t did, const char *name, size_t len,
+                                  uint64_t dev, uint64_t ino,
+                                  const struct stat *st,
+                                  cnid_replace_fn replace, void *arg)
+{
+    cdb->cnid_update_row = conv_real_update_row;
+    conv_fired = conv_real_update_row(cdb, id, did, name, len, dev, ino, st,
+                                      replace, arg) == 1;
+    errno = CNID_ERR_DB;
+    return -1;
+}
+
+/*!
+ * @brief A conversion whose update's answer is lost keeps the CNID for the link
+ *
+ * @returns 0, 1 otherwise, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks
+ */
+int utest_symlink_conversion_answer_lost(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_slrp";
+    static const char target[] = "rq_slrpt";
+    static char buf[CNID_MAX_PATH_LEN];
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    int (*real_update_row)(struct _cnid_db *, cnid_t, cnid_t, const char *,
+                           size_t, uint64_t, uint64_t, const struct stat *,
+                           cnid_replace_fn, void *)
+        = vol->v_cdb->cnid_update_row;
+    struct stat lst;
+    cnid_t id = CNID_INVALID;
+    cnid_t row;
+    uint64_t dev = 0;
+    uint64_t ino = 0;
+    int made = 0;
+    int rc = -1;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (link_source(vol, name, target, &id, &made) != 0) {
+        goto out;
+    }
+
+    conv_real_update_row = real_update_row;
+    conv_fired = 0;
+    vol->v_cdb->cnid_update_row = update_row_answer_lost;
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    vol->v_cdb->cnid_update_row = real_update_row;
+    row = id;
+
+    if (conv_fired && rc == AFP_OK && lstat(path, &lst) == 0
+            && S_ISLNK(lst.st_mode)
+            && cnid_resolve_row(vol->v_cdb, &row, buf, sizeof(buf), &dev,
+                                &ino) != NULL
+            && cnid_row_holds(vol->v_cdb, dev, ino, &lst)) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion, its update's answer lost: %d, "
+                        "the update %s\n", rc,
+                conv_fired ? "changed the row" : "changed nothing");
+        ret = 1;
+    }
+
+out:
+    vol->v_cdb->cnid_update_row = real_update_row;
+    link_source_done(vol, name, target, made);
+    return ret;
+}
+
+/*!
+ * @brief A conversion whose row the backend cannot hold answers kFPMiscErr
+ *
+ * @returns 0, 1 otherwise, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks
+ */
+int utest_symlink_conversion_hold_refused(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_slhr";
+    static const char target[] = "rq_slhrt";
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    int (*real_update)(struct _cnid_db *, cnid_t, cnid_t, const char *,
+                       size_t, uint64_t, uint64_t, const struct stat *,
+                       cnid_replace_fn, void *) = vol->v_cdb->cnid_update_row;
+    struct stat st;
+    cnid_t id = CNID_INVALID;
+    int made = 0;
+    int staged = -1;
+    int rc = -1;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (link_source(vol, name, target, &id, &made) != 0) {
+        goto out;
+    }
+
+    vol->v_cdb->cnid_update_row = hold_busy;
+    hold_busy_calls = 0;
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    vol->v_cdb->cnid_update_row = real_update;
+    staged = staged_links(vol);
+
+    if (rc == AFPERR_MISC && hold_busy_calls > 0 && lstat(path, &st) == 0
+            && S_ISREG(st.st_mode) && staged == 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion, its row not held: %d after %d "
+                        "holds, %d staged links left\n", rc, hold_busy_calls,
+                staged);
+        ret = 1;
+    }
+
+out:
+    vol->v_cdb->cnid_update_row = real_update;
+    link_source_done(vol, name, target, made);
+    return ret;
+}
+
+/*!
+ * @brief Replace the file at its name as another process would, then update
+ *
+ * @returns what the backend's conditional update returns
+ */
+static int replace_file_then_update(struct _cnid_db *cdb, cnid_t id,
+                                    cnid_t did, const char *name, size_t len,
+                                    uint64_t dev, uint64_t ino,
+                                    const struct stat *st,
+                                    cnid_replace_fn replace, void *arg)
+{
+    cdb->cnid_update_row = conv_real_update_row;
+    conv_fired = create_disk_file_stat(conv_other, &conv_st) == 0
+                 && rename(conv_other, conv_path) == 0;
+    return conv_real_update_row(cdb, id, did, name, len, dev, ino, st,
+                                replace, arg);
+}
+
+/*!
+ * @brief A file replaced while its conversion waits answers kFPObjectNotFound
+ *
+ * @returns 0, 1 otherwise, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks
+ */
+int utest_symlink_conversion_replaced_meanwhile(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_slrm";
+    static const char target[] = "rq_slrmt";
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    char other[MAXPATHLEN + 1];
+    int (*real_update_row)(struct _cnid_db *, cnid_t, cnid_t, const char *,
+                           size_t, uint64_t, uint64_t, const struct stat *,
+                           cnid_replace_fn, void *)
+        = vol->v_cdb->cnid_update_row;
+    struct stat st;
+    cnid_t id = CNID_INVALID;
+    int made = 0;
+    int staged = -1;
+    int rc = -1;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(other, sizeof(other), "%s/%s-new", vol->v_path, name);
+
+    if (link_source(vol, name, target, &id, &made) != 0) {
+        goto out;
+    }
+
+    conv_real_update_row = real_update_row;
+    conv_path = path;
+    conv_other = other;
+    conv_fired = 0;
+    vol->v_cdb->cnid_update_row = replace_file_then_update;
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    vol->v_cdb->cnid_update_row = real_update_row;
+    staged = staged_links(vol);
+
+    if (conv_fired && rc == AFPERR_NOOBJ && lstat(path, &st) == 0
+            && S_ISREG(st.st_mode) && st.st_ino == conv_st.st_ino
+            && staged == 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion, its file replaced meanwhile: "
+                        "%d, %d staged links left, the stand-in %s\n", rc,
+                staged, conv_fired ? "ran" : "never ran");
+        ret = 1;
+    }
+
+out:
+    vol->v_cdb->cnid_update_row = real_update_row;
+    unlink(other);
+    link_source_done(vol, name, target, made);
+    return ret;
+}
+
+/* the conversion's replace, which the backend runs, and whether the
+ * stand-in's wrapper of it began */
+static cnid_replace_fn conv_real_replace;
+static int conv_replacing;
+
+/*!
+ * @brief Mark that the replace began, then run it
+ *
+ * @returns what the replace returns
+ */
+static int replace_marked(void *arg)
+{
+    conv_replacing = 1;
+    return conv_real_replace(arg);
+}
+
+/*!
+ * @brief Move the other file over the name once the replace began
+ */
+static void move_other_at_open(void)
+{
+    if (conv_replacing) {
+        conv_fired = rename(conv_other, conv_path) == 0;
+    }
+}
+
+/*!
+ * @brief Run the update, its refusal checks' first open moving another file in
+ *
+ * @returns what the backend's conditional update returns
+ */
+static int replace_in_checks_then_update(struct _cnid_db *cdb, cnid_t id,
+                                         cnid_t did, const char *name,
+                                         size_t len, uint64_t dev,
+                                         uint64_t ino, const struct stat *st,
+                                         cnid_replace_fn replace, void *arg)
+{
+    cdb->cnid_update_row = conv_real_update_row;
+    conv_real_replace = replace;
+    conv_replacing = 0;
+    fi.open_hook = move_other_at_open;
+    fi.open_hook_flags = 0;
+    return conv_real_update_row(cdb, id, did, name, len, dev, ino, st,
+                                replace != NULL ? &replace_marked : NULL, arg);
+}
+
+/*!
+ * @brief A file replaced in the refusal checks answers kFPObjectNotFound
+ *
+ * @returns 0, 1 otherwise, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks or without the fault-injection shim
+ */
+int utest_symlink_conversion_replaced_in_checks(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_slrc";
+    static const char target[] = "rq_slrct";
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    char other[MAXPATHLEN + 1];
+    int (*real_update_row)(struct _cnid_db *, cnid_t, cnid_t, const char *,
+                           size_t, uint64_t, uint64_t, const struct stat *,
+                           cnid_replace_fn, void *)
+        = vol->v_cdb->cnid_update_row;
+    struct stat st;
+    cnid_t id = CNID_INVALID;
+    int made = 0;
+    int staged = -1;
+    int rc = -1;
+    int ret = -1;
+
+    if ((vol->v_flags & AFPVOL_FOLLOWSYM)
+            || !test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(other, sizeof(other), "%s/%s-new", vol->v_path, name);
+
+    if (link_source(vol, name, target, &id, &made) != 0
+            || create_disk_file_stat(other, &conv_st) != 0) {
+        goto out;
+    }
+
+    conv_real_update_row = real_update_row;
+    conv_path = path;
+    conv_other = other;
+    conv_fired = 0;
+    vol->v_cdb->cnid_update_row = replace_in_checks_then_update;
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    vol->v_cdb->cnid_update_row = real_update_row;
+    fault_inject_reset();
+    staged = staged_links(vol);
+
+    /* the second refusal check answered */
+    if (conv_fired && rc == AFPERR_NOOBJ && lstat(path, &st) == 0
+            && S_ISREG(st.st_mode) && st.st_ino == conv_st.st_ino
+            && staged == 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion, its file replaced in the "
+                        "refusal checks: %d, %d staged links left, the hook "
+                        "%s\n", rc, staged,
+                conv_fired ? "moved the other file"
+                : "moved nothing inside the replace");
+        ret = 1;
+    }
+
+out:
+    vol->v_cdb->cnid_update_row = real_update_row;
+    fault_inject_reset();
+    unlink(other);
+    link_source_done(vol, name, target, made);
+    return ret;
+}
+
+/* the name whose stats replace_with_stat_eio() fails */
+static const char *conv_eio_name;
+
+/*!
+ * @brief Fail the name's stats with EIO once the replace began, then run it
+ *
+ * @returns what the replace returns
+ */
+static int replace_with_stat_eio(void *arg)
+{
+    int ret;
+    fi.stat_name = conv_eio_name;
+    fi.stat_errno = EIO;
+    fi.stat_pass = 0;
+    fi.stat_calls = 0;
+    ret = conv_real_replace(arg);
+    conv_fired = fi.stat_calls > 0;
+    fi.stat_name = NULL;
+    return ret;
+}
+
+/*!
+ * @brief Run the update with a replace whose stats of the name fail
+ *
+ * @returns what the backend's conditional update returns
+ */
+static int stat_eio_in_checks_then_update(struct _cnid_db *cdb, cnid_t id,
+                                          cnid_t did, const char *name,
+                                          size_t len, uint64_t dev,
+                                          uint64_t ino, const struct stat *st,
+                                          cnid_replace_fn replace, void *arg)
+{
+    cdb->cnid_update_row = conv_real_update_row;
+    conv_real_replace = replace;
+    return conv_real_update_row(cdb, id, did, name, len, dev, ino, st,
+                                replace != NULL ? &replace_with_stat_eio
+                                : NULL, arg);
+}
+
+/*!
+ * @brief A name whose stat fails with EIO at the rename answers kFPMiscErr
+ *
+ * @returns 0, 1 otherwise, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks or without the fault-injection shim
+ */
+int utest_symlink_conversion_stat_fails_in_checks(AFPObj *obj,
+                                                  struct vol *vol)
+{
+    static char name[] = "rq_slsf";
+    static const char target[] = "rq_slsft";
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    int (*real_update_row)(struct _cnid_db *, cnid_t, cnid_t, const char *,
+                           size_t, uint64_t, uint64_t, const struct stat *,
+                           cnid_replace_fn, void *)
+        = vol->v_cdb->cnid_update_row;
+    struct stat before;
+    struct stat st;
+    cnid_t id = CNID_INVALID;
+    int made = 0;
+    int staged = -1;
+    int rc = -1;
+    int ret = -1;
+
+    if ((vol->v_flags & AFPVOL_FOLLOWSYM)
+            || !test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (link_source(vol, name, target, &id, &made) != 0
+            || lstat(path, &before) != 0) {
+        goto out;
+    }
+
+    conv_real_update_row = real_update_row;
+    conv_eio_name = name;
+    conv_fired = 0;
+    vol->v_cdb->cnid_update_row = stat_eio_in_checks_then_update;
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    vol->v_cdb->cnid_update_row = real_update_row;
+    fault_inject_reset();
+    staged = staged_links(vol);
+
+    /* an I/O error does not say that the file has gone */
+    if (conv_fired && rc == AFPERR_MISC && lstat(path, &st) == 0
+            && S_ISREG(st.st_mode) && st.st_ino == before.st_ino
+            && staged == 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion, its name's stat failing with "
+                        "EIO in the rename's checks: %d, %d staged links "
+                        "left, the stat %s\n", rc, staged,
+                conv_fired ? "failed" : "never ran inside the replace");
+        ret = 1;
+    }
+
+out:
+    vol->v_cdb->cnid_update_row = real_update_row;
+    fault_inject_reset();
+    link_source_done(vol, name, target, made);
+    return ret;
+}
+
+/*!
+ * @brief Move a file the session holds open onto the name, then run the update
+ *
+ * @returns what the backend's conditional update returns
+ */
+static int move_held_file_then_update(struct _cnid_db *cdb, cnid_t id,
+                                      cnid_t did, const char *name,
+                                      size_t len, uint64_t dev, uint64_t ino,
+                                      const struct stat *st,
+                                      cnid_replace_fn replace, void *arg)
+{
+    cdb->cnid_update_row = conv_real_update_row;
+    conv_fired = rename(conv_other, conv_path) == 0;
+    return conv_real_update_row(cdb, id, did, name, len, dev, ino, st,
+                                replace, arg);
+}
+
+/*!
+ * @brief A held file that replaces a converting file keeps its locks
+ *
+ * @returns 0, 1 otherwise, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks
+ */
+int utest_symlink_conversion_held_file_meanwhile(AFPObj *obj,
+                                                 struct vol *vol)
+{
+    static char name[] = "rq_slhf";
+    static char held_name[] = "rq_slhfh";
+    static const char target[] = "rq_slhft";
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    char other[MAXPATHLEN + 1];
+    int (*real_update_row)(struct _cnid_db *, cnid_t, cnid_t, const char *,
+                           size_t, uint64_t, uint64_t, const struct stat *,
+                           cnid_replace_fn, void *)
+        = vol->v_cdb->cnid_update_row;
+    cnid_t id = CNID_INVALID;
+    uint16_t r = 0;
+    int held[2] = { -1, -1 };
+    int made = 0;
+    int staged = -1;
+    int rc = -1;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(other, sizeof(other), "%s/%s", vol->v_path, held_name);
+    conv_fired = 0;
+
+    if (link_source(vol, name, target, &id, &made) != 0
+            || createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, held_name)
+            != AFP_OK
+            || openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, held_name,
+                        OPENFORK_DATA, OPENACC_RD | OPENACC_DWR, &r)
+            != AFP_OK) {
+        goto out;
+    }
+
+    held[0] = peer_try_lock(other, F_WRLCK, AD_FILELOCK_DENY_WR, 1);
+    conv_real_update_row = real_update_row;
+    conv_path = path;
+    conv_other = other;
+    vol->v_cdb->cnid_update_row = move_held_file_then_update;
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    vol->v_cdb->cnid_update_row = real_update_row;
+    held[1] = peer_try_lock(path, F_WRLCK, AD_FILELOCK_DENY_WR, 1);
+    staged = staged_links(vol);
+
+    if (held[0] < 0) {
+        goto out;
+    }
+
+    if (conv_fired && rc == AFPERR_NOOBJ && held[0] == 0 && held[1] == 0
+            && staged == 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion, a held file at its name "
+                        "meanwhile: %d, deny-write band held %d then %d, %d "
+                        "staged links left, the stand-in %s\n", rc,
+                held[0] == 0, held[1] == 0, staged,
+                conv_fired ? "ran" : "never ran");
+        ret = 1;
+    }
+
+out:
+    vol->v_cdb->cnid_update_row = real_update_row;
+
+    /* the held file goes back under its own name and goes with its fork */
+    if (conv_fired) {
+        (void)rename(path, other);
+    }
+
+    if (r != 0) {
+        closefork(&fio.obj, r);
+    }
+
+    delete (&fio.obj, vol->v_vid, DIRDID_ROOT, held_name);
+    link_source_done(vol, name, target, made);
+    return ret;
+}
+
+/*!
+ * @brief Deny writes to the file from a peer process, then run the update
+ *
+ * @returns what the backend's conditional update returns
+ */
+static int deny_writes_then_update(struct _cnid_db *cdb, cnid_t id,
+                                   cnid_t did, const char *name, size_t len,
+                                   uint64_t dev, uint64_t ino,
+                                   const struct stat *st,
+                                   cnid_replace_fn replace, void *arg)
+{
+    cdb->cnid_update_row = conv_real_update_row;
+    conv_fired = peer_hold_lock(&conv_peer, conv_path, F_RDLCK,
+                                AD_FILELOCK_DENY_WR, 1) == 0;
+    return conv_real_update_row(cdb, id, did, name, len, dev, ino, st,
+                                replace, arg);
+}
+
+/*!
+ * @brief A file denied writes while its conversion waits answers kFPFileBusy
+ *
+ * @returns 0, 1 otherwise, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks
+ */
+int utest_symlink_conversion_denied_meanwhile(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_sldm";
+    static const char target[] = "rq_sldmt";
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    int (*real_update_row)(struct _cnid_db *, cnid_t, cnid_t, const char *,
+                           size_t, uint64_t, uint64_t, const struct stat *,
+                           cnid_replace_fn, void *)
+        = vol->v_cdb->cnid_update_row;
+    struct stat st;
+    cnid_t id = CNID_INVALID;
+    int made = 0;
+    int staged = -1;
+    int rc = -1;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (link_source(vol, name, target, &id, &made) != 0) {
+        goto out;
+    }
+
+    conv_real_update_row = real_update_row;
+    conv_path = path;
+    conv_fired = 0;
+    vol->v_cdb->cnid_update_row = deny_writes_then_update;
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    vol->v_cdb->cnid_update_row = real_update_row;
+
+    if (conv_fired) {
+        peer_release(&conv_peer);
+    }
+
+    staged = staged_links(vol);
+
+    if (conv_fired && rc == AFPERR_BUSY && lstat(path, &st) == 0
+            && S_ISREG(st.st_mode) && staged == 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion, its file's writes denied "
+                        "meanwhile: %d, %d staged links left, the stand-in "
+                        "%s\n", rc, staged,
+                conv_fired ? "ran" : "never ran");
+        ret = 1;
+    }
+
+out:
+    vol->v_cdb->cnid_update_row = real_update_row;
+    link_source_done(vol, name, target, made);
+    return ret;
+}
+
+/*!
+ * @brief Flip the file's mode until its ctime moves, then run the update
+ *
+ * A coarsely ticking clock can leave the ctime of one change unmoved.
+ *
+ * @returns what the backend's conditional update returns
+ */
+static int chmod_file_then_update(struct _cnid_db *cdb, cnid_t id,
+                                  cnid_t did, const char *name, size_t len,
+                                  uint64_t dev, uint64_t ino,
+                                  const struct stat *st,
+                                  cnid_replace_fn replace, void *arg)
+{
+    const struct timespec was = atalk_stat_ctime_timespec(&conv_st);
+    const struct timespec tick = { .tv_sec = 0, .tv_nsec = 10 * 1000 * 1000 };
+    struct timespec now;
+    struct stat now_st;
+    int fd = open(conv_path, O_RDONLY);
+    cdb->cnid_update_row = conv_real_update_row;
+
+    for (int i = 0; fd >= 0 && i < 200 && !conv_fired; i++) {
+        if (fchmod(fd, (i % 2) ? 0640 : 0600) != 0
+                || fstat(fd, &now_st) != 0) {
+            break;
+        }
+
+        now = atalk_stat_ctime_timespec(&now_st);
+
+        if (!atalk_timespec_eq(&was, &now)) {
+            conv_fired = 1;
+        } else {
+            nanosleep(&tick, NULL);
+        }
+    }
+
+    if (fd >= 0) {
+        close(fd);
+    }
+
+    return conv_real_update_row(cdb, id, did, name, len, dev, ino, st,
+                                replace, arg);
+}
+
+/*!
+ * @brief A file changed while its conversion waits answers kFPMiscErr
+ *
+ * @returns 0, 1 otherwise, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks
+ */
+int utest_symlink_conversion_changed_meanwhile(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_slcm";
+    static const char target[] = "rq_slcmt";
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    int (*real_update_row)(struct _cnid_db *, cnid_t, cnid_t, const char *,
+                           size_t, uint64_t, uint64_t, const struct stat *,
+                           cnid_replace_fn, void *)
+        = vol->v_cdb->cnid_update_row;
+    struct stat st;
+    cnid_t id = CNID_INVALID;
+    int made = 0;
+    int staged = -1;
+    int rc = -1;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (link_source(vol, name, target, &id, &made) != 0
+            || stat(path, &conv_st) != 0) {
+        goto out;
+    }
+
+    conv_real_update_row = real_update_row;
+    conv_path = path;
+    conv_fired = 0;
+    vol->v_cdb->cnid_update_row = chmod_file_then_update;
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    vol->v_cdb->cnid_update_row = real_update_row;
+    staged = staged_links(vol);
+
+    if (conv_fired && rc == AFPERR_MISC && lstat(path, &st) == 0
+            && S_ISREG(st.st_mode) && staged == 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion, its file changed meanwhile: %d, "
+                        "%d staged links left, the stand-in %s\n", rc,
+                staged, conv_fired ? "ran" : "never moved the ctime");
+        ret = 1;
+    }
+
+out:
+    vol->v_cdb->cnid_update_row = real_update_row;
+    link_source_done(vol, name, target, made);
+    return ret;
+}
+
+/*!
+ * @brief Run the replace and fail as a rollback does, then run the update
+ *
+ * @returns -1 with errno CNID_ERR_BUSY, then what the backend's conditional
+ *          update returns
+ */
+static int update_row_fails_once(struct _cnid_db *cdb, cnid_t id, cnid_t did,
+                                 const char *name, size_t len, uint64_t dev,
+                                 uint64_t ino, const struct stat *st,
+                                 cnid_replace_fn replace, void *arg)
+{
+    if (conv_fired++ == 0) {
+        if (replace != NULL) {
+            (void)replace(arg);
+        }
+
+        errno = CNID_ERR_BUSY;
+        return -1;
+    }
+
+    cdb->cnid_update_row = conv_real_update_row;
+    return conv_real_update_row(cdb, id, did, name, len, dev, ino, st,
+                                replace, arg);
+}
+
+/*!
+ * @brief A conversion whose update rolls back after the rename keeps the CNID
+ *
+ * @returns 0, 1 otherwise, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks
+ */
+int utest_symlink_conversion_rolled_back(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_slrb";
+    static const char target[] = "rq_slrbt";
+    static char buf[CNID_MAX_PATH_LEN];
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    int (*real_update_row)(struct _cnid_db *, cnid_t, cnid_t, const char *,
+                           size_t, uint64_t, uint64_t, const struct stat *,
+                           cnid_replace_fn, void *)
+        = vol->v_cdb->cnid_update_row;
+    struct stat lst;
+    cnid_t id = CNID_INVALID;
+    cnid_t row;
+    uint64_t dev = 0;
+    uint64_t ino = 0;
+    int made = 0;
+    int rc = -1;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (link_source(vol, name, target, &id, &made) != 0) {
+        goto out;
+    }
+
+    conv_real_update_row = real_update_row;
+    conv_fired = 0;
+    vol->v_cdb->cnid_update_row = update_row_fails_once;
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    vol->v_cdb->cnid_update_row = real_update_row;
+    row = id;
+
+    /* the second update gave the row the link */
+    if (conv_fired == 2 && rc == AFP_OK && lstat(path, &lst) == 0
+            && S_ISLNK(lst.st_mode)
+            && cnid_resolve_row(vol->v_cdb, &row, buf, sizeof(buf), &dev,
+                                &ino) != NULL
+            && cnid_row_holds(vol->v_cdb, dev, ino, &lst)) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion, its update rolled back after the "
+                        "rename: %d after %d updates\n", rc, conv_fired);
+        ret = 1;
+    }
+
+out:
+    vol->v_cdb->cnid_update_row = real_update_row;
+    link_source_done(vol, name, target, made);
+    return ret;
+}
+
+/*!
+ * @brief A listing hides a staged link but lists a look-alike name
+ *
+ * @returns 0, 1 otherwise, or -1 when the fixture failed
+ */
+int utest_symlink_conversion_stage_unlisted(AFPObj *obj, struct vol *vol)
+{
+    static char folder[] = "rq_slsu";
+    static char name[] = "rq_slsuf";
+    static char own[] = ".netatalk-symlink-notes";
+    static const char staged[] = ".netatalk-symlink-1-1";
+    char spath[MAXPATHLEN + 1];
+    char opath[MAXPATHLEN + 1];
+    char lnames[3][MACFILELEN + 1];
+    char unames[3][UTF8FILELEN_EARLY + 1];
+    const int ignorecase = vol->v_ignorecase;
+    cnid_t did = CNID_INVALID;
+    bool listed = false;
+    int count = -1;
+    int folded = -1;
+    int padded = -1;
+    int ret = -1;
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(spath, sizeof(spath), "%s/%s/%s", vol->v_path, folder, staged);
+    snprintf(opath, sizeof(opath), "%s/%s/%s", vol->v_path, folder, own);
+
+    if (createdir(&fio.obj, vol->v_vid, DIRDID_ROOT, folder) != AFP_OK) {
+        goto out;
+    }
+
+    did = curdir->d_did;
+
+    if (createfile(&fio.obj, vol->v_vid, did, name) != AFP_OK
+            || symlink(name, spath) != 0 || create_disk_file(opath) != 0) {
+        goto out;
+    }
+
+    count = enumerate_names(&fio.obj, vol->v_vid, did, lnames, unames, 3);
+    listed = count == 2
+             && ((strcmp(unames[0], name) == 0 && strcmp(unames[1], own) == 0)
+                 || (strcmp(unames[0], own) == 0
+                     && strcmp(unames[1], name) == 0));
+    vol->v_ignorecase = 1;
+    folded = vol->vfs->vfs_validupath(vol, ".NETATALK-SYMLINK-1-1", -1);
+    vol->v_ignorecase = ignorecase;
+    padded = vol->vfs->vfs_validupath(vol, ".netatalk-symlink-01-1", -1);
+
+    if (listed && folded == 0 && padded == 1) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "listing beside a staged link: %d names, the staged "
+                        "name in capitals %s, a zero-padded one %s\n", count,
+                folded == 0 ? "hidden" : "shown",
+                padded == 1 ? "shown" : "hidden");
+        ret = 1;
+    }
+
+out:
+    vol->v_ignorecase = ignorecase;
+    unlink(spath);
+
+    if (did != CNID_INVALID) {
+        delete (&fio.obj, vol->v_vid, did, own);
+        delete (&fio.obj, vol->v_vid, did, name);
+        delete (&fio.obj, vol->v_vid, DIRDID_ROOT, folder);
+    }
+
+    unlink(opath);
+    fio_done(vol, 0, folder);
+    return ret;
+}
+
+/* another session's CNID handle, the SQL that cuts its lock wait and the
+ * MySQL probes of whether the backend holds rows, with their answers, the
+ * file and its row, and what that session's step answered */
+static struct _cnid_db *window_cdb;
+static const char *window_wait_sql;
+static int window_wait_set;
+static char window_lock_sql[96];
+static char window_engine_sql[320];
+static bool window_unheld;
+static char *window_name;
+static char window_path[MAXPATHLEN + 1];
+static struct stat window_st;
+static cnid_t window_id;
+static int window_fired;
+static int window_busy;
+static int window_deleted;
+static cnid_t window_added;
+
+/*!
+ * @brief Cut the other session's lock wait and, on MySQL, probe the row hold
+ *
+ * No wait on SQLite and a second's on MySQL fail the step while the
+ * conversion holds the row. A user who may not lock a table that is not
+ * InnoDB gets no hold, and the engine's SET fails for such a table.
+ */
+static void window_no_wait(void *con)
+{
+    window_wait_set = fi.sql.exec(con, window_wait_sql) == 0;
+
+    if (window_lock_sql[0] == '\0') {
+        return;
+    }
+
+    if (fi.sql.exec(con, window_lock_sql) != 0) {
+        window_unheld = fi.sql.exec(con, window_engine_sql) != 0;
+    } else {
+        (void)fi.sql.exec(con, "UNLOCK TABLES");
+    }
+}
+
+/*!
+ * @brief Open another session's CNID handle with its lock wait cut
+ *
+ * @param[in] vol    the open volume
+ * @param[in] mysql  the volume's backend is MySQL
+ * @returns the handle, or NULL when the open failed or the shim could not
+ *          cut its lock wait
+ */
+static struct _cnid_db *window_open(struct vol *vol, bool mysql)
+{
+    struct _cnid_db *cdb;
+    char *table = NULL;
+    fault_inject_reset();
+    window_wait_set = 0;
+    window_unheld = false;
+    window_lock_sql[0] = '\0';
+    window_wait_sql = "PRAGMA busy_timeout = 0";
+
+    if (mysql) {
+        window_wait_sql = "SET SESSION innodb_lock_wait_timeout = 1, "
+                          "lock_wait_timeout = 1";
+    }
+
+    /* the table the backend names after the volume's UUID */
+    if (mysql && (table = uuid_strip_dashes(vol->v_uuid)) != NULL) {
+        snprintf(window_lock_sql, sizeof(window_lock_sql),
+                 "LOCK TABLES `%s` READ", table);
+        snprintf(window_engine_sql, sizeof(window_engine_sql),
+                 "SET @fi_engine = (SELECT 1 UNION ALL SELECT 2 FROM DUAL "
+                 "WHERE EXISTS (SELECT 1 FROM information_schema.TABLES "
+                 "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '%s' AND "
+                 "ENGINE <> 'InnoDB'))", table);
+        free(table);
+    }
+
+    fi.sql.hook = window_no_wait;
+    fi.sql.prefix = mysql ? "CREATE TABLE IF NOT EXISTS volumes"
+                    : "PRAGMA journal_mode";
+    cdb = cnid_open(vol, vol->v_cnidscheme, 0);
+    fault_inject_reset();
+
+    if (cdb != NULL && !window_wait_set) {
+        cnid_close(cdb);
+        cdb = NULL;
+    }
+
+    return cdb;
+}
+
+/*!
+ * @brief Another session's lookup by CNID at the link: a conditional row delete
+ */
+static void window_lookup(void)
+{
+    window_fired = 1;
+    window_deleted = cnid_delete_row(window_cdb, window_id, DIRDID_ROOT,
+                                     window_name, strlen(window_name),
+                                     cnid_row_dev(window_cdb, &window_st),
+                                     (uint64_t)window_st.st_ino);
+    window_busy = window_deleted == -1 && CNID_ERRNO() == CNID_ERR_BUSY;
+}
+
+/*!
+ * @brief Another session's listing at the link looks the link up by its name
+ */
+static void window_listing(void)
+{
+    struct stat lst;
+
+    if (lstat(window_path, &lst) == 0) {
+        window_fired = 1;
+        window_added = cnid_add(window_cdb, &lst, DIRDID_ROOT, window_name,
+                                strlen(window_name), CNID_INVALID);
+        window_busy = window_added == CNID_INVALID
+                      && CNID_ERRNO() == CNID_ERR_BUSY;
+    }
+}
+
+/*!
+ * @brief A symlink conversion with another session's step at the link's rename
+ *
+ * @param[in] obj   the harness's session
+ * @param[in] vol   the open volume
+ * @param[in] name  the file's name
+ * @param[in] step  the other session's step
+ * @returns 0 when the step failed with CNID_ERR_BUSY and the link holds the
+ *          file's CNID, 1 otherwise, -1 when the fixture failed, or
+ *          TEST_SKIP on a volume that follows symlinks, without the shim, or
+ *          where the backend holds no row
+ */
+static int window_conversion(AFPObj *obj, struct vol *vol, char *name,
+                             void (*step)(void))
+{
+    static char buf[CNID_MAX_PATH_LEN];
+    char target[MAXPATHLEN + 1];
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    const bool mysql = vol->v_cnidscheme != NULL
+                       && strcasecmp(vol->v_cnidscheme, "mysql") == 0;
+    const char *step_answer;
+    struct stat lst;
+    cnid_t id = CNID_INVALID;
+    cnid_t row;
+    uint64_t dev = 0;
+    uint64_t ino = 0;
+    int made = 0;
+    int rc = -1;
+    int ret = -1;
+
+    if ((vol->v_flags & AFPVOL_FOLLOWSYM)
+            || !test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(target, sizeof(target), "%st", name);
+    snprintf(window_path, sizeof(window_path), "%s/%s", vol->v_path, name);
+
+    if (link_source(vol, name, target, &id, &made) != 0
+            || stat(window_path, &window_st) != 0
+            || (window_cdb = window_open(vol, mysql)) == NULL) {
+        goto out;
+    }
+
+    if (window_unheld) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    window_name = name;
+    window_id = id;
+    window_fired = 0;
+    window_busy = 0;
+    window_deleted = -2;
+    window_added = CNID_INVALID;
+    fi.rename_hook.fn = step;
+    fi.rename_hook.to = name;
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    fault_inject_reset();
+    row = id;
+
+    if (window_busy && rc == AFP_OK && lstat(window_path, &lst) == 0
+            && S_ISLNK(lst.st_mode)
+            && cnid_resolve_row(vol->v_cdb, &row, buf, sizeof(buf), &dev,
+                                &ino) != NULL
+            && cnid_row_holds(vol->v_cdb, dev, ino, &lst)) {
+        ret = 0;
+    } else {
+        step_answer = window_busy ? "found the row held" : "did not wait";
+        fprintf(stderr, "symlink conversion, another session at the rename: "
+                        "%d, its step %s, its delete %d, its CNID %u for "
+                        "%u\n", rc, window_fired ? step_answer : "never ran",
+                window_deleted, ntohl(window_added), ntohl(id));
+        ret = 1;
+    }
+
+out:
+    fault_inject_reset();
+
+    if (window_cdb != NULL) {
+        /* a CNID the other session gave the link */
+        if (window_added != CNID_INVALID && window_added != id) {
+            cnid_delete(vol->v_cdb, window_added);
+        }
+
+        cnid_close(window_cdb);
+        window_cdb = NULL;
+    }
+
+    link_source_done(vol, name, target, made);
+    return ret;
+}
+
+/*!
+ * @brief On a collating backend a conversion keeps a case-renamed row's CNID
+ *
+ * @returns 0, 1 otherwise, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks or whose backend matches names by
+ *          case
+ */
+int utest_symlink_conversion_row_case(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_slCase";
+    static char lower[] = "rq_slcase";
+    static const char target[] = "rq_slCaset";
+    static char buf[CNID_MAX_PATH_LEN];
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    struct stat st;
+    struct stat lst;
+    cnid_t id = CNID_INVALID;
+    cnid_t row;
+    uint64_t dev = 0;
+    uint64_t ino = 0;
+    int made = 0;
+    int rc = -1;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (link_source(vol, name, target, &id, &made) != 0
+            || stat(path, &st) != 0
+            || cnid_update(vol->v_cdb, id, &st, DIRDID_ROOT, lower,
+                           strlen(lower)) != 0) {
+        goto out;
+    }
+
+    /* a backend that matches names by case finds no row at the name */
+    row = cnid_get(vol->v_cdb, DIRDID_ROOT, name, strlen(name));
+
+    if (row == CNID_INVALID && CNID_ERRNO() == CNID_ERR_NOTFOUND) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    if (row != id) {
+        goto out;
+    }
+
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    row = id;
+
+    if (rc == AFP_OK && lstat(path, &lst) == 0 && S_ISLNK(lst.st_mode)
+            && cnid_resolve_row(vol->v_cdb, &row, buf, sizeof(buf), &dev,
+                                &ino) != NULL
+            && cnid_row_holds(vol->v_cdb, dev, ino, &lst)) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion, its row's name in another case: "
+                        "%d\n", rc);
+        ret = 1;
+    }
+
+out:
+
+    /* by CNID: a lookup by the file's name may miss the row */
+    if (id != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    link_source_done(vol, name, target, made);
+    return ret;
+}
+
+/*!
+ * @brief The conversion's row hold keeps a racing lookup by CNID off the row
+ *
+ * @returns what window_conversion() returns
+ */
+int utest_symlink_conversion_window_lookup(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_slwl";
+    return window_conversion(obj, vol, name, window_lookup);
+}
+
+/*!
+ * @brief The conversion's row hold keeps a racing listing's add off the link
+ *
+ * @returns what window_conversion() returns
+ */
+int utest_symlink_conversion_window_listing(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_slwd";
+    return window_conversion(obj, vol, name, window_listing);
+}
+
+/*!
+ * @brief A conversion keeps the CNID while the dircache validates every lookup
+ *
+ * @returns 0, 1 otherwise, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks
+ */
+int utest_symlink_conversion_validated_entry(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_slve";
+    static const char target[] = "rq_slvet";
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    const int freq = obj->options.dircache_validation_freq;
+    const char *params;
+    struct stat lst;
+    size_t len = 0;
+    cnid_t id = CNID_INVALID;
+    cnid_t fnum = CNID_INVALID;
+    int made = 0;
+    int rc = -1;
+    int by_cnid = -1;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    /* the request by the name leaves the file's entry in the dircache */
+    if (link_source(vol, name, target, &id, &made) != 0
+            || getfiledirparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name)
+            != AFP_OK) {
+        goto out;
+    }
+
+    obj->options.dircache_validation_freq = 1;
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    by_cnid = getfiledirparms(&fio.obj, vol->v_vid, id, "");
+    obj->options.dircache_validation_freq = freq;
+    params = reply_params(REPLY_FILEDIRPARMS, &len);
+
+    if (by_cnid == AFP_OK && len >= sizeof(fnum)) {
+        memcpy(&fnum, params, sizeof(fnum));
+    }
+
+    /* the file became the link, which the CNID names */
+    if (rc == AFP_OK && lstat(path, &lst) == 0 && S_ISLNK(lst.st_mode)
+            && fnum == id) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion, every lookup validated: %d, the "
+                        "file's CNID: %d, file number %u of %u\n", rc, by_cnid,
+                ntohl(fnum), ntohl(id));
+        ret = 1;
+    }
+
+out:
+    obj->options.dircache_validation_freq = freq;
+    link_source_done(vol, name, target, made);
+    return ret;
+}
+
+/*!
+ * @brief A conversion whose link has no stat after the rename: kFPMiscErr
+ *
+ * @returns 0, 1 otherwise, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks or without the fault-injection shim
+ */
+int utest_symlink_conversion_link_unstatable(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_slus";
+    static const char target[] = "rq_slust";
+    static char buf[CNID_MAX_PATH_LEN];
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    struct stat lst;
+    cnid_t id = CNID_INVALID;
+    cnid_t row;
+    uint64_t dev = 0;
+    uint64_t ino = 0;
+    int seen = 0;
+    int made = 0;
+    int rc = -1;
+    int ret = -1;
+
+    if ((vol->v_flags & AFPVOL_FOLLOWSYM)
+            || !test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (link_source(vol, name, target, &id, &made) != 0) {
+        goto out;
+    }
+
+    /* afpd renames and stats the bare name: the request's cwd is the root */
+    fault_inject_reset();
+    conv_path = name;
+    conv_fired = 0;
+    fi.rename_hook.fn = unstatable_after_rename;
+    fi.rename_hook.to = name;
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    seen = fi.stat_calls;
+    fault_inject_reset();
+    row = id;
+
+    if (conv_fired && seen > 0 && rc == AFPERR_MISC && lstat(path, &lst) == 0
+            && S_ISLNK(lst.st_mode)
+            && cnid_resolve_row(vol->v_cdb, &row, buf, sizeof(buf), &dev,
+                                &ino) != NULL
+            && cnid_row_holds(vol->v_cdb, dev, ino, &lst)) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion, the link without a stat: %d "
+                        "after %d stats, the rename hook %s\n", rc, seen,
+                conv_fired ? "ran" : "never ran");
+        ret = 1;
+    }
+
+out:
+    fault_inject_reset();
+    link_source_done(vol, name, target, made);
+    return ret;
+}
+
+/*!
+ * @brief Converting a replaced file gives the link none of the old row's CNID
+ *
+ * @returns 0, 1 otherwise, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks
+ */
+int utest_symlink_conversion_replaced_file(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_slrf";
+    static const char target[] = "rq_slrft";
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    char fresh[MAXPATHLEN + 1];
+    const size_t tlen = strlen(target);
+    struct stat lst;
+    cnid_t id = CNID_INVALID;
+    bool written;
+    int made = 0;
+    int held = -1;
+    int fd;
+    int rc = -1;
+    int err = -1;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(fresh, sizeof(fresh), "%s/%s.new", vol->v_path, name);
+
+    if (link_source(vol, name, target, &id, &made) != 0
+            || (fd = open(fresh, O_WRONLY | O_CREAT | O_EXCL, 0640)) < 0) {
+        goto out;
+    }
+
+    /* the new file holds the target's name; an open descriptor keeps the
+     * first file's inode from the link */
+    written = write(fd, target, tlen) == (ssize_t)tlen;
+    close(fd);
+
+    if (!written || (held = open(path, O_RDONLY)) < 0
+            || rename(fresh, path) != 0) {
+        unlink(fresh);
+        goto out;
+    }
+
+    /* with no entry at the name, as a refusal leaves it, the request reaches
+     * the conversion */
+    drop_entry(vol, DIRDID_ROOT, name);
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    err = getfiledirparms(&fio.obj, vol->v_vid, id, "");
+
+    if (rc == AFP_OK && lstat(path, &lst) == 0 && S_ISLNK(lst.st_mode)
+            && err == AFPERR_NOOBJ) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion of a replaced file: %d, the old "
+                        "CNID %d\n", rc, err);
+        ret = 1;
+    }
+
+out:
+
+    /* the replaced file, and its row where the refusal left it */
+    if (held >= 0) {
+        close(held);
+    }
+
+    if (id != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    link_source_done(vol, name, target, made);
+    return ret;
+}
+
+/*!
+ * @brief A conversion whose CNID or row is unreadable answers kFPMiscErr
+ *
+ * @returns 0, 1 otherwise, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks
+ */
+int utest_symlink_conversion_needs_cnid(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_slib";
+    static const char target[] = "rq_slibt";
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    cnid_t (*real_get)(struct _cnid_db *, cnid_t, const char *, size_t);
+    char *(*real_resolve)(struct _cnid_db *, cnid_t *, void *, size_t,
+                          uint64_t *, uint64_t *);
+    struct stat st;
+    cnid_t id = CNID_INVALID;
+    int made = 0;
+    int rc = -1;
+    int rrc = -1;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (link_source(vol, name, target, &id, &made) != 0) {
+        goto out;
+    }
+
+    real_get = vol->v_cdb->cnid_get;
+    vol->v_cdb->cnid_get = get_busy;
+    get_busy_calls = 0;
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    vol->v_cdb->cnid_get = real_get;
+    /* the CNID read answers, the read of its row does not */
+    real_resolve = vol->v_cdb->cnid_resolve;
+    vol->v_cdb->cnid_resolve = resolve_busy;
+    resolve_busy_calls = 0;
+    rrc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                       1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    vol->v_cdb->cnid_resolve = real_resolve;
+
+    if (rc == AFPERR_MISC && get_busy_calls > 0 && rrc == AFPERR_MISC
+            && resolve_busy_calls > 0
+            && lstat(path, &st) == 0 && S_ISREG(st.st_mode)
+            && cnid_get(vol->v_cdb, DIRDID_ROOT, name, strlen(name)) == id) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion, CNID unreadable: %d after %d "
+                        "reads, its row unreadable: %d after %d resolves\n",
+                rc, get_busy_calls, rrc, resolve_busy_calls);
+        ret = 1;
+    }
+
+out:
+    link_source_done(vol, name, target, made);
     return ret;
 }

@@ -35,6 +35,9 @@
 /*! Maximum number of VFS modules that can be chained */
 #define VFS_MODULES_MAX 3
 
+/*! Name prefix of a symlink conversion's staged link, then PID, dash, serial */
+#define VFS_SYMLINK_STAGE ".netatalk-symlink-"
+
 /* Function argument types for VFS operations */
 typedef int (*vfs_validupath_fn)(const struct vol *vol, const char *name,
                                  int fd);
