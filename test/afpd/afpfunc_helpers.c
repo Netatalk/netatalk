@@ -1575,6 +1575,65 @@ int create_disk_file(const char *path)
 }
 
 /*!
+ * @brief One FPCatSearchExt request over the volume at a catalog position, ten
+ *        matches at most
+ *
+ * @param[in]     obj      session
+ * @param[in]     vid      volume
+ * @param[in]     fbitmap  the files' bitmap
+ * @param[in]     dbitmap  the folders' bitmap, 0 for files only
+ * @param[in]     rbitmap  criteria, FILPBIT_* bits
+ * @param[in]     spec1    first specification record
+ * @param[in]     spec2    second specification record
+ * @param[in]     speclen  length of each record, at most 64 bytes
+ * @param[in,out] pos      catalog position, all zero for a new search
+ * @param[out]    nrecs    matches in the reply, 0 for a rejected request
+ * @returns the AFP result, or AFPERR_PARAM for a longer record
+ */
+static int catsearch_ext_at(AFPObj *obj, uint16_t vid, uint16_t fbitmap,
+                            uint16_t dbitmap, uint32_t rbitmap,
+                            const void *spec1, const void *spec2,
+                            uint16_t speclen, unsigned char pos[16],
+                            uint32_t *nrecs)
+{
+    static char buf[256] = { 0 };
+    char *p = buf;
+    int len = 0;
+    int ret;
+    *nrecs = 0;
+
+    if (speclen > 64) {
+        return AFPERR_PARAM;
+    }
+
+    ADD(p, len, 2);
+    PUSHVAL(p, uint16_t, vid, len);
+    /* ten matches at most and no reserved bits */
+    PUSHVAL(p, uint32_t, htonl(10), len);
+    PUSHVAL(p, uint32_t, 0, len);
+    PUSHBUF(p, pos, 16, len);
+    PUSHVAL(p, uint16_t, htons(fbitmap), len);
+    PUSHVAL(p, uint16_t, htons(dbitmap), len);
+    PUSHVAL(p, uint32_t, htonl(rbitmap), len);
+    PUSHVAL(p, uint16_t, htons(speclen), len);
+    PUSHBUF(p, spec1, speclen, len);
+    PUSHVAL(p, uint16_t, htons(speclen), len);
+    PUSHBUF(p, spec2, speclen, len);
+    rbuflen = 0;
+    ret = afp_catsearch_ext(obj, buf, len, rbuf, &rbuflen);
+
+    if (ret != AFP_OK && ret != AFPERR_EOF) {
+        return ret;
+    }
+
+    /* the position, the two bitmaps and the count, then the records */
+    memcpy(pos, rbuf, 16);
+    memcpy(nrecs, rbuf + 20, sizeof(*nrecs));
+    *nrecs = ntohl(*nrecs);
+    return ret;
+}
+
+/*!
  * @brief FPCatSearchExt over the volume for files, and for folders by their
  *        bitmap, long names requested
  *
@@ -1595,44 +1654,14 @@ int catsearch_ext(AFPObj *obj, uint16_t vid, uint16_t dbitmap,
                   uint16_t speclen, uint32_t *nrecs,
                   char lname[MACFILELEN + 1])
 {
-    static char buf[256] = { 0 };
-    char *p = buf;
+    unsigned char pos[16] = { 0 };
     uint16_t off;
-    int len = 0;
-    int ret;
-    *nrecs = 0;
+    int ret = catsearch_ext_at(obj, vid, 1 << FILPBIT_LNAME, dbitmap, rbitmap,
+                               spec1, spec2, speclen, pos, nrecs);
     *lname = '\0';
 
-    if (speclen > 64) {
-        return AFPERR_PARAM;
-    }
-
-    ADD(p, len, 2);
-    PUSHVAL(p, uint16_t, vid, len);
-    /* ten matches at most, no reserved bits, a new search's position */
-    PUSHVAL(p, uint32_t, htonl(10), len);
-    PUSHVAL(p, uint32_t, 0, len);
-    ADD(p, len, 16);
-    PUSHVAL(p, uint16_t, htons(1 << FILPBIT_LNAME), len);
-    PUSHVAL(p, uint16_t, htons(dbitmap), len);
-    PUSHVAL(p, uint32_t, htonl(rbitmap), len);
-    PUSHVAL(p, uint16_t, htons(speclen), len);
-    PUSHBUF(p, spec1, speclen, len);
-    PUSHVAL(p, uint16_t, htons(speclen), len);
-    PUSHBUF(p, spec2, speclen, len);
-    rbuflen = 0;
-    ret = afp_catsearch_ext(obj, buf, len, rbuf, &rbuflen);
-
-    if (ret != AFP_OK && ret != AFPERR_EOF) {
-        return ret;
-    }
-
-    /* the position, the two bitmaps and the count, then the records: a
-     * length, the kind byte, a pad, and the parameters, which lead with the
-     * offset of the name's Pascal string */
-    memcpy(nrecs, rbuf + 20, sizeof(*nrecs));
-    *nrecs = ntohl(*nrecs);
-
+    /* a record is a length, the kind byte, a pad, and the parameters, which
+     * lead with the offset of the name's Pascal string */
     if (*nrecs > 0) {
         const unsigned char *params = (const unsigned char *)rbuf + 28;
         memcpy(&off, params, sizeof(off));
@@ -1641,6 +1670,58 @@ int catsearch_ext(AFPObj *obj, uint16_t vid, uint16_t dbitmap,
             return AFPERR_PARAM;
         }
     }
+
+    return ret;
+}
+
+/*!
+ * @brief Collect the file IDs that the replies of an FPCatSearchExt search
+ *        over the volume match, each once, following the catalog position to
+ *        the end
+ *
+ * @param[in]  obj      session
+ * @param[in]  vid      volume
+ * @param[in]  rbitmap  criteria, FILPBIT_* bits
+ * @param[in]  spec1    first specification record
+ * @param[in]  spec2    second specification record
+ * @param[in]  speclen  length of each record, at most 64 bytes
+ * @param[out] ids      receives the file IDs
+ * @param[in]  max      room in ids
+ * @param[out] nids     distinct file IDs, max at most
+ * @returns AFPERR_EOF at the end of the search, or the result that stopped it
+ */
+int catsearch_ext_ids(AFPObj *obj, uint16_t vid, uint32_t rbitmap,
+                      const void *spec1, const void *spec2, uint16_t speclen,
+                      cnid_t *ids, uint32_t max, uint32_t *nids)
+{
+    unsigned char pos[16] = { 0 };
+    uint32_t nrecs;
+    int ret;
+    *nids = 0;
+
+    do {
+        /* a record is its size, the kind byte, a pad, and the file ID */
+        const unsigned char *rec = (const unsigned char *)rbuf + 24;
+        ret = catsearch_ext_at(obj, vid, 1 << FILPBIT_FNUM, 0, rbitmap, spec1,
+                               spec2, speclen, pos, &nrecs);
+
+        for (uint32_t k = 0; k < nrecs; k++) {
+            uint16_t size;
+            cnid_t id;
+            uint32_t j = 0;
+            memcpy(&size, rec, sizeof(size));
+            memcpy(&id, rec + 4, sizeof(id));
+            rec += 4 + ntohs(size);
+
+            while (j < *nids && ids[j] != id) {
+                j++;
+            }
+
+            if (j == *nids && *nids < max) {
+                ids[(*nids)++] = id;
+            }
+        }
+    } while (ret == AFP_OK);
 
     return ret;
 }

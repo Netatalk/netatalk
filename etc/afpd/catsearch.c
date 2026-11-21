@@ -1096,11 +1096,14 @@ catsearch_end:
     return result;
 } /* catsearch() */
 
+/* CNIDs one search of the database by name holds at most */
+#define CATSEARCH_DB_MAX_RESULTS (1U << 20)
+
 /*!
  * @brief Search the CNID database by name for an FPCatSearch request
  *
  * A new search looks up the CNIDs of the lowercased uname through
- * cnid_find_exact().
+ * cnid_find_exact(), and grows its buffer while the database holds more.
  * Each call then resolves, stats, and tests the next CNIDs against the
  * criteria in c1 and c2. The search always covers all of the volume. A call
  * pauses after rmatches matches or 448 bytes of results. A CNID that no
@@ -1128,8 +1131,8 @@ static int catsearch_db(const AFPObj *obj,
                         int *rsize,
                         int ext)
 {
-    /* resbuf must be >= CNID_FIND_MIN_BUFLEN; see libatalk/cnid/cnid.c. */
-    static char resbuf[CNID_FIND_MIN_BUFLEN];
+    static cnid_t *resbuf;
+    static size_t rescap;
     static uint32_t cur_pos;
     static int num_matches;
     int ccr, r;
@@ -1164,19 +1167,34 @@ static int catsearch_db(const AFPObj *obj,
         }
 
         LOG(log_debug, logtype_afpd, "catsearch_db: %s", buffer);
-        AFP_CNID_START("cnid_find_exact");
-        num_matches = cnid_find_exact(vol->v_cdb,
-                                      buffer,
-                                      namelen,
-                                      resbuf,
-                                      sizeof(resbuf),
-                                      NULL);
-        AFP_CNID_DONE();
+        size_t want = CNID_FIND_MIN_RESULTS;
+        bool more;
 
-        if (num_matches == -1) {
-            result = AFPERR_MISC;
-            goto catsearch_end;
-        }
+        do {
+            if (want > rescap) {
+                cnid_t *grown = realloc(resbuf, want * sizeof(*resbuf));
+
+                if (grown == NULL) {
+                    result = AFPERR_MISC;
+                    goto catsearch_end;
+                }
+
+                resbuf = grown;
+                rescap = want;
+            }
+
+            AFP_CNID_START("cnid_find_exact");
+            num_matches = cnid_find_exact(vol->v_cdb, buffer, namelen, resbuf,
+                                          rescap * sizeof(*resbuf), &more);
+            AFP_CNID_DONE();
+
+            if (num_matches == -1) {
+                result = AFPERR_MISC;
+                goto catsearch_end;
+            }
+
+            want = MIN(rescap * 8, CATSEARCH_DB_MAX_RESULTS);
+        } while (more && want > rescap);
     }
 
     while (cur_pos < num_matches) {
@@ -1184,8 +1202,7 @@ static int catsearch_db(const AFPObj *obj,
         cnid_t cnid, did;
         char resolvebuf[12 + MAXPATHLEN + 1];
         struct dir *dir;
-        /* Next CNID to process from buffer */
-        memcpy(&cnid, resbuf + cur_pos * sizeof(cnid_t), sizeof(cnid_t));
+        cnid = resbuf[cur_pos];
         did = cnid;
         AFP_CNID_START("cnid_resolve");
         name = cnid_resolve(vol->v_cdb, &did, resolvebuf, 12 + MAXPATHLEN + 1);

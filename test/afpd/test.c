@@ -5733,6 +5733,8 @@ int main(int argc, char *argv[])
              "catsearch: an exact name reads a backslash as itself");
     TEST_int(utest_catsearch_db_exact_wildcards(&obj, vol, vid), 0,
              "catsearch: an exact name reads '%' and '_' as themselves");
+    TEST_int(utest_catsearch_db_exact_many(&obj, vol, vid), 0,
+             "catsearch: more than 100 files of one name are all found");
     TEST_int(utest_createfile_registers_in_its_folder(&obj, vol, vid), 0,
              "create: a file made through a path registers in its folder");
     TEST_int(utest_openfork_registers_in_its_folder(&obj, vol, vid), 0,

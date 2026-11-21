@@ -3381,6 +3381,132 @@ int utest_catsearch_db_exact_wildcards(AFPObj *obj, struct vol *vol,
 }
 
 /*!
+ * @brief Make the folders d000 onwards in a folder, each holding a file of
+ *        one name
+ *
+ * @param[in]  obj   AFP session
+ * @param[in]  vid   volume ID
+ * @param[in]  did   the folder
+ * @param[in]  want  the files' name
+ * @param[in]  n     folders to make, at most 1000
+ * @param[out] dids  receives the folders' IDs, n of room
+ * @param[out] made  receives the folders made, for catsearch_db_unspread()
+ * @returns 0, 1 when a folder or a file is not made
+ */
+static int catsearch_db_spread(AFPObj *obj, uint16_t vid, cnid_t did,
+                               const char *want, int n, cnid_t *dids,
+                               int *made)
+{
+    char name[16];
+
+    for (*made = 0; *made < n;) {
+        snprintf(name, sizeof(name), "d%03d", *made);
+
+        if (createdir(obj, vid, did, name) != AFP_OK) {
+            return 1;
+        }
+
+        dids[(*made)++] = curdir->d_did;
+
+        if (createfile(obj, vid, dids[*made - 1], want) != AFP_OK) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Remove the folders and files catsearch_db_spread() made
+ *
+ * @param[in] obj   AFP session
+ * @param[in] vid   volume ID
+ * @param[in] did   the folder
+ * @param[in] want  the files' name
+ * @param[in] made  the folders made
+ * @param[in] dids  their IDs
+ */
+static void catsearch_db_unspread(AFPObj *obj, uint16_t vid, cnid_t did,
+                                  const char *want, int made,
+                                  const cnid_t *dids)
+{
+    char name[16];
+
+    while (made-- > 0) {
+        delete (obj, vid, dids[made], want);
+        snprintf(name, sizeof(name), "d%03d", made);
+        delete (obj, vid, did, name);
+    }
+}
+
+/*!
+ * @brief Whether a search of the database by exact name, following its
+ *        catalog position to the end, returns each of n files
+ *
+ * Each file sits in a folder of its own.
+ *
+ * @param[in] obj     AFP session
+ * @param[in] vol     volume
+ * @param[in] vid     volume ID
+ * @param[in] folder  folder for the files, made in the volume root
+ * @param[in] want    the files' name, at most 32 bytes
+ * @param[in] n       files, at most CNID_FIND_MIN_RESULTS + 1
+ * @returns 0, 1 when the search misses a file or the setup fails
+ */
+static int catsearch_db_each(AFPObj *obj, struct vol *vol, uint16_t vid,
+                             const char *folder, const char *want, int n)
+{
+    unsigned char spec[12 + 32];
+    const uint16_t speclen = catsearch_db_spec(spec, want);
+    cnid_t dids[CNID_FIND_MIN_RESULTS + 1];
+    cnid_t ids[CNID_FIND_MIN_RESULTS + 2];
+    const int searchdb = vol->v_flags & AFPVOL_SEARCHDB;
+    uint32_t nids = 0;
+    cnid_t did;
+    int made = 0;
+    int ret;
+    int result = 1;
+
+    if ((did = make_folder(obj, vid, folder)) == CNID_INVALID) {
+        return 1;
+    }
+
+    vol->v_flags |= AFPVOL_SEARCHDB;
+
+    if (catsearch_db_spread(obj, vid, did, want, n, dids, &made) != 0) {
+        goto out;
+    }
+
+    ret = catsearch_ext_ids(obj, vid, 1U << FILPBIT_PDINFO, spec, spec,
+                            speclen, ids, (uint32_t)n + 1, &nids);
+
+    if (ret != AFPERR_EOF || nids != (uint32_t)n) {
+        fprintf(stderr, "catsearch: exact name '%s': result %d, %u files\n",
+                want, ret, nids);
+        goto out;
+    }
+
+    result = 0;
+out:
+    vol->v_flags = (vol->v_flags & ~AFPVOL_SEARCHDB) | searchdb;
+    catsearch_db_unspread(obj, vid, did, want, made, dids);
+    delete (obj, vid, DIRDID_ROOT, folder);
+    return result;
+}
+
+/*!
+ * @brief A search of the database by exact name returns every file of that
+ *        name, more of them than one query returns
+ *
+ * @returns 0, 1 when the search misses a file or the setup fails
+ */
+int utest_catsearch_db_exact_many(AFPObj *obj, struct vol *vol, uint16_t vid)
+{
+    return catsearch_db_each(obj, vol, vid, "cx", "ce many",
+                             CNID_FIND_MIN_RESULTS + 1);
+}
+
+/*!
  * @brief A file FPCreateFile makes through a path registers in its folder
  *
  * cname() moves into the path's last folder, which holds the file, so the
