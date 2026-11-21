@@ -642,6 +642,41 @@ static int cnid_mysql_drain_results(MYSQL *con)
     return 0;
 }
 
+static int cnid_mysql_execute(MYSQL *con, const char *sql);
+
+/*!
+ * @brief Empty the volume's table, restart its CNIDs at 17 and write Depleted
+ *
+ * One batch runs it, but TRUNCATE and ALTER commit on their own, so a
+ * TRUNCATE that fails leaves the new mark and the rows in place.
+ *
+ * @param[in] db        MySQL backend state
+ * @param[in] depleted  the mark, 1 or 0
+ * @returns 0, or -1 with errno classified when a statement failed
+ */
+static int cnid_mysql_empty(const CNID_mysql_private *db, int depleted)
+{
+    const char *uuid = db->cnid_mysql_voluuid_str;
+    char *sql = NULL;
+    int ret = -1;
+
+    if (asprintf(&sql, "START TRANSACTION;"
+                       "UPDATE volumes SET Depleted=%d WHERE VolUUID='%s';"
+                       "TRUNCATE TABLE `%s`;"
+                       "ALTER TABLE `%s` AUTO_INCREMENT = 17;"
+                       "COMMIT;", depleted, uuid, uuid, uuid) < 0) {
+        errno = CNID_ERR_DB;
+        return -1;
+    }
+
+    if (cnid_mysql_execute(db->cnid_mysql_con, sql) == 0) {
+        ret = cnid_mysql_drain_results(db->cnid_mysql_con);
+    }
+
+    free(sql);
+    return ret;
+}
+
 /*!
  * @brief Execute a prepared statement and reprepare after CR_SERVER_LOST
  *
@@ -1138,7 +1173,6 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
 {
     EC_INIT;
     CNID_mysql_private *db = NULL;
-    char *sql = NULL;
     cnid_t id = CNID_INVALID;
     MYSQL_STMT *stmt;
     my_ulonglong lastid;
@@ -1277,23 +1311,11 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
                     "cnid_mysql_add: CNID set is depleted, emptying the CNID "
                     "table for volume '%s'; entries are rebuilt on access",
                     cdb->cnid_db_vol->v_localname);
-                EC_NEG1(asprintf(&sql,
-                                 "START TRANSACTION;"
-                                 "UPDATE volumes SET Depleted=1 WHERE VolUUID='%s';"
-                                 "TRUNCATE TABLE %s;"
-                                 "ALTER TABLE %s AUTO_INCREMENT = 17;"
-                                 "COMMIT;",
-                                 db->cnid_mysql_voluuid_str,
-                                 db->cnid_mysql_voluuid_str,
-                                 db->cnid_mysql_voluuid_str));
-                EC_NEG1(cnid_mysql_execute(db->cnid_mysql_con, sql));
-                free(sql);
-                sql = NULL;
                 /* Checked before the table is called reset: announcing a reset
                  * of a table still holding its rows, with the sequence not
                  * reseeded, would disconnect every session and do it again on
                  * the next insert. */
-                EC_NEG1(cnid_mysql_drain_results(db->cnid_mysql_con));
+                EC_NEG1(cnid_mysql_empty(db, 1));
                 db->cnid_mysql_flags |= CNID_MYSQL_FLAG_DEPLETED;
                 /* CNIDs issued before the reset now name nothing, or name a
                  * different file as the table refills. Report rather than
@@ -1323,10 +1345,6 @@ EC_CLEANUP: {
         /* Callers read errno to tell a table reset from an ordinary failure */
         const int saved_errno = errno;
         LOG(log_debug, logtype_cnid, "cnid_mysql_add: id: %" PRIu32, ntohl(id));
-
-        if (sql) {
-            free(sql);
-        }
 
         if (db) {
             /* The hint channel spans only this add: a later direct lookup
@@ -2110,7 +2128,6 @@ int cnid_mysql_wipe(struct _cnid_db *cdb)
 {
     EC_INIT;
     CNID_mysql_private *db;
-    char *sql = NULL;
 
     if (!cdb || !(db = cdb->cnid_db_private)) {
         LOG(log_error, logtype_cnid, "cnid_wipe: Parameter error");
@@ -2119,21 +2136,10 @@ int cnid_mysql_wipe(struct _cnid_db *cdb)
     }
 
     LOG(log_debug, logtype_cnid, "cnid_mysql_wipe");
-    EC_NEG1(asprintf(&sql, "START TRANSACTION;"
-                           "UPDATE volumes SET Depleted=0 WHERE VolUUID='%s';"
-                           "TRUNCATE TABLE `%s`;"
-                           "ALTER TABLE `%s` AUTO_INCREMENT = 17;"
-                           "COMMIT;",
-                     db->cnid_mysql_voluuid_str,
-                     db->cnid_mysql_voluuid_str,
-                     db->cnid_mysql_voluuid_str));
-    EC_NEG1(cnid_mysql_execute(db->cnid_mysql_con, sql));
-    free(sql);
-    sql = NULL;
     /* Before the latch is cleared: a caller told the wipe succeeded rebuilds
      * against a table that still holds its rows, with explicit-Id hint inserts
      * re-enabled against a sequence that was never reseeded. */
-    EC_NEG1(cnid_mysql_drain_results(db->cnid_mysql_con));
+    EC_NEG1(cnid_mysql_empty(db, 0));
     /* The Depleted column is cleared above, but this connection latched the
      * flag at open. Leaving it set would make the rest of a dbd rebuild
      * silently discard every AppleDouble CNID hint it is trying to restore,
@@ -2141,11 +2147,6 @@ int cnid_mysql_wipe(struct _cnid_db *cdb)
     db->cnid_mysql_flags &= ~(CNID_MYSQL_FLAG_DEPLETED
                               | CNID_MYSQL_FLAG_NEAR_DEPLETION);
 EC_CLEANUP:
-
-    if (sql) {
-        free(sql);
-    }
-
     EC_EXIT;
 }
 
