@@ -76,6 +76,7 @@ extern int createfile(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int createfile_soft(AFPObj *obj, uint16_t vid, cnid_t did,
                            const char *name);
 extern int create_disk_file(const char *path);
+extern int create_disk_file_stat(const char *path, struct stat *st);
 extern int write_disk_file(const char *path, const void *data, size_t len);
 extern int disk_file_is(const char *path, const void *want, size_t len);
 extern int delete (AFPObj *obj, uint16_t vid, cnid_t did, const char *name);

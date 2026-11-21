@@ -44,7 +44,21 @@
  * openat_watch = 1 with openat_fd = D: openat() calls from D are counted.
  * write_hook = fn: fn sees every write() first, and one it answers 1 writes
  * nothing.
+ * sql.hook = fn with sql.prefix = P: fn runs once, with the connection, ahead
+ * of the next statement starting with P that sqlite3_exec(), sqlite3_step(),
+ * mysql_query() or mysql_stmt_execute() runs; sql.exec runs a statement on
+ * that connection through the real call. sql.fail = 1 as well: mysql_query()
+ * then fails that statement without running it, and mysql_errno() keeps
+ * the value it had.
  */
+
+/*! A one-shot hook ahead of a backend's SQL statement */
+struct fi_sql {
+    void (*hook)(void *con);     /*!< runs once ahead of the statement */
+    const char *prefix;          /*!< the statement's start */
+    int (*exec)(void *con, const char *sql); /*!< runs sql, 0 on success */
+    int fail;                    /*!< mysql_query() fails the statement */
+};
 
 /*! The countdown of one interposed call, with its count of armed calls */
 struct fi_call {
@@ -170,6 +184,7 @@ struct fault_inject {
     int listxattr_calls;  /*!< listxattr/llistxattr while watching */
     const char *stat_suffix; /*!< count stat()/lstat() of paths ending in it */
     int stat_suffix_calls;   /*!< those calls on stat_suffix's paths */
+    struct fi_sql sql;
 };
 
 extern struct fault_inject fi;

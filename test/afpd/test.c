@@ -4425,6 +4425,39 @@ int main(int argc, char *argv[])
                      "cnid_find: search results never carry a truncated id");
     TEST_int_or_skip(utest_cnid_dup_row_no_truncated_delete(vol), 0,
                      "cnid_lookup: duplicate cleanup never deletes through a truncated id");
+    TEST_int_or_skip(utest_cnid_dup_row_parent_out_of_range(vol), 0,
+                     "cnid_lookup: a surplus row whose parent is out of range "
+                     "goes by its CNID");
+    TEST_int(utest_cnid_delete_row_conditional(vol), 0,
+             "cnid_delete_row: removes a row only while it records the "
+             "parent, name, device and inode");
+    TEST_int(utest_cnid_update_row_conditional(vol), 0,
+             "cnid_update_row: rewrites a row only while it records the "
+             "parent, name, device and inode");
+    TEST_int_or_skip(utest_cnid_update_row_moved_keeps_other(vol), 0,
+                     "cnid_update_row: a row another session moved before "
+                     "the update held it keeps the other row");
+    TEST_int(utest_cnid_update_row_replace_calls(vol), 0,
+             "cnid_update_row: a replace that reads another row leaves it, "
+             "and the row takes the stat");
+    TEST_int_or_skip(utest_cnid_update_row_after_reconnect(vol), 0,
+                     "cnid_update_row: a connection the server dropped "
+                     "reconnects and prepares its statements again");
+    TEST_int_or_skip(utest_cnid_mysql_failed_open_closes(vol), 0,
+                     "cnid_open: a MySQL open that fails after its connect "
+                     "closes the connection");
+    TEST_int_or_skip(utest_cnid_update_row_dropped_in_hold(vol), 0,
+                     "cnid_update_row: a connection dropped inside the hold "
+                     "fails the update and leaves the row");
+    TEST_int_or_skip(utest_cnid_lookup_row_changed(vol), 0,
+                     "cnid_add: a stale row another session rewrote for the "
+                     "object before the lookup's delete keeps its CNID");
+    TEST_int_or_skip(utest_cnid_lookup_rows_changed(vol), 0,
+                     "cnid_lookup: a stale row another session changed "
+                     "before the lookup's delete stays");
+    TEST_int(utest_cnid_row_case_renamed(vol), 0,
+             "cnid_delete_row, cnid_update_row: a row renamed by case alone "
+             "stays");
     TEST_int_or_skip(utest_cnid_uuid_case_keeps_table(vol), 0,
                      "cnid_open: a case-flipped volume UUID reuses the live table");
     TEST_int_or_skip(utest_cnid_sqlite_owner_only(vol), 0,

@@ -13,6 +13,11 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief afpd tests: dircache, path resolution, listings, searches, CNIDs
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -1923,7 +1928,7 @@ int utest_veto_file_list_end(void)
 }
 
 static char *(*cnid_real_resolve)(struct _cnid_db *, cnid_t *, void *,
-                                  size_t);
+                                  size_t, uint64_t *, uint64_t *);
 static cnid_t (*cnid_real_add)(struct _cnid_db *, const struct stat *, cnid_t,
                                const char *, size_t, cnid_t);
 static int cnid_resolves;
@@ -1938,13 +1943,16 @@ static cnid_t cnid_add_did;
  * @param[in,out] id      the CNID to resolve, receives its parent's
  * @param[out]    buffer  receives the name
  * @param[in]     len     size of buffer
+ * @param[out]    dev     receives the row's device
+ * @param[out]    ino     receives the row's inode
  * @returns what the backend's cnid_resolve() returns
  */
 static char *cnid_count_resolve(struct _cnid_db *cdb, cnid_t *id,
-                                void *buffer, size_t len)
+                                void *buffer, size_t len, uint64_t *dev,
+                                uint64_t *ino)
 {
     cnid_resolves++;
-    return cnid_real_resolve(cdb, id, buffer, len);
+    return cnid_real_resolve(cdb, id, buffer, len, dev, ino);
 }
 
 /*!

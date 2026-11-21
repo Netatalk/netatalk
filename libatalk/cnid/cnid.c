@@ -523,6 +523,20 @@ void cnid_close(struct _cnid_db *db)
 }
 
 /*!
+ * @brief The device a CNID row records for st: 0 under CNID_FLAG_NODEV
+ *
+ * Every write, lookup and check of a row's device goes through it.
+ *
+ * @param[in] cdb  CNID database
+ * @param[in] st   stat of the object
+ * @returns the device
+ */
+uint64_t cnid_row_dev(const struct _cnid_db *cdb, const struct stat *st)
+{
+    return cdb->cnid_db_flags & CNID_FLAG_NODEV ? 0 : (uint64_t)st->st_dev;
+}
+
+/*!
  * @brief Add an object to the CNID database or find its existing CNID
  *
  * The call clears errno before it asks the backend, so errno reports the
@@ -559,8 +573,7 @@ cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
     }
 
     if (t != NULL && t->state == DIRTAB_READY && st->st_ctime < t->loaded) {
-        uint64_t dev = cdb->cnid_db_flags & CNID_FLAG_NODEV
-                       ? 0 : (uint64_t)st->st_dev;
+        uint64_t dev = cnid_row_dev(cdb, st);
 
         if ((ret = dirtab_lookup(t, name, len, dev, (uint64_t)st->st_ino))
                 != CNID_INVALID && (hint == CNID_INVALID || hint == ret)) {
@@ -591,6 +604,28 @@ int cnid_delete(struct _cnid_db *cdb, cnid_t id)
     return ret;
 }
 
+/*!
+ * @brief Remove a CNID's row if it records did, name, dev, ino
+ *
+ * @param[in] cdb   CNID database
+ * @param[in] id    CNID to remove
+ * @param[in] did   the parent the row must record
+ * @param[in] name  the name the row must record, as cnid_resolve_row()
+ *                  hands it back
+ * @param[in] len   length of name, up to MAXPATHLEN
+ * @param[in] dev   the device the row must record, as cnid_resolve_row()
+ *                  hands it back
+ * @param[in] ino   the inode the row must record
+ * @returns 1 when the row went, 0 when no row of the CNID records them, or
+ *          -1 with errno classified
+ */
+int cnid_delete_row(struct _cnid_db *cdb, cnid_t id, cnid_t did,
+                    const char *name, size_t len, uint64_t dev, uint64_t ino)
+{
+    errno = 0;
+    dirtab_off(cdb);
+    return cdb->cnid_delete_row(cdb, id, did, name, len, dev, ino);
+}
 
 /*!
  * @brief Look up the CNID of a name in a directory
@@ -757,7 +792,7 @@ int cnid_find_scoped(struct _cnid_db *cdb, const char *name,
 }
 
 /*!
- * @brief Resolve a CNID to its name and parent directory
+ * @brief Resolve a CNID to the name, parent, device and inode its row records
  *
  * A stored name of "." or ".." means a corrupted database, and the call then
  * fails with CNID_ERR_CORRUPT.
@@ -767,13 +802,16 @@ int cnid_find_scoped(struct _cnid_db *cdb, const char *name,
  *                        CNID_INVALID
  * @param[out]    buffer  work buffer for the name
  * @param[in]     len     size of buffer
+ * @param[out]    dev     receives the row's device, for cnid_row_holds()
+ * @param[out]    ino     receives the row's inode
  * @returns the name inside buffer, or NULL
  */
-char *cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
+char *cnid_resolve_row(struct _cnid_db *cdb, cnid_t *id, void *buffer,
+                       size_t len, uint64_t *dev, uint64_t *ino)
 {
     char *ret;
     errno = 0;
-    ret = cdb->cnid_resolve(cdb, id, buffer, len);
+    ret = cdb->cnid_resolve(cdb, id, buffer, len, dev, ino);
 
     if (ret && (!strcmp(ret, ".") || !strcmp(ret, ".."))) {
         LOG(log_error, logtype_afpd,
@@ -786,6 +824,38 @@ char *cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
     }
 
     return ret;
+}
+
+/*!
+ * @brief Resolve a CNID to its name and parent directory
+ *
+ * @param[in]     cdb     CNID database
+ * @param[in,out] id      CNID to resolve, receives the parent CNID or
+ *                        CNID_INVALID
+ * @param[out]    buffer  work buffer for the name
+ * @param[in]     len     size of buffer
+ * @returns the name inside buffer, or NULL, as cnid_resolve_row() answers
+ */
+char *cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
+{
+    uint64_t dev;
+    uint64_t ino;
+    return cnid_resolve_row(cdb, id, buffer, len, &dev, &ino);
+}
+
+/*!
+ * @brief Tell whether st shows the device and inode a CNID row records
+ *
+ * @param[in] cdb  CNID database
+ * @param[in] dev  the row's device, as cnid_resolve_row() hands it back
+ * @param[in] ino  the row's inode
+ * @param[in] st   the stat
+ * @returns true when cnid_row_dev() of st and st's inode are the row's
+ */
+bool cnid_row_holds(const struct _cnid_db *cdb, uint64_t dev, uint64_t ino,
+                    const struct stat *st)
+{
+    return dev == cnid_row_dev(cdb, st) && ino == (uint64_t)st->st_ino;
 }
 
 /*!
@@ -807,6 +877,45 @@ int cnid_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
     dirtab_off(cdb);
     ret = cdb->cnid_update(cdb, id, st, did, name, len);
     return ret;
+}
+
+/*!
+ * @brief Give a CNID's row st's dev and ino if it records did, name, dev, ino
+ *
+ * The backend holds the row from the check to the update, except on a MySQL
+ * table that the open did not read as InnoDB and that its user may not lock,
+ * where only the update's own condition guards the row. Under a hold, another
+ * session's conditional delete or update of the row waits and then finds it
+ * as the update left it, and that session's queries that only read wait only
+ * under MySQL's table lock. The update drops as stale another row that
+ * records the stat's device and inode.
+ *
+ * @param[in] cdb      CNID database
+ * @param[in] id       CNID whose row changes
+ * @param[in] did      the parent the row must record
+ * @param[in] name     the name the row must record, as cnid_resolve_row()
+ *                     hands it back
+ * @param[in] len      length of name, up to MAXPATHLEN
+ * @param[in] dev      the device the row must record, as cnid_resolve_row()
+ *                     hands it back
+ * @param[in] ino      the inode the row must record
+ * @param[in] st       stat of the object whose device and inode the row takes
+ * @param[in] replace  replaces the object at the name once the row matched,
+ *                     inside the hold if any, or NULL
+ * @param[in] arg      replace's argument
+ * @returns 1 when the row changed, 0 when no row of the CNID records them or,
+ *          on MySQL after replace ran, when the row already records the
+ *          stat's device and inode or changed after a check without a hold,
+ *          or -1 with errno classified, or replace's errno when replace failed
+ */
+int cnid_update_row(struct _cnid_db *cdb, cnid_t id, cnid_t did,
+                    const char *name, size_t len, uint64_t dev, uint64_t ino,
+                    const struct stat *st, cnid_replace_fn replace, void *arg)
+{
+    errno = 0;
+    dirtab_off(cdb);
+    return cdb->cnid_update_row(cdb, id, did, name, len, dev, ino, st, replace,
+                                arg);
 }
 
 /*!

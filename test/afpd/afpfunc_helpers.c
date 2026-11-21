@@ -22,7 +22,8 @@
 /*!
  * @file
  * @brief The component tests' helpers: AFP commands called on a session
- *        object, files written to disk, and DSI sessions served in a child
+ *        object and their replies, files written to disk, and DSI sessions
+ *        served in a child
  */
 
 #ifdef HAVE_CONFIG_H
@@ -605,7 +606,8 @@ static cnid_t dsi_test_cnid_get(struct _cnid_db *cdb _U_, cnid_t did _U_,
  * @returns NULL
  */
 static char *dsi_test_cnid_resolve(struct _cnid_db *cdb _U_, cnid_t *id _U_,
-                                   void *buffer _U_, size_t len _U_)
+                                   void *buffer _U_, size_t len _U_,
+                                   uint64_t *dev _U_, uint64_t *ino _U_)
 {
     return NULL;
 }
@@ -1561,17 +1563,39 @@ int getfiledirparms_lname(AFPObj *obj, uint16_t vid, cnid_t did,
  * @brief Create an empty file behind the server's back
  *
  * @param[in] path  the file
- * @returns 0, -1 when the file exists or cannot be made
+ * @returns 0, or -1 when the file exists or cannot be made, or when its stat
+ *          or close fails, which leaves the file
  */
 int create_disk_file(const char *path)
 {
+    struct stat st;
+    return create_disk_file_stat(path, &st);
+}
+
+/*!
+ * @brief Create an empty file behind the server's back and fstat() it
+ *
+ * @param[in]  path  the file
+ * @param[out] st    the file's stat
+ * @returns 0, or -1 when the file exists or cannot be made, or when its stat
+ *          or close fails, which leaves the file
+ */
+int create_disk_file_stat(const char *path, struct stat *st)
+{
     int fd = open(path, O_WRONLY | O_CREAT | O_EXCL, 0600);
+    int ret;
 
     if (fd == -1) {
         return -1;
     }
 
-    return close(fd);
+    ret = fstat(fd, st);
+
+    if (close(fd) != 0) {
+        ret = -1;
+    }
+
+    return ret;
 }
 
 /*!

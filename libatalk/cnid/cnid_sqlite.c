@@ -222,7 +222,7 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Prepare all 13 statements of the volume, at open and after a wipe
+ * @brief Prepare the volume's statements, at open and after a wipe
  *
  * A failure leaves the later statements NULL, which cnid_sqlite_stmt_ready
  * then refuses. The scoped find walks the subtree with a recursive CTE, which
@@ -244,7 +244,8 @@ static int init_prepared_stmt(CNID_sqlite_private * db)
     EC_ZERO(init_prepared_stmt_one(db, &db->cnid_get_stmt, "get",
                                    "SELECT Id FROM \"%s\" WHERE Name = ? AND Did = ?"));
     EC_ZERO(init_prepared_stmt_one(db, &db->cnid_resolve_stmt, "resolve",
-                                   "SELECT Did, Name FROM \"%s\" WHERE Id = ?"));
+                                   "SELECT Did, Name, DevNo, InodeNo "
+                                   "FROM \"%s\" WHERE Id = ?"));
     EC_ZERO(init_prepared_stmt_one(db, &db->cnid_delete_stmt, "delete",
                                    "DELETE FROM \"%s\" WHERE Id = ?"));
     EC_ZERO(init_prepared_stmt_one(db, &db->cnid_getstamp_stmt, "getstamp",
@@ -275,6 +276,21 @@ static int init_prepared_stmt(CNID_sqlite_private * db)
     EC_ZERO(init_prepared_stmt_one(db, &db->cnid_dirlist_stmt, "dirlist",
                                    "SELECT Id, Name, DevNo, InodeNo "
                                    "FROM \"%s\" WHERE Did = ? LIMIT ?"));
+    EC_ZERO(init_prepared_stmt_one(db, &db->cnid_delete_row_stmt, "delete_row",
+                                   "DELETE FROM \"%s\" WHERE Id = ? "
+                                   "AND Did = ? AND Name = ? "
+                                   "AND DevNo = ? AND InodeNo = ?"));
+    EC_ZERO(init_prepared_stmt_one(db, &db->cnid_update_row_stmt, "update_row",
+                                   "UPDATE \"%s\" SET DevNo = ?, InodeNo = ? "
+                                   "WHERE Id = ?"));
+    EC_ZERO(init_prepared_stmt_one(db, &db->cnid_del_devino_other_stmt,
+                                   "del_devino_other",
+                                   "DELETE FROM \"%s\" WHERE DevNo = ? "
+                                   "AND InodeNo = ? AND Id <> ?"));
+    EC_ZERO(init_prepared_stmt_one(db, &db->cnid_check_row_stmt, "check_row",
+                                   "SELECT Id FROM \"%s\" WHERE Id = ? "
+                                   "AND Did = ? AND Name = ? "
+                                   "AND DevNo = ? AND InodeNo = ?"));
     EC_EXIT;
 EC_CLEANUP:
     EC_EXIT;
@@ -300,6 +316,10 @@ static void close_prepared_stmt(CNID_sqlite_private * db)
     sqlite3_finalize(db->cnid_del_didname_stmt);
     sqlite3_finalize(db->cnid_del_devino_stmt);
     sqlite3_finalize(db->cnid_dirlist_stmt);
+    sqlite3_finalize(db->cnid_delete_row_stmt);
+    sqlite3_finalize(db->cnid_update_row_stmt);
+    sqlite3_finalize(db->cnid_del_devino_other_stmt);
+    sqlite3_finalize(db->cnid_check_row_stmt);
     db->cnid_lookup_stmt = NULL;
     db->cnid_add_stmt = NULL;
     db->cnid_put_stmt = NULL;
@@ -313,6 +333,10 @@ static void close_prepared_stmt(CNID_sqlite_private * db)
     db->cnid_del_didname_stmt = NULL;
     db->cnid_del_devino_stmt = NULL;
     db->cnid_dirlist_stmt = NULL;
+    db->cnid_delete_row_stmt = NULL;
+    db->cnid_update_row_stmt = NULL;
+    db->cnid_del_devino_other_stmt = NULL;
+    db->cnid_check_row_stmt = NULL;
 }
 
 /*!
@@ -715,6 +739,193 @@ EC_CLEANUP:
 }
 
 /*!
+ * @brief Remove a CNID's row if it records did, name, dev, ino
+ *
+ * @param[in] cdb   CNID database
+ * @param[in] id    CNID in network order, not 0
+ * @param[in] did   parent the row must record, in network order
+ * @param[in] name  name the row must record
+ * @param[in] len   length of name
+ * @param[in] dev   device the row must record
+ * @param[in] ino   inode the row must record
+ * @returns 1 when deleted, 0 when no row matched, or -1 with errno classified
+ */
+static int cnid_sqlite_delete_row(struct _cnid_db *cdb, const cnid_t id,
+                                  const cnid_t did, const char *name,
+                                  size_t len, uint64_t dev, uint64_t ino)
+{
+    CNID_sqlite_private *db = NULL;
+    int sqlite_return;
+    int ret = -1;
+
+    if (!cdb || !(db = cdb->cnid_db_private) || !id || !name) {
+        LOG(log_error, logtype_cnid, "cnid_sqlite_delete_row: Parameter error");
+        errno = CNID_ERR_PARAM;
+        return -1;
+    }
+
+    if (!cnid_sqlite_stmt_ready(db->cnid_delete_row_stmt,
+                                "cnid_sqlite_delete_row")) {
+        return -1;
+    }
+
+    sqlite3_reset(db->cnid_delete_row_stmt);
+    sqlite3_clear_bindings(db->cnid_delete_row_stmt);
+    sqlite3_bind_int64(db->cnid_delete_row_stmt, 1, ntohl(id));
+    sqlite3_bind_int64(db->cnid_delete_row_stmt, 2, ntohl(did));
+    sqlite3_bind_text(db->cnid_delete_row_stmt, 3, name, (int)len,
+                      SQLITE_STATIC);
+    sqlite3_bind_int64(db->cnid_delete_row_stmt, 4, (sqlite3_int64)dev);
+    sqlite3_bind_int64(db->cnid_delete_row_stmt, 5, (sqlite3_int64)ino);
+    sqlite_return = sqlite3_step(db->cnid_delete_row_stmt);
+
+    if (sqlite_return == SQLITE_DONE) {
+        ret = sqlite3_changes(db->cnid_sqlite_con) > 0 ? 1 : 0;
+    } else {
+        LOG(log_error, logtype_cnid,
+            "cnid_sqlite_delete_row: sqlite query error: %s",
+            sqlite3_errmsg(db->cnid_sqlite_con));
+        cnid_sqlite_set_errno(sqlite_return);
+    }
+
+    cnid_sqlite_stmt_reset(db->cnid_delete_row_stmt);
+    return ret;
+}
+
+/*!
+ * @brief Report a failed statement of a conditional update and roll it back
+ *
+ * @param[in]     db             SQLite backend state
+ * @param[in]     sqlite_return  the statement's result code
+ * @param[in,out] owned          owner flag of the update's transaction
+ * @returns -1 with errno classified
+ */
+static int cnid_sqlite_update_row_failed(CNID_sqlite_private *db,
+                                         int sqlite_return, int *owned)
+{
+    LOG(log_error, logtype_cnid, "cnid_sqlite_update_row: sqlite query error: %s",
+        sqlite3_errmsg(db->cnid_sqlite_con));
+    cnid_sqlite_set_errno(sqlite_return);
+    cnid_sqlite_rollback(db->cnid_sqlite_con, owned);
+    return -1;
+}
+
+/*!
+ * @brief Give a CNID's row st's dev and ino if it records did, name, dev, ino
+ *
+ * The write lock spans the check, replace and the update, so other sessions'
+ * writes wait; another row that records the stat's device and inode is
+ * stale, as the object holds them now, and goes in the same transaction.
+ *
+ * @param[in] cdb      CNID database
+ * @param[in] id       CNID in network order, not 0
+ * @param[in] did      parent the row must record, in network order
+ * @param[in] name     name the row must record
+ * @param[in] len      length of name
+ * @param[in] dev      device the row must record
+ * @param[in] ino      inode the row must record
+ * @param[in] st       stat whose device and inode the row takes
+ * @param[in] replace  runs under the write lock once the row matched, or NULL
+ * @param[in] arg      replace's argument
+ * @returns 1 when the row changed, 0 when no row matched, or -1 with errno
+ *          classified, or with replace's errno when replace failed
+ */
+static int cnid_sqlite_update_row(struct _cnid_db *cdb, const cnid_t id,
+                                  const cnid_t did, const char *name,
+                                  size_t len, uint64_t dev, uint64_t ino,
+                                  const struct stat *st,
+                                  cnid_replace_fn replace, void *arg)
+{
+    CNID_sqlite_private *db = NULL;
+    sqlite3_stmt *stmt;
+    uint64_t now_dev;
+    int sqlite_return;
+    int matched;
+    int changed = 0;
+    int owned = 0;
+
+    if (!cdb || !(db = cdb->cnid_db_private) || !id || !name || !st) {
+        LOG(log_error, logtype_cnid, "cnid_sqlite_update_row: Parameter error");
+        errno = CNID_ERR_PARAM;
+        return -1;
+    }
+
+    if (!cnid_sqlite_stmt_ready(db->cnid_check_row_stmt,
+                                "cnid_sqlite_update_row")
+            || !cnid_sqlite_stmt_ready(db->cnid_update_row_stmt,
+                                       "cnid_sqlite_update_row")
+            || !cnid_sqlite_stmt_ready(db->cnid_del_devino_other_stmt,
+                                       "cnid_sqlite_update_row")) {
+        return -1;
+    }
+
+    /* BEGIN defers the write lock to the first write, after the check */
+    if (cnid_sqlite_execute(db->cnid_sqlite_con, "BEGIN IMMEDIATE") < 0) {
+        return -1;
+    }
+
+    owned = 1;
+    stmt = db->cnid_check_row_stmt;
+    sqlite3_reset(stmt);
+    sqlite3_clear_bindings(stmt);
+    sqlite3_bind_int64(stmt, 1, ntohl(id));
+    sqlite3_bind_int64(stmt, 2, ntohl(did));
+    sqlite3_bind_text(stmt, 3, name, (int)len, SQLITE_STATIC);
+    sqlite3_bind_int64(stmt, 4, (sqlite3_int64)dev);
+    sqlite3_bind_int64(stmt, 5, (sqlite3_int64)ino);
+    sqlite_return = sqlite3_step(stmt);
+    matched = sqlite_return == SQLITE_ROW;
+    cnid_sqlite_stmt_reset(stmt);
+
+    if (!matched && sqlite_return != SQLITE_DONE) {
+        return cnid_sqlite_update_row_failed(db, sqlite_return, &owned);
+    }
+
+    if (matched) {
+        if (replace != NULL && replace(arg) != 0) {
+            cnid_sqlite_rollback(db->cnid_sqlite_con, &owned);
+            return -1;
+        }
+
+        now_dev = cnid_row_dev(cdb, st);
+        stmt = db->cnid_del_devino_other_stmt;
+        sqlite3_reset(stmt);
+        sqlite3_clear_bindings(stmt);
+        sqlite3_bind_int64(stmt, 1, (sqlite3_int64)now_dev);
+        sqlite3_bind_int64(stmt, 2, (sqlite3_int64)st->st_ino);
+        sqlite3_bind_int64(stmt, 3, ntohl(id));
+        sqlite_return = sqlite3_step(stmt);
+        cnid_sqlite_stmt_reset(stmt);
+
+        if (sqlite_return != SQLITE_DONE) {
+            return cnid_sqlite_update_row_failed(db, sqlite_return, &owned);
+        }
+
+        /* the write lock keeps the row as the check found it */
+        stmt = db->cnid_update_row_stmt;
+        sqlite3_reset(stmt);
+        sqlite3_clear_bindings(stmt);
+        sqlite3_bind_int64(stmt, 1, (sqlite3_int64)now_dev);
+        sqlite3_bind_int64(stmt, 2, (sqlite3_int64)st->st_ino);
+        sqlite3_bind_int64(stmt, 3, ntohl(id));
+        sqlite_return = sqlite3_step(stmt);
+        changed = sqlite3_changes(db->cnid_sqlite_con);
+        cnid_sqlite_stmt_reset(stmt);
+
+        if (sqlite_return != SQLITE_DONE) {
+            return cnid_sqlite_update_row_failed(db, sqlite_return, &owned);
+        }
+    }
+
+    if (cnid_sqlite_commit(db->cnid_sqlite_con, &owned) < 0) {
+        cnid_sqlite_rollback(db->cnid_sqlite_con, &owned);
+        return -1;
+    }
+
+    return changed > 0 ? 1 : 0;
+}
+
+/*!
  * @brief Close the SQLite connection of a CNID database and free the database
  *
  * The call first folds the WAL back into the database with a TRUNCATE
@@ -829,10 +1040,7 @@ int cnid_sqlite_update(struct _cnid_db *cdb,
         EC_FAIL;
     }
 
-    if (!(cdb->cnid_db_flags & CNID_FLAG_NODEV)) {
-        dev = st->st_dev;
-    }
-
+    dev = cnid_row_dev(cdb, st);
     ino = st->st_ino;
 
     for (int attempt = 0; attempt < 2; attempt++) {
@@ -940,15 +1148,18 @@ EC_CLEANUP:
 /*!
  * @brief Find the CNID of an object by name and parent or by device and inode
  *
- * Extra matching rows are stale, and the call removes them and reports
- * CNID_ERR_NOTFOUND. A row with an ID or parent outside the CNID range means
- * a corrupted database.
+ * Extra matching rows are stale: each goes while it still records what the
+ * call read, or by its ID alone where its parent is outside the CNID range,
+ * and the call reports CNID_ERR_NOTFOUND. One whose ID is outside the range
+ * stays, and the call reports CNID_ERR_CORRUPT, as for a found row with an ID
+ * or parent outside the range.
  *
  * A row with another name or parent means a server-side move or a reused
  * inode. When its CNID equals the hint of the current add, the row takes the
  * new name and parent. Otherwise, and for a row with another device or inode,
- * the call removes the row and reports CNID_ERR_NOTFOUND, so cnid_sqlite_add
- * inserts a new entry.
+ * the row goes while it still records what the call read, and the call
+ * reports CNID_ERR_NOTFOUND: cnid_sqlite_add inserts a new entry, or meets a
+ * row another session changed meanwhile and repeats the lookup.
  *
  * @param[in] cdb   CNID database
  * @param[in] st    stat of the object
@@ -989,11 +1200,7 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb, const struct stat *st,
 
     ino = st->st_ino;
     hint = db->cnid_sqlite_hint;
-
-    if (!(cdb->cnid_db_flags & CNID_FLAG_NODEV)) {
-        dev = st->st_dev;
-    }
-
+    dev = cnid_row_dev(cdb, st);
     LOG(log_maxdebug, logtype_cnid,
         "cnid_sqlite_lookup(did: %" PRIu32 ", name: \"%s\", hint: %" PRIu32 "): BEGIN",
         ntohl(did), name, ntohl(hint));
@@ -1061,13 +1268,27 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb, const struct stat *st,
      * up over successive lookups. */
     int row_count = 1;
     int delete_errno = 0;
-    uint64_t extra_ids[2];
+    struct {
+        uint64_t id;
+        uint64_t did;
+        uint64_t dev;
+        uint64_t ino;
+        char name[MAXPATHLEN];
+    } extras[2];
     int extra_count = 0;
 
     while ((sqlite_return = sqlite3_step(db->cnid_lookup_stmt)) == SQLITE_ROW) {
-        if (extra_count < (int)(sizeof(extra_ids) / sizeof(extra_ids[0]))) {
-            extra_ids[extra_count++] =
-                sqlite3_column_int64(db->cnid_lookup_stmt, 0);
+        if (extra_count < (int)(sizeof(extras) / sizeof(extras[0]))) {
+            sqlite3_stmt *stmt = db->cnid_lookup_stmt;
+            const unsigned char *extra_name = sqlite3_column_text(stmt, 2);
+            extras[extra_count].id = sqlite3_column_int64(stmt, 0);
+            extras[extra_count].did = sqlite3_column_int64(stmt, 1);
+            extras[extra_count].dev = sqlite3_column_int64(stmt, 3);
+            extras[extra_count].ino = sqlite3_column_int64(stmt, 4);
+            strlcpy(extras[extra_count].name,
+                    extra_name ? (const char *)extra_name : "",
+                    sizeof(extras[extra_count].name));
+            extra_count++;
         }
 
         row_count++;
@@ -1084,13 +1305,16 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb, const struct stat *st,
     sqlite3_reset(db->cnid_lookup_stmt);
 
     for (int i = 0; i < extra_count; i++) {
-        /* An out-of-range rowid is unreachable through this statement, whose
-         * bound id is 32-bit: it is reported and left in place */
-        if (!cnid_sqlite_rowid_ok(extra_ids[i])) {
+        int gone;
+
+        /* the deletes take 32-bit CNIDs: a row with an id out of range stays,
+         * and one with a parent out of range goes by its id alone, as no
+         * session rewrites a row whose parent no CNID names */
+        if (!cnid_sqlite_rowid_ok(extras[i].id)) {
             LOG(log_error, logtype_cnid,
                 "cnid_sqlite_lookup: out of range duplicate id %" PRIu64
                 " for did: %u, name: '%s', not deleted",
-                extra_ids[i], ntohl(did), name);
+                extras[i].id, ntohl(did), name);
             delete_errno = CNID_ERR_CORRUPT;
             continue;
         }
@@ -1098,9 +1322,20 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb, const struct stat *st,
         LOG(log_debug, logtype_cnid,
             "cnid_sqlite_lookup: multiple matches for did: %u, name: '%s', deleting extra id: %"
             PRIu64,
-            ntohl(did), name, extra_ids[i]);
+            ntohl(did), name, extras[i].id);
 
-        if (cnid_sqlite_delete(cdb, htonl((cnid_t)extra_ids[i]))) {
+        if (!cnid_sqlite_rowid_ok(extras[i].did)) {
+            gone = cnid_sqlite_delete(cdb, htonl((cnid_t)extras[i].id));
+        } else {
+            /* a row another session changed since the read stays */
+            gone = cnid_sqlite_delete_row(cdb, htonl((cnid_t)extras[i].id),
+                                          htonl((cnid_t)extras[i].did),
+                                          extras[i].name,
+                                          strlen(extras[i].name),
+                                          extras[i].dev, extras[i].ino);
+        }
+
+        if (gone < 0) {
             LOG(log_error, logtype_cnid,
                 "cnid_sqlite_lookup: sqlite query error (delete extra): %s",
                 sqlite3_errmsg(db->cnid_sqlite_con));
@@ -1108,7 +1343,7 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb, const struct stat *st,
         }
     }
 
-    /* row_count, not extra_count: extra_ids saturates at its size */
+    /* row_count, not extra_count: extras saturates at its size */
     if (row_count > 1) {
         LOG(log_debug, logtype_cnid,
             "cnid_sqlite_lookup: deleted %d duplicate rows for did: %u, name: '%s'",
@@ -1147,8 +1382,13 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb, const struct stat *st,
             ", name: \"%s\"): server side mv oder reused inode",
             retdid, ntohl(hint), ntohl(did), name);
 
+        /* a row another session changed since the read stays */
         if (hint != retid) {
-            if (cnid_sqlite_delete(cdb, retid) != 0) {
+            if (cnid_sqlite_delete_row(cdb, retid, (cnid_t)retdid,
+                                       lookup_result_name,
+                                       strlen(lookup_result_name),
+                                       lookup_result_dev,
+                                       lookup_result_ino) < 0) {
                 /* errno holds the delete's classification and is passed through */
                 LOG(log_error, logtype_cnid,
                     "cnid_sqlite_lookup: sqlite query error (hint delete): %s",
@@ -1176,7 +1416,10 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb, const struct stat *st,
             "cnid_sqlite_lookup(DID:%u, name: \"%s\"): changed dev/ino",
             ntohl(did), name);
 
-        if (cnid_sqlite_delete(cdb, retid) != 0) {
+        if (cnid_sqlite_delete_row(cdb, retid, (cnid_t)retdid,
+                                   lookup_result_name,
+                                   strlen(lookup_result_name),
+                                   lookup_result_dev, lookup_result_ino) < 0) {
             LOG(log_error, logtype_cnid,
                 "cnid_sqlite_lookup: sqlite query error (delete): %s",
                 sqlite3_errmsg(db->cnid_sqlite_con));
@@ -1270,10 +1513,7 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
         EC_FAIL;
     }
 
-    if (!(cdb->cnid_db_flags & CNID_FLAG_NODEV)) {
-        dev = st->st_dev;
-    }
-
+    dev = cnid_row_dev(cdb, st);
     ino = st->st_ino;
     /* The reserve gate governs inserting the hint as an explicit rowid only.
      * The raw hint still drives lookup's update-in-place vs delete-and-reinsert
@@ -1604,7 +1844,7 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Resolve a CNID to its parent and name in the SQLite table
+ * @brief Resolve a CNID to the parent, name, device and inode of its row
  *
  * Only a missing row reports CNID_ERR_NOTFOUND, which afp_resolveid answers
  * with the permanent AFPERR_NOID. A parent outside the CNID range or a NULL
@@ -1615,10 +1855,12 @@ EC_CLEANUP:
  *                        CNID_INVALID
  * @param[out]    buffer  receives the name, always NUL-terminated
  * @param[in]     len     size of buffer, not 0
+ * @param[out]    dev     receives the row's device
+ * @param[out]    ino     receives the row's inode
  * @returns buffer, or NULL with errno classified
  */
 char *cnid_sqlite_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
-                          size_t len)
+                          size_t len, uint64_t *dev, uint64_t *ino)
 {
     EC_INIT;
     CNID_sqlite_private *db = NULL;
@@ -1696,6 +1938,8 @@ char *cnid_sqlite_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
     *id = htonl((uint32_t) resolve_result_did);
     strlcpy(buffer, (const char *) resolve_result_name, len);
     ((char *)buffer)[len - 1] = '\0';
+    *dev = (uint64_t)sqlite3_column_int64(db->cnid_resolve_stmt, 2);
+    *ino = (uint64_t)sqlite3_column_int64(db->cnid_resolve_stmt, 3);
     LOG(log_debug, logtype_cnid,
         "cnid_sqlite_resolve: resolved did: %u, name: \"%s\"",
         ntohl(*id), buffer);
@@ -2126,6 +2370,8 @@ static struct _cnid_db *cnid_sqlite_new(struct vol *vol)
     cdb->cnid_add = cnid_sqlite_add;
     cdb->cnid_dirlist = cnid_sqlite_dirlist;
     cdb->cnid_delete = cnid_sqlite_delete;
+    cdb->cnid_delete_row = cnid_sqlite_delete_row;
+    cdb->cnid_update_row = cnid_sqlite_update_row;
     cdb->cnid_get = cnid_sqlite_get;
     cdb->cnid_lookup = cnid_sqlite_lookup;
     cdb->cnid_find = cnid_sqlite_find;
