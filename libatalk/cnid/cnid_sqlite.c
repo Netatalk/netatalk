@@ -52,6 +52,7 @@
 #include <atalk/errchk.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
+#include <atalk/sl_names.h>
 #include <atalk/unix.h>
 #include <atalk/util.h>
 #include <atalk/volume.h>
@@ -174,6 +175,25 @@ static int cnid_sqlite_fchmod_companions(const char *dbpath, mode_t mode)
 }
 
 /*!
+ * @brief SQL function netatalk_match(name, query): whether the name matches
+ *
+ * @param[in,out] ctx   receives 1 or 0
+ * @param[in]     argc  2
+ * @param[in]     argv  the name, and the query bound with
+ *                      sqlite3_bind_pointer()
+ */
+static void cnid_sqlite_match(sqlite3_context *ctx, int argc _U_,
+                              sqlite3_value **argv)
+{
+    const struct sl_name_query *query =
+        sqlite3_value_pointer(argv[1], "sl_name_query");
+    const char *name = (const char *)sqlite3_value_text(argv[0]);
+    size_t len = (size_t)sqlite3_value_bytes(argv[0]);
+    sqlite3_result_int(ctx, query != NULL && name != NULL
+                       && sl_name_query_match(query, name, len));
+}
+
+/*!
  * @brief Prepare one statement of the volume, finalizing the previous one
  *
  * Preparing loads the schema, so a corrupt or read-only database fails here,
@@ -250,7 +270,8 @@ static int init_prepared_stmt(CNID_sqlite_private * db)
     EC_ZERO(init_prepared_stmt_one(db, &db->cnid_getstamp_stmt, "getstamp",
                                    "SELECT Stamp FROM volumes WHERE VolPath = ?"));
     EC_ZERO(init_prepared_stmt_one(db, &db->cnid_find_stmt, "find",
-                                   "SELECT Id FROM \"%s\" WHERE Name LIKE ? ESCAPE '!' "
+                                   "SELECT Id FROM \"%s\" "
+                                   "WHERE netatalk_match(Name, ?) "
                                    "ORDER BY Id LIMIT ?"));
     /* Subtree-scoped variant: the recursive CTE enumerates the scope
      * directory's transitive contents via the (Did, Name) unique index, and
@@ -266,7 +287,8 @@ static int init_prepared_stmt(CNID_sqlite_private * db)
                                    ") "
                                    "SELECT t.Id FROM scope s CROSS JOIN \"%1$s\" t "
                                    "ON t.Did = s.Id "
-                                   "WHERE t.Name LIKE ? ESCAPE '!' ORDER BY t.Id LIMIT ?"));
+                                   "WHERE netatalk_match(t.Name, ?) "
+                                   "ORDER BY t.Id LIMIT ?"));
     EC_ZERO(init_prepared_stmt_one(db, &db->cnid_update_stmt, "update",
                                    "UPDATE \"%s\" SET Name = ?, Did = ?, DevNo = ?, InodeNo = ? WHERE Id = ?"));
     EC_ZERO(init_prepared_stmt_one(db, &db->cnid_del_didname_stmt, "del_didname",
@@ -1816,17 +1838,19 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Find the CNIDs whose names a LIKE pattern matches, for cnid_find
+ * @brief Find the CNIDs whose names match a query, for cnid_find
  *
- * The cnid_find wrapper validates the arguments and builds the pattern, which
- * escapes with '!'. The query asks for 1 row more than buffer holds, and that
- * extra row sets more_available. A row with an ID outside the CNID range
+ * The cnid_find wrapper validates the arguments. The statements decide each
+ * name through netatalk_match(), the query bound as a pointer, so the LIMIT
+ * counts matches. The statement asks for 1 row more than buffer holds, which
+ * sets more_available. A row with an ID outside the CNID range
  * drops out. A scope directory selects the statement that walks its subtree
  * with a recursive CTE.
  *
  * @param[in]  cdb             CNID database
- * @param[in]  name            the LIKE pattern
- * @param[in]  namelen         bytes in @p name
+ * @param[in]  query           the name comparisons
+ * @param[in]  seeds           unused: every search reads every name
+ * @param[in]  nseeds          unused
  * @param[in]  scope_did       CNID of the scope directory, or CNID_INVALID for
  *                             an unscoped search
  * @param[out] buffer          receives the CNIDs in network order
@@ -1834,18 +1858,20 @@ EC_CLEANUP:
  * @param[out] more_available  receives true when more matches exist, or NULL
  * @returns the number of CNIDs, or -1 with errno classified
  */
-int cnid_sqlite_find(struct _cnid_db *cdb, const char *name, size_t namelen,
-                     cnid_t scope_did,
-                     void *buffer, size_t buflen, bool *more_available)
+int cnid_sqlite_find(struct _cnid_db *cdb, const struct sl_name_query *query,
+                     const struct sl_name_pattern *const *seeds _U_,
+                     int nseeds _U_, cnid_t scope_did, void *buffer,
+                     size_t buflen, bool *more_available)
 {
     EC_INIT;
     CNID_sqlite_private *db = NULL;
     sqlite3_stmt *stmt = NULL;
     int count = 0;
-    char *namelike = NULL;
+    int find_return;
+    int param = 1;
     cnid_t *cnids = (cnid_t *)buffer;
     unsigned long max_results = buflen / sizeof(cnid_t);
-    LOG(log_maxdebug, logtype_cnid, "cnid_sqlite_find(\"%s\"): BEGIN", name);
+    LOG(log_maxdebug, logtype_cnid, "cnid_sqlite_find(): BEGIN");
 
     if (!cdb || !(db = cdb->cnid_db_private)) {
         LOG(log_error, logtype_cnid, "cnid_sqlite_find: Parameter error");
@@ -1861,49 +1887,36 @@ int cnid_sqlite_find(struct _cnid_db *cdb, const char *name, size_t namelen,
     }
 
     /* Parameters pre-validated by the libatalk/cnid/cnid.c wrapper:
-     *   cdb, name non-NULL; namelen in [1, MAXPATHLEN];
-     *   buflen >= CNID_FIND_MIN_BUFLEN.
-     * Re-checking here would risk emitting a different errno value
-     * (CNID_ERR_PATH) than the wrapper (CNID_ERR_PARAM) for the same
-     * input, contradicting the uniform-behaviour-across-backends goal. */
+     *   cdb, query non-NULL; buflen >= CNID_FIND_MIN_BUFLEN.
+     * Re-checking here would risk emitting a different errno value than
+     * the wrapper for the same input. */
 
     if (more_available) {
         *more_available = false;
     }
 
-    EC_NULL(namelike = strndup(name, namelen));
     sqlite3_reset(stmt);
     sqlite3_clear_bindings(stmt);
-    int find_return;
 
     if (scope_did != CNID_INVALID) {
         /* The table stores host-order integers; the API traffics in network
          * order */
-        find_return = sqlite3_bind_int64(stmt, 1,
+        find_return = sqlite3_bind_int64(stmt, param++,
                                          (sqlite3_int64) ntohl(scope_did));
-
-        if (find_return == SQLITE_OK) {
-            find_return = sqlite3_bind_text(stmt, 2, namelike,
-                                            (int) strlen(namelike),
-                                            SQLITE_STATIC);
-        }
-
-        if (find_return == SQLITE_OK) {
-            /* LIMIT max_results + 1: peek for an extra row to detect "more
-             * results exist" without a second query. */
-            find_return = sqlite3_bind_int64(stmt, 3,
-                                             (sqlite3_int64)(max_results + 1));
-        }
     } else {
-        find_return = sqlite3_bind_text(stmt, 1, namelike,
-                                        (int) strlen(namelike), SQLITE_STATIC);
+        find_return = SQLITE_OK;
+    }
 
-        if (find_return == SQLITE_OK) {
-            /* LIMIT max_results + 1: peek for an extra row to detect "more
-             * results exist" without a second query. */
-            find_return = sqlite3_bind_int64(stmt, 2,
-                                             (sqlite3_int64)(max_results + 1));
-        }
+    if (find_return == SQLITE_OK) {
+        find_return = sqlite3_bind_pointer(stmt, param++, (void *)query,
+                                           "sl_name_query", NULL);
+    }
+
+    if (find_return == SQLITE_OK) {
+        /* LIMIT max_results + 1: peek for an extra row to detect "more
+         * results exist" without a second query. */
+        find_return = sqlite3_bind_int64(stmt, param,
+                                         (sqlite3_int64)(max_results + 1));
     }
 
     if (find_return != SQLITE_OK) {
@@ -1928,7 +1941,7 @@ int cnid_sqlite_find(struct _cnid_db *cdb, const char *name, size_t namelen,
         if (!cnid_sqlite_rowid_ok(rowid)) {
             LOG(log_error, logtype_cnid,
                 "cnid_sqlite_find: out of range id %" PRIu64
-                " for name like '%s', skipped", rowid, name);
+                " in a name search, skipped", rowid);
             continue;
         }
 
@@ -1961,10 +1974,6 @@ EC_CLEANUP:
 
     if (db && stmt) {
         cnid_sqlite_stmt_reset(stmt);
-    }
-
-    if (namelike) {
-        free(namelike);
     }
 
     if (ret != 0) {
@@ -2440,6 +2449,17 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
      * volume. Everything else classifies through a & 0xff mask, so the wider
      * codes change nothing there. */
     sqlite3_extended_result_codes(db->cnid_sqlite_con, 1);
+
+    /* The searches call netatalk_match() and the index's moves
+     * netatalk_fold(), so neither prepares without them */
+    if (sqlite3_create_function(db->cnid_sqlite_con, "netatalk_match", 2,
+                                SQLITE_UTF8 | SQLITE_DETERMINISTIC, NULL,
+                                cnid_sqlite_match, NULL, NULL) != SQLITE_OK) {
+        LOG(log_error, logtype_cnid,
+            "cnid_sqlite_open: cannot register the name matcher: %s",
+            sqlite3_errmsg(db->cnid_sqlite_con));
+        EC_FAIL;
+    }
 
     /* A shared volume needs a world-writable database so authenticated users
      * and nad can update CNID state; a private volume's is its owner's alone.

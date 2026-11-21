@@ -111,10 +111,9 @@ limit clear of the 32-bit match counts the Xapian API uses and bounds the
 CNID candidate buffer at 64 MB. LocalSearch maps it to a SPARQL
 `LIMIT`, Xapian to the requested match count, and the CNID backend to the
 size of its candidate buffer — which, when unlimited, starts at 10000 CNIDs
-and doubles until `cnid_find()` reports no further matches. The capacity
-always leaves each search term `CNID_FIND_MIN_RESULTS` entries of room,
-because `cnid_find()` rejects a smaller buffer and a term with no room
-would be dropped from the search.
+and grows eight times over until `cnid_find()` reports no further matches.
+The capacity is at least `CNID_FIND_MIN_RESULTS`, the smallest buffer
+`cnid_find()` accepts.
 
 ## Query flow
 
@@ -131,16 +130,32 @@ All current backends ultimately return filesystem results through the same
 
 ## CNID backend
 
-The CNID backend is the smallest backend. It extracts a filename search
-term from every supported Spotlight predicate in the query — such as
-`kMDItemFSName`, `kMDItemDisplayName`, `_kMDItemFileName`, and simple
-`*==` wildcard queries — because macOS sends one predicate per word of a
-multi-word search, joined with `||`. A quoted phrase arrives as one value
-and matches as a filename substring, so adjacency needs no extra
-machinery.
+The CNID backend is the smallest backend. It reads the name comparisons
+of the query — `kMDItemFSName`, `kMDItemDisplayName`, `_kMDItemFileName`
+and the any-attribute `*`, with `==` or `!=`, joined by `&&` and `||` —
+through the matcher in `libatalk/util/sl_names.c`, which decides every
+name the backend returns; any other comparison drops out of the query.
+The matcher reads attribute names and modifiers without regard to case, as
+a volume that folds its names to one case converts the query, and on a
+volume whose charset is not UTF-8 it converts the query's values and each
+name to UTF-8 first. macOS sends one predicate per word of a multi-word
+search, joined with `||`, and a quoted phrase as one value.
 
-It searches the Netatalk CNID database with cnid_find_scoped(), once per
-term, and unites the results. When the query carries a folder scope, the
+It searches the Netatalk CNID database with cnid_find_scoped(), which
+hands the database backend the whole query. A backend that narrows the
+search by the query's seeds, positive comparisons that every match
+satisfies one of, reads the candidates of all of them in one statement;
+otherwise one statement reads every name. Of the two sides of an `&&` the
+seeds come from the one the backend narrows by, the left one where it
+narrows by both, and the search reads every candidate of that side.
+Either way the results are the first matches of the whole query in CNID
+order, each once, so a result limit counts matches and a term with many
+matches leaves the others no less room than a search of every name would.
+A repeated comparison counts once toward the eight a query keeps, and is
+read once in an `&&` or an `||` of its own kind, and a query of
+more than 32 name comparisons, repeats included, or of parentheses nested
+more than 64 deep, matches no name. When
+the query carries a folder scope, the
 scope path is resolved to its directory CNID with cnid_for_path() and
 the subtree restriction is applied inside the database: a recursive CTE
 for the sqlite and mysql schemes.

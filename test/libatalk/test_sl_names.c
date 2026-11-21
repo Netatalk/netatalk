@@ -227,14 +227,19 @@ struct like_case {
 };
 
 static const struct like_case like_cases[] = {
-    {"report*", SL_C, "report%"},
-    {"report*", SL_C | SL_W, "%report%"},
-    {"*.pdf", 0, "%.pdf"},
-    {"50%", 0, "50!%"},
-    {"a?b", 0, "a%b"},
-    {"my_file", 0, "my!_file"},
-    {"a!b", 0, "a!!b"},
+    /* letters and non-ASCII characters give way, for any collation, and a
+     * variation selector or a mark d drops can stand beside any character */
+    {"report*", SL_C, "%"},
+    {"*.pdf", 0, "%.%"},
+    {"IMG_2024*", SL_C | SL_W, "%!_%2%0%2%4%"},
+    {"50%", 0, "%5%0%!%%"},
+    {"a?b", 0, "%"},
+    {"my_file", 0, "%!_%"},
+    {"a!b", 0, "%!!%"},
+    {"caf\xc3\xa9 1.txt", 0, "% %1%.%"},
     {"*.txt", SL_NAMES_NEGATE, "%"},
+    {"2023*", SL_C | SL_D, "%2%0%2%3%"},
+    {"*5%x", SL_D, "%5%!%%"},
 };
 
 /* A query, a name and whether the query matches it */
@@ -684,6 +689,47 @@ static void test_refused(void)
     sl_name_query_free(q);
 }
 
+/* A search term, whether it is a whole name, a name, and whether the term
+ * matches the name */
+struct term_case {
+    const char *term;
+    bool exact;
+    const char *name;
+    bool match;
+};
+
+static const struct term_case term_cases[] = {
+    {"a*b?c", true, "a*b?c", true},
+    {"a*b?c", true, "axxbyc", false},
+    {"A\\B", true, "a\\b", true},
+    {"a\\*b", false, "xa*by", true},
+    {"a\\*b", false, "axxb", false},
+    {"ab\\", false, "xab\\y", true},
+    {"ab\\", false, "xaby", false},
+};
+
+/*!
+ * @brief Check the queries made from search terms, for whole names and for
+ *        the names that contain the term
+ */
+static void test_term_query(void)
+{
+    char label[160];
+
+    for (size_t i = 0; i < ARRAY_SIZE(term_cases); i++) {
+        const struct term_case *t = &term_cases[i];
+        struct sl_name_query *q = sl_name_query_term(t->term, strlen(t->term),
+                                                     t->exact, SL_C);
+        snprintf(label, sizeof(label), "term '%s'%s %s '%s'", t->term,
+                 t->exact ? " as a whole name" : "",
+                 t->match ? "matches" : "does not match", t->name);
+        report(q != NULL
+               && sl_name_query_match(q, t->name, strlen(t->name)) == t->match,
+               label);
+        sl_name_query_free(q);
+    }
+}
+
 /*!
  * @brief Check a query of one comparison made from its value
  */
@@ -713,6 +759,7 @@ int main(void)
     test_policy();
     test_seed_choice();
     test_refused();
+    test_term_query();
     test_value_query();
     printf("1..%d\n", tests_run);
     return tests_failed == 0 ? 0 : 1;

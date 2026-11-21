@@ -3449,18 +3449,19 @@ static void catsearch_db_unspread(AFPObj *obj, uint16_t vid, cnid_t did,
  * @param[in] vol         volume
  * @param[in] vid         volume ID
  * @param[in] folder      folder for the files, made in the volume root
- * @param[in] want        the files' name, at most 32 bytes
+ * @param[in] want        the files' name
+ * @param[in] search      the name the search asks for, at most 32 bytes
  * @param[in] n           files, at most CNID_FIND_MIN_RESULTS + 1
  * @param[in] reqmatches  matches a reply holds at most
  * @returns 0, 1 when the search misses a file, repeats one, does not end or
  *          the setup fails
  */
 static int catsearch_db_each(AFPObj *obj, struct vol *vol, uint16_t vid,
-                             const char *folder, const char *want, int n,
-                             uint32_t reqmatches)
+                             const char *folder, const char *want,
+                             const char *search, int n, uint32_t reqmatches)
 {
     unsigned char spec[12 + 32];
-    const uint16_t speclen = catsearch_db_spec(spec, want);
+    const uint16_t speclen = catsearch_db_spec(spec, search);
     cnid_t dids[CNID_FIND_MIN_RESULTS + 1];
     cnid_t ids[CNID_FIND_MIN_RESULTS + 2];
     const int searchdb = vol->v_flags & AFPVOL_SEARCHDB;
@@ -3487,7 +3488,7 @@ static int catsearch_db_each(AFPObj *obj, struct vol *vol, uint16_t vid,
 
     if (ret != AFPERR_EOF || nids != (uint32_t)n || nrecs != nids) {
         fprintf(stderr, "catsearch: exact name '%s': result %d, %u files in "
-                        "%u matches\n", want, ret, nids, nrecs);
+                        "%u matches\n", search, ret, nids, nrecs);
         goto out;
     }
 
@@ -3507,7 +3508,7 @@ out:
  */
 int utest_catsearch_db_exact_many(AFPObj *obj, struct vol *vol, uint16_t vid)
 {
-    return catsearch_db_each(obj, vol, vid, "cx", "ce many",
+    return catsearch_db_each(obj, vol, vid, "cx", "ce many", "ce many",
                              CNID_FIND_MIN_RESULTS + 1, 10);
 }
 
@@ -3521,7 +3522,25 @@ int utest_catsearch_db_exact_many(AFPObj *obj, struct vol *vol, uint16_t vid)
 int utest_catsearch_db_one_at_a_time(AFPObj *obj, struct vol *vol,
                                      uint16_t vid)
 {
-    return catsearch_db_each(obj, vol, vid, "co", "co one", 3, 1);
+    return catsearch_db_each(obj, vol, vid, "co", "co one", "co one", 3, 1);
+}
+
+/*!
+ * @brief An exact-name search of the database finds names that lower alike
+ *
+ * I with dot above among them: under c it folds to i and U+0307, where the
+ * case table lowers it to i.
+ *
+ * @returns 0, 1 when the search misses a file, repeats one, does not end,
+ *          walks the volume or the setup fails
+ */
+int utest_catsearch_db_exact_dotted(AFPObj *obj, struct vol *vol,
+                                    uint16_t vid)
+{
+    return catsearch_db_each(obj, vol, vid, "ci", "\xc4\xb0stanbul",
+                             "\xc4\xb0stanbul", 1, 10)
+           || catsearch_db_each(obj, vol, vid, "cj", "istanbul",
+                                "\xc4\xb0STANBUL", 2, 10);
 }
 
 /*!

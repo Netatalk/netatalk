@@ -1,11 +1,13 @@
-/*
- * FPSpotlightRPC — exercises the paged cnid Spotlight search through
- * FPSpotlightRPC. test volume must be configured with `spotlight = yes`
+/*!
+ * @file
+ * @brief FPSpotlightRPC tests of the paged cnid Spotlight search
+ *
+ * The test volume needs `spotlight = yes`.
  *
  * Determinism invariants:
  *
- *   1. cnid_find() does an UNSCOPED substring/prefix match across the
- *      entire CNID database. The Spotlight DSL filename predicate is
+ *   1. An unscoped search matches names across the entire CNID
+ *      database. The Spotlight DSL filename predicate is
  *      filename-only, so the per-test sub-directory does NOT partition
  *      results by CNID. To avoid collisions with pre-existing files
  *      anywhere on the volume, both fixtures use deliberately long,
@@ -47,8 +49,8 @@
 #define PAG_DIR_SMALL  "pagtest_small"
 #define PAG_DIR_PAGED  "pagtest_paged"
 
-/* Phrase/OR fixture; the phrase632- prefix keeps the unscoped substring
- * search collision-free (see the paginate fixtures above). */
+/* Phrase/OR fixture; the phrase632- prefix keeps the unscoped name search
+ * collision-free (see the paginate fixtures above). */
 #define PHRASE_DIR     "pagtest_phrase"
 
 /* Scope fixture: identically named files in two sibling directories;
@@ -185,7 +187,7 @@ STATIC void test547()
         }
     }
 
-    /* Use the long, test-unique prefix so the unscoped substring search
+    /* Use the long, test-unique prefix so the unscoped prefix search
      * across the volume cannot pick up unrelated files. */
     ret = FPSpotlightOpenQuery(Conn, vol,
                                "kMDItemFSName==\"" PAG_PREFIX_530 "*\"cd",
@@ -582,7 +584,7 @@ STATIC void test632()
         const char *query;
         int expect;
     } phrase_cases[] = {
-        /* substring match with a space in the value: file A only */
+        /* a prefix with a space in the value: file A only */
         {
             "plain-space term",
             "kMDItemFSName==\"phrase632-alpha beta*\"cd", 1
@@ -592,8 +594,7 @@ STATIC void test632()
             "quoted phrase",
             "kMDItemFSName==\"\\\"phrase632-alpha beta\\\"*\"cd", 1
         },
-        /* one predicate per word: alpha matches A+AB, beta B+AB; the
-         * union counts AB once */
+        /* one predicate per word: alpha matches A and AB, beta matches B */
         {
             "per-word OR",
             "kMDItemFSName==\"phrase632-alpha*\"cd"
@@ -615,8 +616,8 @@ STATIC void test632()
             "kMDItemDisplayName==\"*kMDItemFSName*\"cd"
             "||kMDItemTextContent==\"phrase632-alpha*\"cd", 0
         },
-        /* a term under the minimum length is skipped without losing
-         * the scan position for the predicates that follow */
+        /* a value under the minimum length matches no name, and the
+         * predicates that follow are still read */
         {
             "short term alone",
             "kMDItemFSName==\"ab*\"cd", 0
@@ -775,7 +776,7 @@ STATIC void test633()
         goto cleanup;
     }
 
-    /* Unscoped: the substring search sees all three copies. */
+    /* Unscoped: the prefix search sees all three copies. */
     if (!phrase_query_count(testname, vol,
                             "kMDItemFSName==\"scope633-file*\"cd",
                             NULL, 0x123a, &got)) {

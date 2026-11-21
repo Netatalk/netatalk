@@ -19,12 +19,14 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <arpa/inet.h>
+#include <ctype.h>
 #include <errno.h>
 #include <net/if.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -42,6 +44,7 @@
 #include <atalk/errchk.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
+#include <atalk/sl_names.h>
 #include <atalk/unix.h>
 #include <atalk/util.h>
 #include <atalk/volume.h>
@@ -1470,18 +1473,349 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/* Rows one batch of a volume search fetches at most */
+#define CNID_MYSQL_FIND_BATCH 65536
+
 /*!
- * @brief Find the CNIDs whose names a LIKE pattern matches, for cnid_find
+ * @brief The LIKE pattern a name search sends the server for a seed
  *
- * The cnid_find wrapper validates the arguments and builds the pattern, which
- * escapes with '!'. The query asks for 1 row more than buffer holds, and that
- * extra row sets more_available. The pattern binds as a statement parameter,
- * never as SQL text. A scoped search walks the subtree with a recursive CTE.
- * A server without CTE support falls back to an unscoped search.
+ * A collation can fold letters other than the matcher does, a decomposed
+ * name holds marks after its letters, and a collation can read two letters
+ * as one, so every letter and every non-ASCII character give way to '%'.
+ * Digits and punctuation compare as themselves under every collation, and
+ * under 'd' the seed's pattern already gives way after each of them, for the
+ * marks the matcher drops. Every name the seed matches satisfies the
+ * pattern.
+ *
+ * @param[in] seed  the seed, or NULL for every name
+ * @returns the pattern, to free(), or NULL when out of memory
+ */
+static char *cnid_mysql_like(const struct sl_name_pattern *seed)
+{
+    const unsigned char *c;
+    bool open = false;
+    char *like;
+    char *o;
+
+    if (seed == NULL) {
+        return strdup("%");
+    }
+
+    c = (const unsigned char *)sl_name_pattern_like(seed);
+
+    if ((like = malloc(strlen((const char *)c) + 1)) == NULL) {
+        return NULL;
+    }
+
+    o = like;
+
+    while (*c != '\0') {
+        size_t len = *c == '!' && c[1] != '\0' ? 2 : 1;
+
+        if (*c == '%' || *c >= 0x80 || isalpha(*c)) {
+            if (!open) {
+                *o++ = '%';
+                open = true;
+            }
+
+            c++;
+            continue;
+        }
+
+        memcpy(o, c, len);
+        o += len;
+        c += len;
+        open = false;
+    }
+
+    *o = '\0';
+    return like;
+}
+
+/*!
+ * @brief Tell whether the LIKE pattern of a seed narrows a name search
+ *
+ * @param[in] cdb   unused
+ * @param[in] seed  the seed
+ * @returns true when the pattern holds a character other than '%'
+ */
+static bool cnid_mysql_find_narrows(struct _cnid_db *cdb _U_,
+                                    const struct sl_name_pattern *seed)
+{
+    char *like = cnid_mysql_like(seed);
+    bool narrows = like != NULL && like[strspn(like, "%")] != '\0';
+    free(like);
+    return narrows;
+}
+
+/*!
+ * @brief Write the WHERE condition of a name search over its LIKE patterns
+ *
+ * @param[in]  npat  LIKE patterns, 0 for every row
+ * @param[out] cond  receives the condition
+ * @param[in]  size  room in cond
+ */
+static void cnid_mysql_find_cond(int npat, char *cond, size_t size)
+{
+    size_t n = 0;
+
+    if (npat == 0) {
+        snprintf(cond, size, "1");
+        return;
+    }
+
+    for (int i = 0; i < npat; i++) {
+        n += (size_t)snprintf(cond + n, size - n, "%st.Name LIKE ? ESCAPE '!'",
+                              i ? " OR " : "(");
+    }
+
+    snprintf(cond + n, size - n, ")");
+}
+
+/*!
+ * @brief Prepare a name search: a batch of the volume, or a folder's subtree
+ *
+ * A volume search takes the rows after an Id whose names a LIKE pattern
+ * keeps. A folder search walks its subtree with a recursive CTE once and
+ * streams the rows unordered: a batch after the last Id would walk and sort
+ * the whole subtree again for every batch. A server that cannot parse the
+ * CTE latches the unscoped search for the connection.
+ *
+ * @param[in,out] db      MySQL backend state
+ * @param[in]     stmt    the statement
+ * @param[in]     npat    LIKE patterns, 0 for every name
+ * @param[in,out] scoped  whether the search is scoped, cleared on a fallback
+ * @returns 0, or -1 when the prepare fails
+ */
+static int cnid_mysql_find_prepare(CNID_mysql_private *db, MYSQL_STMT *stmt,
+                                   int npat, bool *scoped)
+{
+    char cond[CNID_FIND_MAX_SEEDS * 48 + 32];
+    char *sql = NULL;
+    int ret = -1;
+    cnid_mysql_find_cond(npat, cond, sizeof(cond));
+
+    if (*scoped) {
+        /* STRAIGHT_JOIN keeps the scope the outer loop, so the cost follows
+         * the subtree, not the volume; the CTE needs MySQL 8.0 or MariaDB
+         * 10.2 */
+        if (asprintf(&sql,
+                     "WITH RECURSIVE scope (Id) AS ("
+                     "  SELECT CAST(? AS UNSIGNED)"
+                     "  UNION"
+                     "  SELECT t.Id FROM `%s` t JOIN scope s ON t.Did = s.Id"
+                     ") "
+                     "SELECT t.Id, t.Name FROM scope s "
+                     "STRAIGHT_JOIN `%s` t ON t.Did = s.Id WHERE %s",
+                     db->cnid_mysql_voluuid_str,
+                     db->cnid_mysql_voluuid_str, cond) < 0) {
+            return -1;
+        }
+
+        LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: SQL query: %s", sql);
+        ret = mysql_stmt_prepare(stmt, sql, strlen(sql));
+        free(sql);
+        sql = NULL;
+
+        if (ret == 0) {
+            return 0;
+        }
+
+        /*
+         * Only a parse rejection means the server lacks recursive CTEs;
+         * latch the fallback for that alone.
+         */
+        if (mysql_stmt_errno(stmt) != 1064 /* ER_PARSE_ERROR */) {
+            LOG(log_error, logtype_cnid, "cnid_mysql_find: prepare failed: %s",
+                mysql_stmt_error(stmt));
+            return -1;
+        }
+
+        LOG(log_warning, logtype_cnid,
+            "cnid_mysql_find: server lacks recursive-CTE support (%s); "
+            "falling back to unscoped searches for this connection",
+            mysql_stmt_error(stmt));
+        db->cnid_find_scoped_unsupported = true;
+        *scoped = false;
+        ret = -1;
+    }
+
+    if (asprintf(&sql,
+                 "SELECT t.Id, t.Name FROM `%s` t WHERE %s AND t.Id > ? "
+                 "ORDER BY t.Id LIMIT ?", db->cnid_mysql_voluuid_str,
+                 cond) < 0) {
+        return -1;
+    }
+
+    LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: SQL query: %s", sql);
+
+    if (mysql_stmt_prepare(stmt, sql, strlen(sql)) == 0) {
+        ret = 0;
+    } else {
+        LOG(log_error, logtype_cnid, "cnid_mysql_find: prepare failed: %s",
+            mysql_stmt_error(stmt));
+    }
+
+    free(sql);
+    return ret;
+}
+
+/*!
+ * @brief Bind a name search's parameters and its result columns
+ *
+ * @param[in] stmt    the prepared search
+ * @param[in] scoped  whether the search takes a scope, and no batches
+ * @param[in] scope   CNID of the scope directory in host order
+ * @param[in] likes   the LIKE patterns
+ * @param[in] lens    bytes of each pattern
+ * @param[in] npat    number of patterns
+ * @param[in] after   Id the rows of a batch follow
+ * @param[in] batch   rows one batch fetches
+ * @param[in] result  the Id and the name of a row
+ * @returns 0, or -1 when a bind fails
+ */
+static int cnid_mysql_find_bind(MYSQL_STMT *stmt, bool scoped,
+                                unsigned long long *scope, char *const *likes,
+                                unsigned long *lens, int npat,
+                                unsigned long long *after,
+                                unsigned long long *batch, MYSQL_BIND *result)
+{
+    MYSQL_BIND param[CNID_FIND_MAX_SEEDS + 3];
+    int i = 0;
+    memset(param, 0, sizeof(param));
+
+    if (scoped) {
+        param[i].buffer_type = MYSQL_TYPE_LONGLONG;
+        param[i].buffer = scope;
+        param[i++].is_unsigned = true;
+    }
+
+    for (int k = 0; k < npat; k++, i++) {
+        param[i].buffer_type = MYSQL_TYPE_STRING;
+        param[i].buffer = likes[k];
+        param[i].buffer_length = lens[k];
+        param[i].length = &lens[k];
+    }
+
+    if (!scoped) {
+        param[i].buffer_type = MYSQL_TYPE_LONGLONG;
+        param[i].buffer = after;
+        param[i++].is_unsigned = true;
+        param[i].buffer_type = MYSQL_TYPE_LONGLONG;
+        param[i].buffer = batch;
+        param[i].is_unsigned = true;
+    }
+
+    if (mysql_stmt_bind_param(stmt, param) != 0
+            || mysql_stmt_bind_result(stmt, result) != 0) {
+        LOG(log_error, logtype_cnid, "cnid_mysql_find: bind failed: %s",
+            mysql_stmt_error(stmt));
+        return -1;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Tell whether a row's Id is a CNID, logging one that is not
+ *
+ * A corrupt row's match drops out of the search.
+ *
+ * @param[in] id  the Id
+ * @returns true for 1 to UINT32_MAX
+ */
+static bool cnid_mysql_id_ok(unsigned long long id)
+{
+    if (id != 0 && id <= UINT32_MAX) {
+        return true;
+    }
+
+    LOG(log_error, logtype_cnid,
+        "cnid_mysql_find: out of range id %llu in a name search, skipped", id);
+    return false;
+}
+
+/*!
+ * @brief Keep the lowest Ids of an unordered stream of matches, in a max-heap
+ *
+ * @param[in,out] heap  the Ids kept, the largest first
+ * @param[in,out] n     Ids in heap
+ * @param[in]     cap   room in heap
+ * @param[in]     id    the Id of a match
+ * @returns true when heap was full, so the search holds more matches than it
+ *          keeps
+ */
+static bool cnid_mysql_lowest(uint32_t *heap, int *n, int cap, uint32_t id)
+{
+    int i;
+
+    if (*n < cap) {
+        for (i = (*n)++; i > 0 && heap[(i - 1) / 2] < id; i = (i - 1) / 2) {
+            heap[i] = heap[(i - 1) / 2];
+        }
+
+        heap[i] = id;
+        return false;
+    }
+
+    if (id < heap[0]) {
+        for (i = 0;;) {
+            int c = 2 * i + 1;
+
+            if (c >= cap) {
+                break;
+            }
+
+            if (c + 1 < cap && heap[c + 1] > heap[c]) {
+                c++;
+            }
+
+            if (heap[c] <= id) {
+                break;
+            }
+
+            heap[i] = heap[c];
+            i = c;
+        }
+
+        heap[i] = id;
+    }
+
+    return true;
+}
+
+/*!
+ * @brief Order two host-order Ids
+ *
+ * @param[in] a  an Id
+ * @param[in] b  another
+ * @returns -1, 0 or 1
+ */
+static int cnid_mysql_id_order(const void *a, const void *b)
+{
+    uint32_t x = *(const uint32_t *)a;
+    uint32_t y = *(const uint32_t *)b;
+    return x < y ? -1 : x > y;
+}
+
+/*!
+ * @brief Find the CNIDs whose names match a query, for cnid_find
+ *
+ * The cnid_find wrapper validates the arguments. One statement takes the rows
+ * whose names one of the seeds' LIKE patterns keeps, every row without seeds,
+ * and the query decides each name. An unscoped search reads the rows after
+ * the last Id the previous execution read, 1 more than buffer holds at first
+ * and eight times as many each time a batch fills, CNID_MYSQL_FIND_BATCH at
+ * most, until 1 match more than buffer holds, which sets more_available. A
+ * scoped search walks the subtree with a recursive CTE once and streams its
+ * rows unordered, keeping the lowest Ids that match, so it finds the matches
+ * an unscoped search would. The patterns bind as statement parameters, never
+ * as SQL text. A server without CTE support falls back to an unscoped search.
  *
  * @param[in]  cdb             CNID database
- * @param[in]  name            the LIKE pattern
- * @param[in]  namelen         bytes in @p name
+ * @param[in]  query           the name comparisons
+ * @param[in]  seeds           the query's seeds, or NULL for every name
+ * @param[in]  nseeds          number of seeds
  * @param[in]  scope_did       CNID of the scope directory, or CNID_INVALID for
  *                             all of the volume
  * @param[out] buffer          receives the CNIDs in network order
@@ -1489,29 +1823,34 @@ EC_CLEANUP:
  * @param[out] more_available  receives true when more matches exist, or NULL
  * @returns the number of CNIDs, or -1 on error
  */
-int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen,
-                    cnid_t scope_did,
-                    void *buffer, size_t buflen, bool *more_available)
+int cnid_mysql_find(struct _cnid_db *cdb, const struct sl_name_query *query,
+                    const struct sl_name_pattern *const *seeds, int nseeds,
+                    cnid_t scope_did, void *buffer, size_t buflen,
+                    bool *more_available)
 {
     EC_INIT;
     CNID_mysql_private *db = cdb->cnid_db_private;
-    char *sql = NULL;
-    char *namelike = NULL;
+    char *likes[CNID_FIND_MAX_SEEDS] = { NULL };
+    unsigned long lens[CNID_FIND_MAX_SEEDS];
     MYSQL_STMT *stmt = NULL;
-    MYSQL_BIND param[1];
-    MYSQL_BIND sparam[2];
-    MYSQL_BIND result[1];
-    int count = 0;
+    MYSQL_BIND result[2];
+    char name[MAXPATHLEN + 1];
+    unsigned long name_len = 0;
+    unsigned long long result_id = 0;
+    unsigned long long scope = ntohl(scope_did);
+    unsigned long long after = 0;
+    unsigned long long batch;
     cnid_t *cnids = (cnid_t *)buffer;
     unsigned long max_results = buflen / sizeof(cnid_t);
-    unsigned long namelike_len;
-    unsigned long long result_id = 0;
-    bool have_result = false;
-    int fetch_ret = MYSQL_NO_DATA;
+    bool scoped = (scope_did != CNID_INVALID
+                   && !db->cnid_find_scoped_unsupported);
+    bool more = false;
+    int npat = seeds != NULL ? nseeds : 0;
+    int fetch_ret = 0;
+    int count = 0;
 
     /* Parameters pre-validated by the libatalk/cnid/cnid.c wrapper:
-     *   cdb, name non-NULL; namelen in [1, MAXPATHLEN];
-     *   buflen >= CNID_FIND_MIN_BUFLEN.
+     *   cdb, query non-NULL; buflen >= CNID_FIND_MIN_BUFLEN.
      * Re-checking here would risk emitting a different errno value than
      * the wrapper for the same input. */
 
@@ -1519,186 +1858,133 @@ int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen,
         *more_available = false;
     }
 
-    LOG(log_maxdebug, logtype_cnid,
-        "cnid_mysql_find: called with name='%s', namelen=%zu, buflen=%zu", name,
-        namelen, buflen);
-    EC_NULL(namelike = strndup(name, namelen));
-    namelike_len = strlen(namelike);
-    LOG(log_debug, logtype_cnid, "cnid_mysql_find: LIKE pattern is '%s'", namelike);
-    EC_NULL(stmt = mysql_stmt_init(db->cnid_mysql_con));
-    /* LIMIT max_results + 1: peek pattern (matches SQLite). The LIMIT value
-     * is not user-controlled (derived from caller's buflen) and is safe to
-     * interpolate as a literal; the Name LIKE parameter is bound via
-     * mysql_stmt_bind_param below, never inlined into the SQL string. */
-    bool scoped = (scope_did != CNID_INVALID
-                   && !db->cnid_find_scoped_unsupported);
-    unsigned long long scope_host = 0;
-
-    if (scoped) {
-        /*
-         * Subtree-scoped variant: the recursive CTE enumerates the
-         * scope directory's transitive contents; STRAIGHT_JOIN pins
-         * the scope set as the outer loop so cost is proportional to
-         * the subtree, not the volume. Requires MySQL 8.0 / MariaDB
-         * 10.2; older servers fail the prepare and fall back below.
-         */
-        EC_NEG1(asprintf(&sql,
-                         "WITH RECURSIVE scope (Id) AS ("
-                         "  SELECT CAST(? AS UNSIGNED)"
-                         "  UNION"
-                         "  SELECT t.Id FROM `%s` t JOIN scope s ON t.Did = s.Id"
-                         ") "
-                         "SELECT t.Id FROM scope s STRAIGHT_JOIN `%s` t "
-                         "ON t.Did = s.Id "
-                         "WHERE t.Name LIKE ? ESCAPE '!' ORDER BY t.Id "
-                         "LIMIT %lu",
-                         db->cnid_mysql_voluuid_str,
-                         db->cnid_mysql_voluuid_str, max_results + 1));
-        LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: SQL query: %s", sql);
-
-        if (mysql_stmt_prepare(stmt, sql, strlen(sql)) != 0) {
-            /*
-             * Only a parse rejection means the server lacks recursive
-             * CTEs; latch the fallback for that alone. Any other
-             * prepare failure (connection loss, OOM) is transient and
-             * takes the same error path the unscoped prepare would.
-             */
-            if (mysql_stmt_errno(stmt) == 1064 /* ER_PARSE_ERROR */) {
-                LOG(log_warning, logtype_cnid,
-                    "cnid_mysql_find: server lacks recursive-CTE support "
-                    "(%s); falling back to unscoped searches for this "
-                    "connection", mysql_stmt_error(stmt));
-                db->cnid_find_scoped_unsupported = true;
-                scoped = false;
-                free(sql);
-                sql = NULL;
-            } else {
-                LOG(log_error, logtype_cnid,
-                    "cnid_mysql_find: prepare failed: %s",
-                    mysql_stmt_error(stmt));
-                EC_FAIL;
-            }
-        }
+    for (int i = 0; i < npat; i++) {
+        EC_NULL(likes[i] = cnid_mysql_like(seeds[i]));
+        lens[i] = strlen(likes[i]);
+        LOG(log_debug, logtype_cnid, "cnid_mysql_find: LIKE pattern is '%s'",
+            likes[i]);
     }
 
-    if (!scoped) {
-        EC_NEG1(asprintf(&sql,
-                         "SELECT Id FROM `%s` WHERE Name LIKE ? "
-                         "ESCAPE '!' ORDER BY Id LIMIT %lu",
-                         db->cnid_mysql_voluuid_str, max_results + 1));
-        LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: SQL query: %s", sql);
-        EC_ZERO_LOG(mysql_stmt_prepare(stmt, sql, strlen(sql)));
-    }
-
-    free(sql);
-    sql = NULL;
-
-    if (scoped) {
-        scope_host = (unsigned long long)ntohl(scope_did);
-        memset(sparam, 0, sizeof(sparam));
-        sparam[0].buffer_type = MYSQL_TYPE_LONGLONG;
-        sparam[0].buffer = &scope_host;
-        sparam[0].is_unsigned = true;
-        sparam[1].buffer_type = MYSQL_TYPE_STRING;
-        sparam[1].buffer = namelike;
-        sparam[1].buffer_length = namelike_len;
-        sparam[1].length = &namelike_len;
-        EC_ZERO_LOG(mysql_stmt_bind_param(stmt, sparam));
-    } else {
-        memset(param, 0, sizeof(param));
-        param[0].buffer_type = MYSQL_TYPE_STRING;
-        param[0].buffer = namelike;
-        param[0].buffer_length = namelike_len;
-        param[0].length = &namelike_len;
-        EC_ZERO_LOG(mysql_stmt_bind_param(stmt, param));
-    }
-
+    batch = MIN(max_results + 1, CNID_MYSQL_FIND_BATCH);
     memset(result, 0, sizeof(result));
     result[0].buffer_type = MYSQL_TYPE_LONGLONG;
     result[0].buffer = &result_id;
     result[0].is_unsigned = true;
-    EC_ZERO_LOG(mysql_stmt_bind_result(stmt, result));
+    result[1].buffer_type = MYSQL_TYPE_STRING;
+    result[1].buffer = name;
+    result[1].buffer_length = sizeof(name);
+    result[1].length = &name_len;
+    EC_NULL(stmt = mysql_stmt_init(db->cnid_mysql_con));
+    EC_ZERO(cnid_mysql_find_prepare(db, stmt, npat, &scoped));
+    EC_ZERO(cnid_mysql_find_bind(stmt, scoped, &scope, likes, lens, npat,
+                                 &after, &batch, result));
 
-    if (mysql_stmt_execute(stmt) != 0) {
-        if (!scoped) {
+    if (scoped && mysql_stmt_execute(stmt) == 0) {
+        /* Unbuffered, so the rows come as the fetches read them */
+        while ((fetch_ret = mysql_stmt_fetch(stmt)) == 0) {
+            if (cnid_mysql_id_ok(result_id)
+                    && sl_name_query_match(query, name, name_len)
+                    && cnid_mysql_lowest((uint32_t *)cnids, &count,
+                                         (int)max_results,
+                                         (uint32_t)result_id)) {
+                more = true;
+            }
+        }
+
+        if (fetch_ret != MYSQL_NO_DATA) {
             LOG(log_error, logtype_cnid,
-                "cnid_mysql_find: execute failed: %s",
+                "cnid_mysql_find: MySQL error after fetch: %s",
                 mysql_stmt_error(stmt));
+            mysql_stmt_free_result(stmt);
             EC_FAIL;
         }
 
-        /* e.g. the server's CTE recursion-depth cap on an unusually
-         * deep subtree; retry unscoped — the Spotlight layer's path
-         * guard keeps the results correct */
-        LOG(log_warning, logtype_cnid,
-            "cnid_mysql_find: scoped query failed at execute (%s); "
-            "retrying unscoped", mysql_stmt_error(stmt));
-        EC_NEG1(asprintf(&sql,
-                         "SELECT Id FROM `%s` WHERE Name LIKE ? "
-                         "ESCAPE '!' ORDER BY Id LIMIT %lu",
-                         db->cnid_mysql_voluuid_str, max_results + 1));
-        EC_ZERO_LOG(mysql_stmt_prepare(stmt, sql, strlen(sql)));
-        free(sql);
-        sql = NULL;
-        memset(param, 0, sizeof(param));
-        param[0].buffer_type = MYSQL_TYPE_STRING;
-        param[0].buffer = namelike;
-        param[0].buffer_length = namelike_len;
-        param[0].length = &namelike_len;
-        EC_ZERO_LOG(mysql_stmt_bind_param(stmt, param));
-        EC_ZERO_LOG(mysql_stmt_bind_result(stmt, result));
-        EC_ZERO_LOG(mysql_stmt_execute(stmt));
-    }
+        mysql_stmt_free_result(stmt);
+        qsort(cnids, (size_t)count, sizeof(cnids[0]), cnid_mysql_id_order);
 
-    EC_ZERO_LOG(mysql_stmt_store_result(stmt));
-    have_result = true;
-    LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: mysql_num_rows=%lu",
-        (unsigned long)mysql_stmt_num_rows(stmt));
-
-    /* Fetch up to max_results + 1 rows. The (max_results + 1)-th row, if
-     * it exists, is the "more available" sentinel and is not stored in
-     * cnids[]. */
-    while (count <= (int)max_results
-            && (fetch_ret = mysql_stmt_fetch(stmt)) == 0) {
-        if (count < (int)max_results) {
-            LOG(log_maxdebug, logtype_cnid,
-                "cnid_mysql_find: row[%d] = '%llu'", count, result_id);
-            cnids[count] = htonl((uint32_t)result_id);
+        for (int i = 0; i < count; i++) {
+            cnids[i] = htonl(cnids[i]);
+        }
+    } else {
+        if (scoped) {
+            /* e.g. the server's CTE recursion-depth cap on an unusually
+             * deep subtree; retry unscoped — the Spotlight layer's path
+             * guard keeps the results correct */
+            LOG(log_warning, logtype_cnid,
+                "cnid_mysql_find: scoped query failed at execute (%s); "
+                "retrying unscoped", mysql_stmt_error(stmt));
+            scoped = false;
+            EC_ZERO(cnid_mysql_find_prepare(db, stmt, npat, &scoped));
+            EC_ZERO(cnid_mysql_find_bind(stmt, scoped, &scope, likes, lens,
+                                         npat, &after, &batch, result));
         }
 
-        count++;
-    }
+        while (count <= (int)max_results) {
+            unsigned long long rows = 0;
 
-    if (count > (int)max_results) {
-        if (more_available) {
-            *more_available = true;
+            if (mysql_stmt_execute(stmt) != 0) {
+                LOG(log_error, logtype_cnid,
+                    "cnid_mysql_find: execute failed: %s",
+                    mysql_stmt_error(stmt));
+                EC_FAIL;
+            }
+
+            EC_ZERO_LOG(mysql_stmt_store_result(stmt));
+
+            while ((fetch_ret = mysql_stmt_fetch(stmt)) == 0) {
+                rows++;
+                after = result_id;
+
+                if (!cnid_mysql_id_ok(result_id)
+                        || !sl_name_query_match(query, name, name_len)) {
+                    continue;
+                }
+
+                if (count < (int)max_results) {
+                    cnids[count] = htonl((uint32_t)result_id);
+                }
+
+                if (++count > (int)max_results) {
+                    break;
+                }
+            }
+
+            if (fetch_ret != 0 && fetch_ret != MYSQL_NO_DATA) {
+                LOG(log_error, logtype_cnid,
+                    "cnid_mysql_find: MySQL error after fetch: %s",
+                    mysql_stmt_error(stmt));
+                mysql_stmt_free_result(stmt);
+                EC_FAIL;
+            }
+
+            mysql_stmt_free_result(stmt);
+
+            if (rows < batch) {
+                break;
+            }
+
+            batch = MIN(batch * 8, CNID_MYSQL_FIND_BATCH);
         }
 
-        count = (int)max_results;
-    } else if (fetch_ret != MYSQL_NO_DATA && fetch_ret != 0) {
-        LOG(log_error, logtype_cnid,
-            "cnid_mysql_find: MySQL error after fetch: %s",
-            mysql_stmt_error(stmt));
-        EC_FAIL;
+        if (count > (int)max_results) {
+            more = true;
+            count = (int)max_results;
+        }
+    }
+
+    if (more && more_available) {
+        *more_available = true;
     }
 
     LOG(log_debug, logtype_cnid, "cnid_mysql_find: returning %d matches", count);
 EC_CLEANUP:
 
-    if (have_result) {
-        mysql_stmt_free_result(stmt);
-    }
-
     if (stmt) {
         mysql_stmt_close(stmt);
     }
 
-    if (namelike) {
-        free(namelike);
-    }
-
-    if (sql) {
-        free(sql);
+    for (int i = 0; i < npat; i++) {
+        free(likes[i]);
     }
 
     if (ret != 0) {
@@ -1830,6 +2116,7 @@ static struct _cnid_db *cnid_mysql_new(struct vol *vol)
     cdb->cnid_get = cnid_mysql_get;
     cdb->cnid_lookup = cnid_mysql_lookup;
     cdb->cnid_find = cnid_mysql_find;
+    cdb->cnid_find_narrows = cnid_mysql_find_narrows;
     cdb->cnid_resolve = cnid_mysql_resolve;
     cdb->cnid_getstamp = cnid_mysql_getstamp;
     cdb->cnid_update = cnid_mysql_update;

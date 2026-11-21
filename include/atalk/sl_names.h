@@ -42,6 +42,13 @@ extern struct sl_name_query *sl_name_query_parse_in(const char *query,
 extern struct sl_name_query *sl_name_query_value(const char *value,
                                                  size_t len,
                                                  unsigned int flags);
+extern struct sl_name_query *sl_name_query_term(const char *term, size_t len,
+                                                bool exact,
+                                                unsigned int flags);
+extern struct sl_name_query *sl_name_query_term_in(const char *term,
+                                                   size_t len, bool exact,
+                                                   unsigned int flags,
+                                                   charset_t charset);
 extern void sl_name_query_free(struct sl_name_query *query);
 extern bool sl_name_query_match(const struct sl_name_query *query,
                                 const char *name, size_t len);

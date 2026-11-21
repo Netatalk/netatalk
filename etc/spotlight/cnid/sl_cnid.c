@@ -1,10 +1,11 @@
 /*
  * Spotlight CNID database search backend for Netatalk.
  *
- * Uses cnid_find() to perform LIKE-based filename searches directly in
- * the Netatalk CNID database.
+ * Searches the Netatalk CNID database for the names that a Spotlight
+ * query's name comparisons match.
  *
  * Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +38,7 @@
 #include <atalk/errchk.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
+#include <atalk/sl_names.h>
 #include <atalk/spotlight.h>
 #include <atalk/util.h>
 #include <atalk/volume.h>
@@ -62,38 +64,12 @@ static int cnid_comp_fn(const void *p1, const void *p2)
     return (*c1 < *c2) ? -1 : 1;
 }
 
-/*!
- * @brief Order two 32-bit CNIDs in network byte order, for qsort over the
- * result buffer
- *
- * The order serves deduplication only, so the call compares the raw
- * network-order values. The cnid_comp_fn call compares the 64-bit host-order
- * values of the client filter.
- *
- * @param[in] p1  first CNID
- * @param[in] p2  second CNID
- * @returns -1, 0, or 1
- */
-static int cnid32_comp_fn(const void *p1, const void *p2)
-{
-    const cnid_t *c1 = p1, *c2 = p2;
-
-    if (*c1 == *c2) {
-        return 0;
-    }
-
-    return (*c1 < *c2) ? -1 : 1;
-}
-
 /*
- * Candidate-buffer sizing. The buffer holds the CNIDs of every search
- * term before deduplication, so it is allocated from 'spotlight results
- * limit'. An unlimited limit starts at SL_CNID_START_RESULTS and doubles
- * until cnid_find() stops reporting further matches.
- *
- * cnid_find() rejects a buffer smaller than CNID_FIND_MIN_RESULTS, so the
- * capacity must also leave every term that many entries, or the terms
- * that find no room are silently dropped from the search.
+ * Candidate-buffer sizing. The buffer is allocated from 'spotlight results
+ * limit'. An unlimited limit starts at SL_CNID_START_RESULTS and grows
+ * SL_CNID_GROWTH times over while the search reports further matches. The capacity never
+ * falls below CNID_FIND_MIN_RESULTS, the smallest buffer cnid_find_scoped()
+ * takes.
  *
  * SL_CNID_MAX_CAP keeps the growth loop's arithmetic in range and bounds
  * what one query can allocate; it is the same ceiling the option itself
@@ -104,19 +80,18 @@ static int cnid32_comp_fn(const void *p1, const void *p2)
 #define SL_CNID_GROWTH        8
 
 /*
- * Minimum filename-substring length the Spotlight CNID backend will pass
- * through to cnid_find(). Sub-3-char terms produce too many matches
- * against a typical CNID database to be useful, so we silently return no
- * results. This policy is Spotlight-only: `nad find` and FPCatSearch /
- * CatSearchExt accept 1- and 2-character names through the same CNID
- * search calls.
+ * Literal bytes a name comparison without != needs before the backend
+ * searches for it. Shorter values match too many names of a typical CNID
+ * database to be useful, so the comparison matches no name. This policy is
+ * Spotlight-only: `nad find` and FPCatSearch / CatSearchExt accept 1- and
+ * 2-character names through the CNID search calls.
  */
 #define SL_CNID_MIN_TERMLEN 3
 
 /*
- * Maximum filename predicates honored per query. Finder joins one
- * predicate pair per typed word with ||, so this bounds the number
- * of words in a single search string.
+ * Maximum name comparisons honoured per query; any past it matches no name.
+ * Finder joins one predicate pair per typed word with ||, so this bounds the
+ * number of words in a single search string.
  */
 #define SL_CNID_MAX_TERMS   8
 
@@ -160,262 +135,24 @@ struct sl_cnid_query {
     /* Directory-path memo, lazily allocated on this context */
     struct sl_did_cache_ent *dcache;
     int    dcache_n;
+    /* The query's name comparisons */
+    struct sl_name_query *names;
 };
 
 /****************************************************************************
- * Query term extraction
+ * Query state
  ****************************************************************************/
 
 /*!
- * @brief Extract the quoted value starting at or after `p`
+ * @brief Free a query's name comparisons as talloc frees its state
  *
- * Scans to the first unescaped closing quote, strips unescaped
- * leading/trailing '*' wildcards, drops one wrapping escaped-quote
- * pair (Finder's exact-phrase delimiters; the substring search
- * preserves adjacency by construction) and removes the remaining
- * backslash escapes.
- *
- * @param mem_ctx  talloc context for the returned term
- * @param p        query-string position the scan starts from
- * @param endp     set to just past the closing quote when a quoted
- *                 span was found (even if the term is rejected), NULL
- *                 when no quoted span follows — the caller must stop
- *                 scanning then
- * @returns talloc'd term, or NULL when no quoted value follows or
- *          the result is shorter than SL_CNID_MIN_TERMLEN
+ * @param[in] csq  query state
+ * @returns 0, so talloc goes on to free the state
  */
-static char *sl_cnid_quoted_value(TALLOC_CTX *mem_ctx, const char *p,
-                                  const char **endp)
+static int sl_cnid_query_free(struct sl_cnid_query *csq)
 {
-    const char *quote_start, *quote_end = NULL;
-    char *term;
-    size_t len;
-    *endp = NULL;
-    quote_start = strchr(p, '"');
-
-    if (quote_start == NULL) {
-        return NULL;
-    }
-
-    quote_start++;
-
-    for (const char *scan = quote_start; *scan; scan++) {
-        if (*scan == '\\' && scan[1] != '\0') {
-            scan++;
-            continue;
-        }
-
-        if (*scan == '"') {
-            quote_end = scan;
-            break;
-        }
-    }
-
-    if (quote_end == NULL) {
-        return NULL;
-    }
-
-    *endp = quote_end + 1;
-    term = talloc_strndup(mem_ctx, quote_start,
-                          (size_t)(quote_end - quote_start));
-
-    if (term == NULL) {
-        return NULL;
-    }
-
-    /* strip leading '*' wildcards */
-    {
-        const char *t = term;
-
-        while (*t == '*') {
-            t++;
-        }
-
-        if (t != term) {
-            memmove(term, t, strnlen(t, MAXPATHLEN) + 1);
-        }
-    }
-    /* strip trailing unescaped '*' wildcards */
-    len = strnlen(term, MAXPATHLEN);
-
-    while (len > 0 && term[len - 1] == '*'
-            && !(len > 1 && term[len - 2] == '\\')) {
-        term[--len] = '\0';
-    }
-
-    /* drop one wrapping escaped-quote pair: \"two words\" */
-    if (len >= 4
-            && term[0] == '\\' && term[1] == '"'
-            && term[len - 1] == '"' && term[len - 2] == '\\') {
-        term[len - 2] = '\0';
-        memmove(term, term + 2, len - 3);
-    }
-
-    /* remove one level of backslash escaping: \" -> ", \* -> * */
-    {
-        const char *r = term;
-        char *w = term;
-
-        while (*r) {
-            if (r[0] == '\\' && (r[1] == '"' || r[1] == '*')) {
-                r++;
-            }
-
-            *w++ = *r++;
-        }
-
-        *w = '\0';
-    }
-
-    if (strnlen(term, MAXPATHLEN) < (size_t)SL_CNID_MIN_TERMLEN) {
-        LOG(log_debug, logtype_sl,
-            "cnid backend: ignoring term \"%s\" "
-            "(length < SL_CNID_MIN_TERMLEN=%d)",
-            term, SL_CNID_MIN_TERMLEN);
-        return NULL;
-    }
-
-    return term;
-}
-
-/*!
- * @brief Append a term to the term list unless the list holds it already
- *
- * The caller keeps count below the size of the list.
- *
- * @param[in,out] terms  term list
- * @param[in,out] count  number of terms, incremented on an append
- * @param[in]     term   term to append
- * @returns true after an append, false for a term that the list holds
- */
-static bool sl_cnid_add_term(char **terms, int *count, char *term)
-{
-    for (int j = 0; j < *count; j++) {
-        if (strcmp(terms[j], term) == 0) {
-            return false;
-        }
-    }
-
-    terms[(*count)++] = term;
-    return true;
-}
-
-/*!
- * @brief Extract the filename search terms from a Spotlight query string
- *
- * The named attributes kMDItemFSName, kMDItemDisplayName, and
- * _kMDItemFileName come first, each with "=" after the name. Only when none
- * matches does the call read the any-attribute form *==. Finder splits a
- * multi-word search into one predicate per word joined with ||, so every term
- * adds to the results. A repeated term counts once.
- *
- * Patterns and their terms:
- * @code
- *   kMDItemFSName = "foo*"cd       -> "foo"
- *   kMDItemDisplayName = "*foo*"cd -> "foo"
- *   _kMDItemFileName = "foo*"cd    -> "foo"
- *   *=="foo*"cdw                   -> "foo"
- * @endcode
- *
- * @param[in]  mem_ctx    talloc context for the terms
- * @param[in]  qstring    query string, or NULL
- * @param[out] terms      receives the terms
- * @param[in]  max_terms  size of terms
- * @returns the number of terms
- */
-static int sl_cnid_extract_terms(TALLOC_CTX *mem_ctx, const char *qstring,
-                                 char **terms, int max_terms)
-{
-    static const char *const name_keys[] = {
-        "kMDItemFSName",
-        "kMDItemDisplayName",
-        "_kMDItemFileName",
-        NULL
-    };
-    const char *p, *key, *eq, *next;
-    char *term;
-    int count = 0;
-
-    if (qstring == NULL) {
-        return 0;
-    }
-
-    for (size_t i = 0; name_keys[i] != NULL; i++) {
-        key = name_keys[i];
-        p = strstr(qstring, key);
-
-        while (p != NULL && count < max_terms) {
-            /* Require '=' directly after the key (spaces allowed): an
-             * occurrence inside another predicate's quoted value must
-             * not bind to a later predicate. */
-            eq = p + strnlen(key, 32);
-
-            while (*eq == ' ') {
-                eq++;
-            }
-
-            if (*eq != '=') {
-                p = strstr(p + 1, key);
-                continue;
-            }
-
-            term = sl_cnid_quoted_value(mem_ctx, eq + 1, &next);
-
-            if (next == NULL) {
-                break;
-            }
-
-            p = next;
-
-            if (term == NULL) {
-                /* re-anchor: `p` is past a value, not at a key */
-                p = strstr(p, key);
-                continue;
-            }
-
-            if (sl_cnid_add_term(terms, &count, term)) {
-                LOG(log_debug, logtype_sl,
-                    "cnid backend: extracted search term \"%s\"", term);
-            }
-
-            p = strstr(p, key);
-        }
-    }
-
-    if (count == 0) {
-        /*
-         * Handle macOS's "any attribute" wildcard operator:
-         * *=="term*"cdw — treat it as a filename search, the only
-         * predicate we support.
-         */
-        for (p = strstr(qstring, "*=="); p != NULL && count < max_terms;
-                p = strstr(p, "*==")) {
-            term = sl_cnid_quoted_value(mem_ctx, p + 3, &next);
-
-            if (next == NULL) {
-                break;
-            }
-
-            p = next;
-
-            if (term == NULL) {
-                continue;
-            }
-
-            if (sl_cnid_add_term(terms, &count, term)) {
-                LOG(log_debug, logtype_sl,
-                    "cnid backend: extracted term from *== pattern: \"%s\"",
-                    term);
-            }
-        }
-    }
-
-    if (count == max_terms) {
-        LOG(log_info, logtype_sl,
-            "cnid backend: term limit (%d) reached", max_terms);
-    }
-
-    return count;
+    sl_name_query_free(csq->names);
+    return 0;
 }
 
 /****************************************************************************
@@ -577,7 +314,8 @@ static void sl_cnid_close(AFPObj *obj _U_)
  * page
  *
  * The call resolves each remaining CNID to a path. It skips a CNID outside
- * the client filter and a path that does not resolve or lies out of scope.
+ * the client filter, a path that does not resolve or lies out of scope, and
+ * a name the query's comparisons do not match.
  * It also skips a file that fails stat or a read access check. A full page
  * with CNIDs left sets SLQ_STATE_FULL, so the client polls for the next page.
  * With no CNIDs left the call sets SLQ_STATE_DONE, and a failed add_filemeta
@@ -594,6 +332,7 @@ static int sl_cnid_fill_results(slq_t *slq)
     cnid_t     id;
     uint64_t   uint64var;
     char      *path = NULL;
+    const char *name;
     struct stat sb;
     bool        ok;
 
@@ -650,6 +389,14 @@ static int sl_cnid_fill_results(slq_t *slq)
             continue;
         }
 
+        name = strrchr(path, '/') + 1;
+
+        if (!sl_name_query_match(csq->names, name, strlen(name))) {
+            LOG(log_debug, logtype_sl,
+                "cnid backend: the query does not match, skipping: %s", path);
+            continue;
+        }
+
         if (stat(path, &sb) != 0) {
             LOG(log_debug, logtype_sl,
                 "cnid backend: stat failed, skipping: %s", path);
@@ -697,23 +444,19 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Size the candidate buffer for the wanted results and the search terms
+ * @brief Size the candidate buffer for the wanted results
  *
- * Every term needs CNID_FIND_MIN_RESULTS entries of room, or cnid_find
- * refuses the call. So a small limit still gets room for all the terms, and
- * the caller trims the surplus results afterwards. The capacity stops at
+ * A limit under CNID_FIND_MIN_RESULTS still gets that much room, and the
+ * caller trims the surplus results afterwards. The capacity stops at
  * SL_CNID_MAX_CAP.
  *
- * @param[in] want    number of results wanted
- * @param[in] nterms  number of search terms
+ * @param[in] want  number of results wanted
  * @returns the capacity in entries
  */
-static int sl_cnid_cap_for(uint64_t want, int nterms)
+static int sl_cnid_cap_for(uint64_t want)
 {
-    uint64_t floor = (uint64_t)nterms * CNID_FIND_MIN_RESULTS;
-
-    if (want < floor) {
-        want = floor;
+    if (want < CNID_FIND_MIN_RESULTS) {
+        want = CNID_FIND_MIN_RESULTS;
     }
 
     if (want > SL_CNID_MAX_CAP) {
@@ -721,93 +464,6 @@ static int sl_cnid_cap_for(uint64_t want, int nterms)
     }
 
     return (int)want;
-}
-
-/*!
- * @brief Search every term into the candidate buffer, then drop the duplicates
- *
- * Finder joins one predicate per typed word with ||, so the terms are
- * alternatives. The call runs one cnid_find_scoped per term into the shared
- * buffer, and it holds back CNID_FIND_MIN_RESULTS entries for each term still
- * to come. A sort and a unique pass follow, since a name can match more than
- * one term. The call resets the count and the truncation flag on entry, so
- * the caller can run it again on a grown buffer.
- *
- * @param[in]     slq        query with the volume
- * @param[in,out] csq        backend state with the candidate buffer
- * @param[in]     terms      search terms
- * @param[in]     nterms     number of terms
- * @param[in]     scope_did  CNID of the scope directory, or CNID_INVALID
- *                           without a scope
- * @returns 0, or -1 when a search fails
- */
-static int sl_cnid_collect(slq_t *slq, struct sl_cnid_query *csq,
-                           char **terms, int nterms, cnid_t scope_did)
-{
-    csq->count = 0;
-    csq->more_available = false;
-
-    for (int i = 0; i < nterms; i++) {
-        /*
-         * Hold back room for each term still to come: a broad early
-         * term would otherwise consume the buffer and the rest of the
-         * words would silently drop out of the search.
-         */
-        int reserve = (nterms - 1 - i) * CNID_FIND_MIN_RESULTS;
-        int remaining = csq->cap - csq->count - reserve;
-        int found;
-        bool more = false;
-
-        if (remaining < CNID_FIND_MIN_RESULTS) {
-            csq->more_available = true;
-            LOG(log_debug, logtype_sl,
-                "cnid backend: candidate buffer full before term \"%s\"",
-                terms[i]);
-            break;
-        }
-
-        LOG(log_debug, logtype_sl,
-            "cnid backend: calling cnid_find for term \"%s\"", terms[i]);
-        /* one past the wrapper's bound: an over-long term is refused, not
-         * truncated */
-        found = cnid_find_scoped(slq->slq_vol->v_cdb,
-                                 terms[i], strnlen(terms[i], MAXPATHLEN + 1),
-                                 scope_did,
-                                 csq->cnids + csq->count,
-                                 (size_t)remaining * sizeof(cnid_t),
-                                 &more);
-
-        if (found < 0) {
-            LOG(log_error, logtype_sl,
-                "cnid backend: cnid_find failed for term \"%s\"", terms[i]);
-            return -1;
-        }
-
-        LOG(log_debug, logtype_sl,
-            "cnid backend: cnid_find(\"%s\") returned %d result(s)",
-            terms[i], found);
-        csq->count += found;
-
-        if (more) {
-            csq->more_available = true;
-        }
-    }
-
-    if (nterms > 1 && csq->count > 1) {
-        int w = 1;
-        qsort(csq->cnids, (size_t)csq->count, sizeof(cnid_t),
-              cnid32_comp_fn);
-
-        for (int r = 1; r < csq->count; r++) {
-            if (csq->cnids[r] != csq->cnids[w - 1]) {
-                csq->cnids[w++] = csq->cnids[r];
-            }
-        }
-
-        csq->count = w;
-    }
-
-    return 0;
 }
 
 /*!
@@ -838,7 +494,7 @@ static bool sl_cnid_scope_is_vol_root(const char *scope,
 /*!
  * @brief Run a filename search in the CNID database for a Spotlight query
  *
- * A query without a filename term, or with a scope that does not resolve,
+ * A query without a name comparison, or with a scope that does not resolve,
  * returns no results. A scope below the volume root restricts the search to
  * its subtree inside the database. A query without a result limit starts with
  * SL_CNID_START_RESULTS entries. While the database reports further matches,
@@ -854,8 +510,7 @@ static bool sl_cnid_scope_is_vol_root(const char *scope,
 static int sl_cnid_open_query(slq_t *slq)
 {
     EC_INIT;
-    char *terms[SL_CNID_MAX_TERMS];
-    int nterms;
+    struct sl_name_query *names;
     cnid_t scope_did;
     uint64_t limit;
     bool unlimited;
@@ -863,16 +518,19 @@ static int sl_cnid_open_query(slq_t *slq)
     LOG(log_debug, logtype_sl,
         "cnid backend: open_query called, qstring: \"%s\"",
         slq->slq_qstring);
-    nterms = sl_cnid_extract_terms(slq, slq->slq_qstring, terms,
-                                   SL_CNID_MAX_TERMS);
+    /* the query and the names come in the volume's charset */
+    names = slq->slq_qstring == NULL ? NULL
+            : sl_name_query_parse_in(slq->slq_qstring, SL_CNID_MIN_TERMLEN,
+                                     SL_CNID_MAX_TERMS,
+                                     slq->slq_vol->v_volcharset);
 
-    if (nterms == 0) {
-        /*
-         * Query type not supported (e.g. kMDItemTextContent, date
-         * ranges). Return no results gracefully.
-         */
+    if (names == NULL) {
+        /* no name comparison the backend serves (kMDItemTextContent, date
+         * ranges), only refused ones, or a query that does not parse or
+         * convert */
         LOG(log_debug, logtype_sl,
-            "cnid backend: no extractable term, returning 0 results");
+            "cnid backend: no name comparison to search, returning 0 "
+            "results");
         slq->slq_state = SLQ_STATE_DONE;
         EC_EXIT;
     }
@@ -880,16 +538,18 @@ static int sl_cnid_open_query(slq_t *slq)
     csq = talloc_zero(slq, struct sl_cnid_query);
 
     if (csq == NULL) {
+        sl_name_query_free(names);
         LOG(log_error, logtype_sl, "cnid backend: out of memory");
         slq->slq_state = SLQ_STATE_ERROR;
         EC_FAIL;
     }
 
+    csq->names = names;
+    talloc_set_destructor(csq, sl_cnid_query_free);
     slq->slq_backend_private = csq;
     limit = slq->slq_result_limit;
     unlimited = (limit == 0);
-    csq->cap = sl_cnid_cap_for(unlimited ? SL_CNID_START_RESULTS : limit,
-                               nterms);
+    csq->cap = sl_cnid_cap_for(unlimited ? SL_CNID_START_RESULTS : limit);
     csq->cnids = talloc_array(csq, cnid_t, (size_t)csq->cap);
 
     if (csq->cnids == NULL) {
@@ -940,25 +600,31 @@ static int sl_cnid_open_query(slq_t *slq)
 
     /*
      * With no limit the result count is unknown up front, so the buffer
-     * starts small and the whole collection re-runs against a doubled
-     * buffer while the backend still reports further matches. Bounded
-     * searches allocate once.
+     * starts small and the search re-runs against a larger buffer while the
+     * backend still reports further matches. Bounded searches allocate once.
      */
     for (;;) {
-        EC_ZERO(sl_cnid_collect(slq, csq, terms, nterms, scope_did));
+        csq->count = cnid_find_scoped(slq->slq_vol->v_cdb, csq->names,
+                                      scope_did, csq->cnids,
+                                      (size_t)csq->cap * sizeof(cnid_t),
+                                      &csq->more_available);
+
+        if (csq->count < 0) {
+            LOG(log_error, logtype_sl, "cnid backend: the search failed");
+            csq->count = 0;
+            EC_FAIL;
+        }
+
+        LOG(log_debug, logtype_sl,
+            "cnid backend: the search returned %d result(s)", csq->count);
 
         if (!unlimited || !csq->more_available || csq->cap >= SL_CNID_MAX_CAP) {
             break;
         }
 
         {
-            /*
-             * Grow in large steps: every round re-runs the search, and a
-             * substring match cannot use an index, so each round is a
-             * full scan per term.
-             */
-            int grown = sl_cnid_cap_for((uint64_t)csq->cap * SL_CNID_GROWTH,
-                                        nterms);
+            /* Grow in large steps: every round re-runs the search */
+            int grown = sl_cnid_cap_for((uint64_t)csq->cap * SL_CNID_GROWTH);
             cnid_t *bigger = talloc_realloc(csq, csq->cnids, cnid_t,
                                             (size_t)grown);
 
@@ -977,8 +643,8 @@ static int sl_cnid_open_query(slq_t *slq)
     }
 
     /*
-     * The capacity is at least CNID_FIND_MIN_RESULTS per term, so a
-     * bounded search can collect a few more candidates than asked for.
+     * The capacity is at least CNID_FIND_MIN_RESULTS, so a search bounded
+     * under it can collect more results than asked for.
      */
     if (!unlimited && (uint64_t)csq->count > limit) {
         csq->count = (int)limit;

@@ -791,10 +791,12 @@ static void sl_name_flush(struct sl_name_pattern *pat, const char *run,
 /*!
  * @brief Compile a value with its modifiers
  *
- * The LIKE pattern keeps the value's literal characters, each '%', '_' and
- * '!' escaped with '!', and puts '%' for every wildcard, and at the ends
- * under SL_NAMES_WORD, so it holds every match under a case- and
- * accent-insensitive collation that ignores combining marks.
+ * The LIKE pattern keeps the value's literal ASCII characters but letters,
+ * each '%', '_' and '!' escaped with '!', between '%': a collation can fold a
+ * letter otherwise than the matcher, or read two letters as one, but compares
+ * the others as themselves, and the matcher drops variation selectors, and
+ * under SL_NAMES_DIACRITIC combining marks, between any two characters. So
+ * every match satisfies the pattern under any collation.
  *
  * @param[in] value  the value between its quotes, escapes included
  * @param[in] len    bytes of value
@@ -812,12 +814,11 @@ struct sl_name_pattern *sl_name_pattern_new(const char *value, size_t len,
                                          + room * sizeof(pat->tok[0]));
     ucs2_t *units = malloc(2 * room * sizeof(ucs2_t));
     char *run = malloc(len + 1);
-    bool open = (flags & SL_NAMES_WORD) != 0;
     size_t runlen = 0;
     char *lp;
 
     if (pat == NULL || units == NULL || run == NULL
-            || (pat->like = malloc(2 * len + 3)) == NULL) {
+            || (pat->like = malloc(3 * len + 3)) == NULL) {
         free(units);
         free(run);
         sl_name_pattern_free(pat);
@@ -826,10 +827,7 @@ struct sl_name_pattern *sl_name_pattern_new(const char *value, size_t len,
 
     pat->flags = flags;
     lp = pat->like;
-
-    if (open) {
-        *lp++ = '%';
-    }
+    *lp++ = '%';
 
     while (p < end) {
         const unsigned char *c;
@@ -841,11 +839,6 @@ struct sl_name_pattern *sl_name_pattern_new(const char *value, size_t len,
             if (kind == SL_TOK_ONE || pat->ntok == 0
                     || pat->tok[pat->ntok - 1].kind != SL_TOK_ANY) {
                 pat->tok[pat->ntok++].kind = kind;
-            }
-
-            if (!open) {
-                *lp++ = '%';
-                open = true;
             }
 
             continue;
@@ -867,21 +860,19 @@ struct sl_name_pattern *sl_name_pattern_new(const char *value, size_t len,
         memcpy(run + runlen, c, (size_t)(p - c));
         runlen += (size_t)(p - c);
 
-        if (p - c == 1 && (*c == '%' || *c == '_' || *c == '!')) {
+        if (p - c > 1 || *c >= 0x80 || isalpha(*c)) {
+            continue;
+        }
+
+        if (*c == '%' || *c == '_' || *c == '!') {
             *lp++ = '!';
         }
 
-        memcpy(lp, c, (size_t)(p - c));
-        lp += p - c;
-        open = false;
-    }
-
-    sl_name_flush(pat, run, &runlen, units, units + room);
-
-    if (!open && (flags & SL_NAMES_WORD)) {
+        *lp++ = (char)c[0];
         *lp++ = '%';
     }
 
+    sl_name_flush(pat, run, &runlen, units, units + room);
     *lp = '\0';
     free(units);
     free(run);
@@ -1057,7 +1048,7 @@ size_t sl_name_pattern_literals(const struct sl_name_pattern *pattern)
 }
 
 /*!
- * @brief The LIKE pattern, with ESCAPE '!', that every match satisfies
+ * @brief The LIKE pattern, ESCAPE '!', every match satisfies under any collation
  *
  * @param[in] pattern  the comparison
  * @returns the pattern, "%" for a !=, which lasts as long as @p pattern
@@ -1820,6 +1811,87 @@ struct sl_name_query *sl_name_query_value(const char *value, size_t len,
     }
 
     return node;
+}
+
+/*!
+ * @brief Make a query of one name comparison from a search term
+ *
+ * A term for names that contain it keeps its wildcards and escapes, and a
+ * backslash at its end means itself. A term for whole names takes every
+ * character literally.
+ *
+ * @param[in] term   the term
+ * @param[in] len    bytes of term, MAXPATHLEN at most
+ * @param[in] exact  whether the term is a whole name
+ * @param[in] flags  SL_NAMES_* flags
+ * @returns the query, to sl_name_query_free(), or NULL when out of memory or
+ *          for a longer term
+ */
+struct sl_name_query *sl_name_query_term(const char *term, size_t len,
+                                         bool exact, unsigned int flags)
+{
+    return sl_name_query_term_in(term, len, exact, flags, CH_UTF8);
+}
+
+/*!
+ * @brief Make a query of one name comparison from a search term in a charset
+ *
+ * The term converts to UTF-8 first, and keeps its bytes when it does not.
+ *
+ * @param[in] term     the term
+ * @param[in] len      bytes of term, MAXPATHLEN at most, as UTF-8 too
+ * @param[in] exact    whether the term is a whole name
+ * @param[in] flags    SL_NAMES_* flags
+ * @param[in] charset  charset of the term and the names
+ * @returns the query, to sl_name_query_free(), or NULL when out of memory or
+ *          for a longer term
+ */
+struct sl_name_query *sl_name_query_term_in(const char *term, size_t len,
+                                            bool exact, unsigned int flags,
+                                            charset_t charset)
+{
+    char value[2 * MAXPATHLEN + 3];
+    char utf8[MAXPATHLEN + 1];
+    struct sl_name_query *query;
+    size_t n = 0;
+
+    if (sl_name_converts(charset)
+            && (n = convert_string(charset, CH_UTF8, term, len, utf8,
+                                   sizeof(utf8))) != (size_t) -1) {
+        term = utf8;
+        len = n;
+    }
+
+    n = 0;
+
+    if (len > MAXPATHLEN) {
+        return NULL;
+    }
+
+    if (!exact) {
+        value[n++] = '*';
+    }
+
+    for (size_t i = 0; i < len; i++) {
+        if (!exact && term[i] == '\\' && i + 1 < len) {
+            value[n++] = term[i++];
+        } else if (term[i] == '\\'
+                   || (exact && (term[i] == '*' || term[i] == '?'))) {
+            value[n++] = '\\';
+        }
+
+        value[n++] = term[i];
+    }
+
+    if (!exact) {
+        value[n++] = '*';
+    }
+
+    if ((query = sl_name_query_value(value, n, flags)) != NULL) {
+        query->charset = charset;
+    }
+
+    return query;
 }
 
 /*!

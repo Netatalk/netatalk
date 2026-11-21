@@ -849,15 +849,147 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/* Query bytes one convert_charset() takes: it holds MAXPATHLEN units, and a
+ * 2-byte letter decomposes into 3 on a volume of decomposed names */
+#define SL_QUERY_PIECE (MAXPATHLEN / 2)
+
+/* BMP characters precompose_w() joins to the one before: the second of each
+ * pair in precompose.h, and Hangul's vowel and final consonant jamo */
+static const uint16_t sl_query_second[][2] = {
+    {0x0300, 0x0304}, {0x0306, 0x030c}, {0x030f, 0x030f}, {0x0311, 0x0311},
+    {0x0313, 0x0314}, {0x031b, 0x031b}, {0x0323, 0x0328}, {0x032d, 0x032e},
+    {0x0330, 0x0331}, {0x0342, 0x0342}, {0x0345, 0x0345}, {0x05b4, 0x05b4},
+    {0x05b7, 0x05b9}, {0x05bc, 0x05bc}, {0x05bf, 0x05bf}, {0x05c1, 0x05c2},
+    {0x0653, 0x0655}, {0x093c, 0x093c}, {0x09bc, 0x09bc}, {0x09be, 0x09be},
+    {0x09d7, 0x09d7}, {0x0a3c, 0x0a3c}, {0x0b3c, 0x0b3c}, {0x0b3e, 0x0b3e},
+    {0x0b56, 0x0b57}, {0x0bbe, 0x0bbe}, {0x0bd7, 0x0bd7}, {0x0c56, 0x0c56},
+    {0x0cc2, 0x0cc2}, {0x0cd5, 0x0cd6}, {0x0d3e, 0x0d3e}, {0x0d57, 0x0d57},
+    {0x0dca, 0x0dca}, {0x0dcf, 0x0dcf}, {0x0ddf, 0x0ddf}, {0x0f72, 0x0f72},
+    {0x0f74, 0x0f74}, {0x0f80, 0x0f80}, {0x0fb5, 0x0fb5}, {0x0fb7, 0x0fb7},
+    {0x102e, 0x102e}, {0x1161, 0x1175}, {0x11a8, 0x11c2}, {0x1b35, 0x1b35},
+    {0x3099, 0x309a},
+};
+
+/*!
+ * @brief Tell whether a query piece can start at a character
+ *
+ * A piece starts at a character that composes with nothing before it.
+ * precompose_w() composes some characters past the BMP with the one before
+ * them, so no character past the BMP starts one.
+ *
+ * @param[in] s     the character's first byte
+ * @param[in] left  bytes from s to the end of the query
+ * @returns true when the character starts a piece
+ */
+static bool sl_query_piece_starts(const unsigned char *s, size_t left)
+{
+    uint32_t cp;
+
+    if (s[0] < 0x80) {
+        return true;
+    }
+
+    if ((s[0] & 0xe0) == 0xc0 && left >= 2) {
+        cp = (uint32_t)(s[0] & 0x1f) << 6 | (uint32_t)(s[1] & 0x3f);
+    } else if ((s[0] & 0xf0) == 0xe0 && left >= 3) {
+        cp = (uint32_t)(s[0] & 0x0f) << 12 | (uint32_t)(s[1] & 0x3f) << 6
+             | (uint32_t)(s[2] & 0x3f);
+    } else {
+        return false;
+    }
+
+    for (size_t i = 0; i < sizeof(sl_query_second) / sizeof(sl_query_second[0]);
+            i++) {
+        if (cp >= sl_query_second[i][0] && cp <= sl_query_second[i][1]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/*!
+ * @brief Convert a query of any length from UTF8-MAC to the volume's charset
+ *
+ * A query longer than SL_QUERY_PIECE bytes converts in pieces, each with the
+ * volume's conversion flags. A piece ends before a character that composes
+ * with nothing before it, so a letter and its marks convert together, or
+ * failing that at the start of any character.
+ *
+ * @param[in] ctx    talloc context of the result
+ * @param[in] vol    the volume
+ * @param[in] query  the query, NUL-terminated
+ * @returns the converted query, or NULL when a piece does not convert or out
+ *          of memory
+ */
+char *sl_query_to_volume(TALLOC_CTX *ctx, const struct vol *vol,
+                         const char *query)
+{
+    const unsigned char *q = (const unsigned char *)query;
+    const size_t len = strlen(query);
+    /* a Hangul syllable decomposes for a volume of decomposed names, 3 bytes
+     * into 9 */
+    const size_t room = 3 * len + 2;
+    char *out = talloc_size(ctx, room);
+    size_t done = 0;
+    size_t at = 0;
+
+    if (out == NULL) {
+        return NULL;
+    }
+
+    out[0] = '\0';
+
+    while (at < len) {
+        size_t piece = len - at;
+        uint16_t flags = vol->v_mtou_flags;
+        size_t got;
+
+        if (piece > SL_QUERY_PIECE) {
+            piece = SL_QUERY_PIECE;
+
+            while (piece > 0
+                    && !sl_query_piece_starts(q + at + piece, len - at - piece)) {
+                piece--;
+            }
+
+            for (size_t c = SL_QUERY_PIECE; piece == 0 && c > 0; c--) {
+                if ((q[at + c] & 0xc0) != 0x80) {
+                    piece = c;
+                }
+            }
+
+            /* no character starts in the run: its conversion fails */
+            if (piece == 0) {
+                piece = SL_QUERY_PIECE;
+            }
+        }
+
+        if ((got = convert_charset(CH_UTF8_MAC, vol->v_volcharset,
+                                   vol->v_maccharset, query + at, piece,
+                                   out + done, room - done, &flags))
+                == (size_t) -1) {
+            talloc_free(out);
+            return NULL;
+        }
+
+        done += got;
+        at += piece;
+    }
+
+    out[done] = '\0';
+    return out;
+}
+
 /*!
  * @brief Spotlight RPC openQueryWithParams:forContext: start a search on a
  * volume
  *
  * The request carries the 2 context IDs, the query string, the requested
  * attributes, the scope, and an optional CNID filter. The query string
- * converts from UTF8-MAC to the volume charset. A nested scope array, as
- * macOS Tahoe sends, unwraps one level. A scope outside the volume root, or
- * one with a ".." component, falls back to the volume root.
+ * converts from UTF8-MAC to the volume charset whatever its length. A nested
+ * scope array, as macOS Tahoe sends, unwraps one level. A scope outside the
+ * volume root, or one with a ".." component, falls back to the volume root.
  *
  * The backend gets the query after its result buffers exist, so a
  * synchronous backend can fill them at once. The query then joins the active
@@ -884,8 +1016,6 @@ static int sl_rpc_openQuery(AFPObj *obj,
     const sl_array_t *cnid_array = NULL;
     slq_t *slq = NULL;
     char slq_host[MAXPATHLEN + 1];
-    uint16_t convflags = v->v_mtou_flags;
-    ssize_t convret;
     uint64_t result;
     bool ok;
     bool open_ok = false;
@@ -929,16 +1059,12 @@ static int sl_rpc_openQuery(AFPObj *obj,
     }
 
     LOG(log_debug, logtype_sl, "Spotlight query pre-conversion: \"%s\"", sl_query);
-    convret = convert_charset(CH_UTF8_MAC, v->v_volcharset, v->v_maccharset,
-                              sl_query, strnlen(sl_query, MAXPATHLEN), slq_host, MAXPATHLEN,
-                              &convflags);
 
-    if (convret == -1) {
+    if ((slq->slq_qstring = sl_query_to_volume(slq, v, sl_query)) == NULL) {
         LOG(log_error, logtype_sl, "charset conversion failed");
         EC_FAIL;
     }
 
-    slq->slq_qstring = talloc_strdup(slq, slq_host);
     LOG(log_debug, logtype_sl, "Spotlight query: \"%s\"", slq->slq_qstring);
     slq->slq_time = time(NULL);
     uint64 = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 1);
@@ -1057,6 +1183,8 @@ static int sl_rpc_openQuery(AFPObj *obj,
             const char *end;
             size_t seg_len;
             char segbuf[MAXPATHLEN + 1];
+            uint16_t convflags = v->v_mtou_flags;
+            ssize_t convret;
 
             if (*seg == '/') {
                 if (out >= MAXPATHLEN) {
@@ -1072,7 +1200,6 @@ static int sl_rpc_openQuery(AFPObj *obj,
             end = strchr(seg, '/');
             seg_len = end != NULL ? (size_t)(end - seg)
                       : strnlen(seg, MAXPATHLEN);
-            convflags = v->v_mtou_flags;
             convret = convert_charset(CH_UTF8_MAC, v->v_volcharset,
                                       v->v_maccharset, seg, seg_len,
                                       segbuf, MAXPATHLEN, &convflags);

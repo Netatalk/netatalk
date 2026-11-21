@@ -51,6 +51,19 @@ Available Spotlight backends:
 - **cnid**
   Uses *cnid_find()* against the CNID database for filename-oriented searches.
   It has no extra runtime dependencies beyond the *talloc* library and Netatalk's CNID database.
+  It reads the name comparisons of a query (*kMDItemFSName*,
+  *kMDItemDisplayName*, *_kMDItemFileName* and the any-attribute `*`, with
+  `==` or `!=`, joined by `&&` and `||`) in Apple's syntax: `*` matches any
+  run of characters, `?` one character, a backslash makes the next character
+  literal, and a value without wildcards matches the whole name. The `c`
+  modifier ignores case, `d` diacritics, and `w` anchors the value at word
+  boundaries rather than at the ends of the name; in text written without
+  spaces, such as Chinese, Japanese or Thai, every character starts a word.
+  On a volume whose **vol charset** is not UTF-8, the query and each name
+  convert to UTF-8 before they compare.
+  With the *mysql* CNID scheme the server keeps the names that hold a
+  search's digits and punctuation, whatever the collation of the CNID
+  table, and Netatalk matches each of them.
 
 - **localsearch**
   Uses the LocalSearch/Tracker SPARQL backend for broader file contents and metadata indexing/search.
@@ -76,8 +89,10 @@ queries, but may not match content queries such as `kMDItemTextContent`.
   results contain files whose names match any of the words.
 - To search for words that must appear next to each other, wrap the
   phrase in double quotes in the Finder search field, for example
-  `"two words"`. With the **cnid** backend a phrase matches as a
-  filename substring.
+  `"two words"`. With the **cnid** backend a phrase matches where the
+  query puts it: at the start of a word, as in `my two words.txt`, when
+  the comparison carries `w`, and anywhere in a name when it stands
+  between `*` wildcards.
 - Searching within a folder returns only results from that folder and
   its subfolders. With the **cnid** backend the restriction is applied
   inside the CNID database; with the *mysql* CNID scheme that requires

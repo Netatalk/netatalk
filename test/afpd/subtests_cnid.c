@@ -39,6 +39,7 @@
 #include <atalk/cnid.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
+#include <atalk/sl_names.h>
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
@@ -461,6 +462,244 @@ int utest_cnid_sqlite_creation_logged(void)
     }
 
     return 0;
+}
+
+/* Names that tell the search syntax's wildcards from literal characters */
+static const char *const cnid_syntax_names[] = {
+    "50% off.pdf", "50 off.pdf", "my_file.doc", "myXfile.doc",
+    "report draft final.txt", "IMG_1234.JPG", "\xc3\x89lan.txt",
+    "My Caf\xc3\xa9.txt", "foo\\bar.txt", "food.txt",
+};
+
+/*!
+ * @brief Count the CNIDs a search for a term answers
+ *
+ * @param[in] cdb   CNID database
+ * @param[in] term  search term
+ * @returns the count, or -1 for a failed search
+ */
+static int cnid_find_count(struct _cnid_db *cdb, const char *term)
+{
+    cnid_t results[CNID_FIND_MIN_RESULTS];
+    bool more = false;
+    return cnid_find(cdb, term, strlen(term), results, sizeof(results),
+                     &more);
+}
+
+/*!
+ * @brief Register names in the root of a scratch database, each with an
+ *        inode of its own
+ *
+ * @param[in] cdb    CNID database
+ * @param[in] names  the names
+ * @param[in] n      number of names
+ * @param[in] ino    inode of the first name
+ * @returns 0, or -1 when an add fails
+ */
+static int cnid_add_names(struct _cnid_db *cdb, const char *const *names,
+                          size_t n, ino_t ino)
+{
+    struct stat st;
+    memset(&st, 0, sizeof(st));
+    st.st_dev = 4242;
+
+    for (size_t i = 0; i < n; i++) {
+        st.st_ino = ino + i;
+
+        if (cnid_add(cdb, &st, DIRDID_ROOT, names[i], strlen(names[i]),
+                     CNID_INVALID) == CNID_INVALID) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Check what searches for the syntax names answer
+ *
+ * @param[in] cdb  CNID database holding cnid_syntax_names
+ * @returns 0, or the number of the first failed check
+ */
+static int cnid_syntax_checks(struct _cnid_db *cdb)
+{
+    static const struct {
+        const char *term;
+        int want;
+    } checks[] = {
+        {"50%", 1},
+        {"my_file", 1},
+        {"report*final", 1},
+        {"IMG_??34", 1},
+        {"\xc3\xa9lan", 1},
+        {"off.pdf", 2},
+        {"foo\\", 1},
+    };
+
+    for (size_t i = 0; i < sizeof(checks) / sizeof(checks[0]); i++) {
+        if (cnid_find_count(cdb, checks[i].term) != checks[i].want) {
+            return (int)i + 1;
+        }
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief A name search reads '*' and '?' as wildcards, '%', '_' and a final
+ *        backslash as themselves, and letters without regard to case
+ *
+ * @returns 0, or the number of the first failed check
+ */
+int utest_cnid_find_syntax(void)
+{
+    static char scheme[] = "sqlite";
+    struct cnid_scratch s;
+    struct _cnid_db *cdb;
+    int result = 10;
+
+    if (cnid_scratch_setup(&s, "syntax", "syntaxvol",
+                           "0F0F0F0F-1111-2222-3333-BBBBBBBBBBBB") != 0) {
+        return TEST_SKIP;
+    }
+
+    if ((cdb = cnid_open(&s.vol, scheme, 0)) != NULL) {
+        result = cnid_add_names(cdb, cnid_syntax_names,
+                                sizeof(cnid_syntax_names)
+                                / sizeof(cnid_syntax_names[0]), 100) != 0
+                 ? 11 : cnid_syntax_checks(cdb);
+        cnid_close(cdb);
+    }
+
+    cnid_scratch_cleanup(&s);
+    return result;
+}
+
+/*!
+ * @brief Count the CNIDs a query answers into a buffer of
+ *        CNID_FIND_MIN_RESULTS entries
+ *
+ * @param[in]  cdb    CNID database
+ * @param[in]  query  the query string
+ * @param[out] more   receives whether more matches exist
+ * @returns the count, or -1 for a failed search
+ */
+static int cnid_query_count(struct _cnid_db *cdb, const char *query,
+                            bool *more)
+{
+    cnid_t results[CNID_FIND_MIN_RESULTS];
+    struct sl_name_query *q = sl_name_query_parse(query, 0, 8);
+    int count = q == NULL ? -1
+                : cnid_find_scoped(cdb, q, CNID_INVALID, results,
+                                   sizeof(results), more);
+    sl_name_query_free(q);
+    return count;
+}
+
+/*!
+ * @brief An exact-name search answers the whole name alone, without regard to
+ *        case, past more names that contain it than its buffer holds
+ *
+ * @returns 0, or the number of the first failed check
+ */
+int utest_cnid_find_exact_name(void)
+{
+    static char scheme[] = "sqlite";
+    struct cnid_scratch s;
+    struct _cnid_db *cdb;
+    char name[32];
+    const char *names[1] = { name };
+    cnid_t results[CNID_FIND_MIN_RESULTS];
+    bool more = true;
+    int result = 0;
+
+    if (cnid_scratch_setup(&s, "exact", "exactvol",
+                           "0F0F0F0F-1111-2222-3333-ACACACACACAC") != 0) {
+        return TEST_SKIP;
+    }
+
+    if ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL) {
+        cnid_scratch_cleanup(&s);
+        return 1;
+    }
+
+    for (int i = 0; i <= CNID_FIND_MIN_RESULTS && result == 0; i++) {
+        snprintf(name, sizeof(name), "ce target %03d", i);
+        result = cnid_add_names(cdb, names, 1, 4000 + (ino_t)i) == 0 ? 0 : 10;
+    }
+
+    snprintf(name, sizeof(name), "ce target");
+
+    if (result == 0 && cnid_add_names(cdb, names, 1, 5000) != 0) {
+        result = 11;
+    } else if (result == 0
+               && (cnid_find_exact(cdb, "Ce Target", 9, results,
+                                   sizeof(results), &more) != 1 || more)) {
+        result = 2;
+    }
+
+    cnid_close(cdb);
+    cnid_scratch_cleanup(&s);
+    return result;
+}
+
+/*!
+ * @brief A search fills its buffer with matches of the whole query, an &&
+ *        and a != included, however many names one comparison of it takes
+ *
+ * The names that match come after twice a buffer of names that match one
+ * side of the && alone.
+ *
+ * @returns 0, or the number of the first failed check
+ */
+int utest_cnid_find_query_limit(void)
+{
+    static char scheme[] = "sqlite";
+    struct cnid_scratch s;
+    struct _cnid_db *cdb;
+    char name[32];
+    const char *names[1] = { name };
+    bool more = true;
+    int result = 0;
+
+    if (cnid_scratch_setup(&s, "limit", "limitvol",
+                           "0F0F0F0F-1111-2222-3333-DDDDDDDDDDDD") != 0) {
+        return TEST_SKIP;
+    }
+
+    if ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL) {
+        cnid_scratch_cleanup(&s);
+        return 1;
+    }
+
+    for (int i = 0; i < 2 * CNID_FIND_MIN_RESULTS && result == 0; i++) {
+        snprintf(name, sizeof(name), "photo %03d.jpg", i);
+        result = cnid_add_names(cdb, names, 1, 2000 + i) == 0 ? 0 : 10;
+    }
+
+    for (int i = 0; i < 3 && result == 0; i++) {
+        snprintf(name, sizeof(name), "trip 2024 %d.jpg", i);
+        result = cnid_add_names(cdb, names, 1, 3000 + i) == 0 ? 0 : 11;
+    }
+
+    if (result == 0
+            && (cnid_query_count(cdb, "kMDItemFSName==\"*.jpg\"c"
+                                 "&&kMDItemFSName==\"*2024*\"c", &more) != 3
+                || more)) {
+        result = 1;
+    } else if (result == 0
+               && (cnid_query_count(cdb, "kMDItemFSName!=\"photo*\"c", &more)
+                   != 3 || more)) {
+        result = 2;
+    } else if (result == 0
+               && (cnid_query_count(cdb, "kMDItemFSName==\"*.jpg\"c", &more)
+                   != CNID_FIND_MIN_RESULTS || !more)) {
+        result = 3;
+    }
+
+    cnid_close(cdb);
+    cnid_scratch_cleanup(&s);
+    return result;
 }
 
 /*!
@@ -1265,27 +1504,76 @@ int utest_cnid_resolve_dot_names_rejected(void)
     return 0;
 }
 
-static size_t fake_find_namelen;
+/* The searches fake_seeds_find() saw, and what it answers */
+static struct {
+    int found;              /*!< matches the search has */
+    bool fails;             /*!< whether the search fails */
+    int runs;               /*!< searches that ran */
+    int nseeds;             /*!< seeds the last search took */
+    size_t literals;        /*!< literal bytes of its first seed */
+    bool narrows;           /*!< what fake_cnid_find_narrows() answers */
+} fake_seeds;
 
 /*!
- * @brief Backend cnid_find that records the length of the LIKE pattern
- *        handed to it
+ * @brief Backend cnid_find that answers as fake_seeds says, and notes the
+ *        seeds it takes and the literal bytes of the first
+ *
+ * @param[in]  cdb             unused
+ * @param[in]  query           unused
+ * @param[in]  seeds           the seeds, or NULL
+ * @param[in]  nseeds          number of seeds
+ * @param[in]  scope_did       unused
+ * @param[out] buffer          receives CNIDs 17 onwards
+ * @param[in]  buflen          size of buffer
+ * @param[out] more_available  receives whether more matches exist
+ * @returns the CNIDs written, or -1 when the search fails
  */
-static int fake_cnid_find(struct _cnid_db *cdb _U_, const char *name _U_,
-                          size_t namelen, cnid_t scope_did _U_,
-                          void *buffer _U_, size_t buflen _U_,
-                          bool *more_available _U_)
+static int fake_seeds_find(struct _cnid_db *cdb _U_,
+                           const struct sl_name_query *query _U_,
+                           const struct sl_name_pattern *const *seeds,
+                           int nseeds, cnid_t scope_did _U_, void *buffer,
+                           size_t buflen, bool *more_available)
 {
-    fake_find_namelen = namelen;
-    return 0;
+    cnid_t *cnids = buffer;
+    int room = (int)(buflen / sizeof(cnid_t));
+    int n = fake_seeds.found < room ? fake_seeds.found : room;
+    fake_seeds.runs++;
+    fake_seeds.nseeds = seeds != NULL ? nseeds : 0;
+    fake_seeds.literals = fake_seeds.nseeds > 0
+                          ? sl_name_pattern_literals(seeds[0]) : 0;
+
+    if (fake_seeds.fails) {
+        return -1;
+    }
+
+    for (int i = 0; i < n; i++) {
+        cnids[i] = htonl((uint32_t)(17 + i));
+    }
+
+    *more_available = fake_seeds.found > n;
+    return n;
+}
+
+/*!
+ * @brief Backend cnid_find_narrows that answers as fake_seeds says
+ *
+ * @param[in] cdb   unused
+ * @param[in] seed  unused
+ * @returns fake_seeds.narrows
+ */
+static bool fake_cnid_find_narrows(struct _cnid_db *cdb _U_,
+                                   const struct sl_name_pattern *seed _U_)
+{
+    return fake_seeds.narrows;
 }
 
 /*!
  * @brief cnid_find() accepts a name of MAXPATHLEN bytes and rejects one more
  *
  * The wrapper's bound is the path-buffer limit; a longer name, or an empty
- * one, is a parameter error that never reaches the backend. The backend gets
- * the name with a '%' at either end.
+ * one, is a parameter error that never reaches the backend.
+ *
+ * @returns 0, or the number of the first failed check
  */
 int utest_cnid_find_name_bound(void)
 {
@@ -1293,22 +1581,23 @@ int utest_cnid_find_name_bound(void)
     char name[MAXPATHLEN + 1];
     cnid_t results[CNID_FIND_MIN_RESULTS];
     bool more = false;
-    cdb.cnid_find = fake_cnid_find;
+    cdb.cnid_find = fake_seeds_find;
+    cdb.cnid_find_narrows = fake_cnid_find_narrows;
+    memset(&fake_seeds, 0, sizeof(fake_seeds));
+    fake_seeds.narrows = true;
     memset(name, 'a', MAXPATHLEN);
     name[MAXPATHLEN] = '\0';
-    fake_find_namelen = 0;
     errno = 0;
 
     if (cnid_find(&cdb, name, MAXPATHLEN, results, sizeof(results), &more) != 0
-            || fake_find_namelen != MAXPATHLEN + 2) {
+            || fake_seeds.literals != MAXPATHLEN) {
         return 1;
     }
 
-    fake_find_namelen = 0;
     errno = 0;
 
     if (cnid_find(&cdb, name, MAXPATHLEN + 1, results, sizeof(results),
-                  &more) != -1 || fake_find_namelen != 0) {
+                  &more) != -1 || fake_seeds.runs != 1) {
         return 2;
     }
 
@@ -1319,7 +1608,7 @@ int utest_cnid_find_name_bound(void)
     errno = 0;
 
     if (cnid_find(&cdb, name, 0, results, sizeof(results), &more) != -1
-            || fake_find_namelen != 0) {
+            || fake_seeds.runs != 1) {
         return 4;
     }
 
@@ -1328,6 +1617,63 @@ int utest_cnid_find_name_bound(void)
     }
 
     return 0;
+}
+
+/*!
+ * @brief A query's seeds reach the backend in one search, none when the
+ *        backend does not narrow by them, and a failed search leaves
+ *        more_available false
+ *
+ * @returns 0, or the number of the first failed check
+ */
+int utest_cnid_find_seeds_together(void)
+{
+    static const char either[] = "kMDItemFSName==\"*alpha*\""
+                                 "||kMDItemFSName==\"*beta*\"";
+    struct _cnid_db cdb = { 0 };
+    cnid_t results[CNID_FIND_MIN_RESULTS];
+    struct sl_name_query *q = sl_name_query_parse(either, 0, 8);
+    bool more = true;
+    int result = 0;
+    cdb.cnid_find = fake_seeds_find;
+    cdb.cnid_find_narrows = fake_cnid_find_narrows;
+
+    if (q == NULL) {
+        return 1;
+    }
+
+    memset(&fake_seeds, 0, sizeof(fake_seeds));
+    fake_seeds.found = CNID_FIND_MIN_RESULTS + 1;
+    fake_seeds.narrows = true;
+
+    if (cnid_find_scoped(&cdb, q, CNID_INVALID, results, sizeof(results),
+                         &more) != CNID_FIND_MIN_RESULTS || !more
+            || fake_seeds.runs != 1 || fake_seeds.nseeds != 2) {
+        result = 2;
+    }
+
+    memset(&fake_seeds, 0, sizeof(fake_seeds));
+    fake_seeds.found = 3;
+
+    if (result == 0 && (cnid_find_scoped(&cdb, q, CNID_INVALID, results,
+                                         sizeof(results), &more) != 3 || more
+                        || fake_seeds.runs != 1 || fake_seeds.nseeds != 0)) {
+        result = 3;
+    }
+
+    memset(&fake_seeds, 0, sizeof(fake_seeds));
+    fake_seeds.narrows = true;
+    fake_seeds.fails = true;
+    more = true;
+
+    if (result == 0 && (cnid_find_scoped(&cdb, q, CNID_INVALID, results,
+                                         sizeof(results), &more) != -1
+                        || more)) {
+        result = 4;
+    }
+
+    sl_name_query_free(q);
+    return result;
 }
 
 /*!

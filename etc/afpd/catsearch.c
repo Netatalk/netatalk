@@ -1102,8 +1102,9 @@ catsearch_end:
 /*!
  * @brief Search the CNID database by name for an FPCatSearch request
  *
- * A new search looks up the CNIDs of the lowercased uname through
- * cnid_find_exact(), and grows its buffer while the database holds more.
+ * A new search looks up the CNIDs of uname through cnid_find_exact(), which
+ * folds case and diacritics, so they hold every name crit_check() takes, and
+ * grows its buffer while the database holds more.
  * Each call then resolves, stats, and tests the next CNIDs against the
  * criteria in c1 and c2. The search always covers all of the volume. A call
  * pauses after rmatches matches or 448 bytes of results, and every
@@ -1145,11 +1146,8 @@ static int catsearch_db(const AFPObj *obj,
     int result = AFP_OK;
     int num_rounds = NUM_ROUNDS;
     time_t start_time = time(NULL);
-    size_t namelen;
     struct path path;
     char *rrbuf = rbuf;
-    char buffer[MAXPATHLEN + 2];
-    uint16_t flags = CONV_TOLOWER;
     LOG(log_debug, logtype_afpd, "catsearch_db(req pos: %u): {pos: %u, name: %s}",
         *pos, cur_pos, uname);
 
@@ -1166,22 +1164,6 @@ static int catsearch_db(const AFPObj *obj,
         /* a failed lookup leaves no search to continue */
         cur_pos = 0;
         num_matches = 0;
-        namelen = convert_charset(vol->v_volcharset,
-                                  vol->v_volcharset,
-                                  vol->v_maccharset,
-                                  uname,
-                                  strlen(uname),
-                                  buffer,
-                                  MAXPATHLEN,
-                                  &flags);
-
-        if (namelen == (size_t) -1) {
-            LOG(log_error, logtype_afpd, "catsearch_db: conversion error");
-            result = AFPERR_MISC;
-            goto catsearch_end;
-        }
-
-        LOG(log_debug, logtype_afpd, "catsearch_db: %s", buffer);
 
         do {
             if (want > rescap) {
@@ -1197,7 +1179,7 @@ static int catsearch_db(const AFPObj *obj,
             }
 
             AFP_CNID_START("cnid_find_exact");
-            found = cnid_find_exact(vol->v_cdb, buffer, namelen, resbuf,
+            found = cnid_find_exact(vol->v_cdb, uname, strlen(uname), resbuf,
                                     rescap * sizeof(*resbuf), &more);
             AFP_CNID_DONE();
 
@@ -1213,7 +1195,7 @@ static int catsearch_db(const AFPObj *obj,
             LOG(log_note, logtype_afpd,
                 "catsearch_db: more than %u files are named \"%s\", and the "
                 "search reads the first of them", CATSEARCH_DB_MAX_RESULTS,
-                buffer);
+                uname);
         }
 
         num_matches = (uint32_t)found;
