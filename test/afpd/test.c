@@ -48,6 +48,7 @@
 #include <atalk/netatalk_conf.h>
 #include <atalk/queue.h>
 #include <atalk/server_ipc.h>
+#include <atalk/sl_names.h>
 #include <atalk/uam.h>
 #include <atalk/unicode.h>
 #include <atalk/util.h>
@@ -3753,6 +3754,282 @@ cleanup:
     talloc_free(tmp);
     return result;
 }
+
+/*!
+ * @brief Convert a Spotlight query and compare it with its expected form
+ *
+ * @param[in] vol    the volume
+ * @param[in] query  the query
+ * @param[in] want   its expected conversion
+ * @returns true when they agree
+ */
+static bool long_query_converts(const struct vol *vol, const char *query,
+                                const char *want)
+{
+    char *got = sl_query_to_volume(NULL, vol, query);
+    bool same = got != NULL && strcmp(got, want) == 0;
+    talloc_free(got);
+    return same;
+}
+
+/*!
+ * @brief A query of over 3 * MAXPATHLEN bytes converts whole and composes
+ *
+ * A piece that would end inside a decomposed letter ends before the letter,
+ * and one that ends inside a run of letters outside ASCII ends at a letter's
+ * start.
+ *
+ * @param[in] vol  a volume of UTF-8 names
+ * @returns 0, -1 when the conversion loses or changes a byte, or TEST_SKIP on
+ *          a volume not of UTF-8 names
+ */
+static int utest_spotlight_long_query(const struct vol *vol)
+{
+    static const char unit[] = "kMDItemContentType==\"e\xcc\x81\"||";
+    static const char unit_host[] = "kMDItemContentType==\"\xc3\xa9\"||";
+    static const char tail[] = "kMDItemFSName==\"cafe\xcc\x81*\"cd)";
+    static const char tail_host[] = "kMDItemFSName==\"caf\xc3\xa9*\"cd)";
+    static const char open[] = "kMDItemFSName==\"";
+    const size_t n = 3 * MAXPATHLEN / (sizeof(unit) - 1) + 1;
+    char *query = malloc(n * (sizeof(unit) - 1) + sizeof(tail) + 1);
+    char *want = malloc(n * (sizeof(unit_host) - 1) + sizeof(tail_host) + 1);
+    char *got = NULL;
+    char edge[MAXPATHLEN + 16];
+    char edge_host[MAXPATHLEN + 16];
+    char run[MAXPATHLEN + sizeof(open) + 8];
+    size_t len = sizeof(open) - 1;
+    int result = -1;
+
+    if (vol->v_volcharset != CH_UTF8) {
+        free(query);
+        free(want);
+        return TEST_SKIP;
+    }
+
+    if (query != NULL && want != NULL) {
+        strcpy(query, "(");
+        strcpy(want, "(");
+
+        for (size_t i = 0; i < n; i++) {
+            strcat(query, unit);
+            strcat(want, unit_host);
+        }
+
+        strcat(query, tail);
+        strcat(want, tail_host);
+        got = sl_query_to_volume(NULL, vol, query);
+        result = got != NULL && strcmp(got, want) == 0 ? 0 : -1;
+    }
+
+    /* a piece would start at the mark of a decomposed letter */
+    memcpy(edge, open, len);
+    memset(edge + len, 'x', MAXPATHLEN - 1 - len);
+    memcpy(edge_host, edge, MAXPATHLEN - 1);
+    strcpy(edge + MAXPATHLEN - 1, "e\xcc\x81*\"cd");
+    strcpy(edge_host + MAXPATHLEN - 1, "\xc3\xa9*\"cd");
+    /* letters of two bytes past MAXPATHLEN, no byte of ASCII among them */
+    memcpy(run, open, len);
+
+    while (len < MAXPATHLEN + 4) {
+        memcpy(run + len, "\xc3\xa9", 2);
+        len += 2;
+    }
+
+    strcpy(run + len, "\"");
+
+    if (result == 0 && (!long_query_converts(vol, edge, edge_host)
+                        || !long_query_converts(vol, run, run))) {
+        result = -1;
+    }
+
+    talloc_free(got);
+    free(query);
+    free(want);
+    return result;
+}
+
+/*!
+ * @brief Tell whether a run of a decomposed letter past MAXPATHLEN composes
+ *
+ * @param[in] vol   a volume of UTF-8 names
+ * @param[in] open  the query before the run
+ * @param[in] nfd   the letter decomposed
+ * @param[in] nfc   the letter composed
+ * @returns true when they agree
+ */
+static bool query_run_composes(const struct vol *vol, const char *open,
+                               const char *nfd, const char *nfc)
+{
+    const size_t before = strlen(open);
+    const size_t dlen = strlen(nfd);
+    const size_t clen = strlen(nfc);
+    const size_t many = MAXPATHLEN / dlen + 8;
+    char *query = malloc(before + dlen * many + 4);
+    char *want = malloc(before + clen * many + 4);
+    bool same = false;
+
+    if (query != NULL && want != NULL) {
+        memcpy(query, open, before);
+        memcpy(want, open, before);
+
+        for (size_t i = 0; i < many; i++) {
+            memcpy(query + before + i * dlen, nfd, dlen);
+            memcpy(want + before + i * clen, nfc, clen);
+        }
+
+        strcpy(query + before + many * dlen, "\"cd");
+        strcpy(want + before + many * clen, "\"cd");
+        same = long_query_converts(vol, query, want);
+    }
+
+    free(query);
+    free(want);
+    return same;
+}
+
+/*!
+ * @brief Long runs of letters that compose or decompose convert whole
+ *
+ * Each run is over MAXPATHLEN bytes, so a piece ends inside it. Checks 1 and
+ * 2 convert a run of decomposed letters to UTF-8 and to Latin-1; 3 keeps a
+ * query's comparisons for a volume that folds names to upper case; 4
+ * converts letters that decompose into more units than bytes for a volume of
+ * decomposed names; 5 and 6 compose runs of decomposed Hangul and Greek, no
+ * ASCII letter among them.
+ *
+ * @param[in] vol  a volume of UTF-8 names
+ * @returns 0, the number of the first failed check, 9 out of memory, or
+ *          TEST_SKIP on a volume not of UTF-8 names
+ */
+static int utest_spotlight_query_pieces(const struct vol *vol)
+{
+    static const char open[] = "kMDItemFSName==\"*b";
+    const size_t n = MAXPATHLEN / 3 + 8;
+    const size_t room = sizeof(open) + 3 * n + 4;
+    char *query = malloc(room);
+    char *want = malloc(room);
+    char *latin = malloc(room);
+    struct vol other = *vol;
+    struct sl_name_query *names = NULL;
+    char *got = NULL;
+    int result = 0;
+
+    if (vol->v_volcharset != CH_UTF8) {
+        free(query);
+        free(want);
+        free(latin);
+        return TEST_SKIP;
+    }
+
+    if (query == NULL || want == NULL || latin == NULL) {
+        result = 9;
+    } else {
+        size_t q = sizeof(open) - 1;
+        size_t w = q;
+        size_t l = q;
+        memcpy(query, open, q);
+        memcpy(want, open, q);
+        memcpy(latin, open, q);
+
+        for (size_t i = 0; i < n; i++) {
+            memcpy(query + q, "a\xcc\x81", 3);
+            memcpy(want + w, "\xc3\xa1", 2);
+            latin[l] = '\xe1';
+            q += 3;
+            w += 2;
+            l++;
+        }
+
+        strcpy(query + q, "\"cd");
+        strcpy(want + w, "\"cd");
+        strcpy(latin + l, "\"cd");
+
+        if (!long_query_converts(vol, query, want)) {
+            result = 1;
+        }
+    }
+
+    if (result == 0
+            && (other.v_volcharset = add_charset("ISO-8859-1"))
+            != (charset_t) -1 && !long_query_converts(&other, query, latin)) {
+        result = 2;
+    }
+
+    other = *vol;
+    other.v_mtou_flags |= CONV_TOUPPER;
+
+    if (result == 0
+            && ((got = sl_query_to_volume(NULL, &other,
+                                          "kMDItemFSName==\"report*\"cdw"))
+                == NULL
+                || (names = sl_name_query_parse(got, 0, 8)) == NULL
+                || !sl_name_query_match(names, "Q3 report.pdf", 13))) {
+        result = 3;
+    }
+
+    /* on a volume of decomposed names each 2-byte ǜ takes 3 units */
+    other = *vol;
+    other.v_volcharset = CH_UTF8_MAC;
+    talloc_free(got);
+    got = NULL;
+
+    if (result == 0
+            && (got = sl_query_to_volume(NULL, &other, "\xc7\x9c")) != NULL) {
+        const size_t unit = strlen(got);
+        const size_t many = MAXPATHLEN / 2 + 8;
+        char *mac = malloc(sizeof(open) + 2 * many + 4);
+        char *mac_want = malloc(sizeof(open) + unit * many + 4);
+
+        if (mac != NULL && mac_want != NULL) {
+            size_t q = sizeof(open) - 1;
+            size_t w = q;
+            memcpy(mac, open, q);
+            memcpy(mac_want, open, q);
+
+            for (size_t i = 0; i < many; i++) {
+                memcpy(mac + q, "\xc7\x9c", 2);
+                memcpy(mac_want + w, got, unit);
+                q += 2;
+                w += unit;
+            }
+
+            strcpy(mac + q, "\"cd");
+            strcpy(mac_want + w, "\"cd");
+        }
+
+        if (mac == NULL || mac_want == NULL
+                || !long_query_converts(&other, mac, mac_want)) {
+            result = 4;
+        }
+
+        free(mac);
+        free(mac_want);
+    } else if (result == 0) {
+        result = 4;
+    }
+
+    /* 각 in three jamo, whose vowel and final consonant compose with the
+     * jamo before them */
+    if (result == 0
+            && !query_run_composes(vol, open,
+                                   "\xe1\x84\x80\xe1\x85\xa1\xe1\x86\xa8",
+                                   "\xea\xb0\x81")) {
+        result = 5;
+    }
+
+    /* ά as α and its acute */
+    if (result == 0
+            && !query_run_composes(vol, open, "\xce\xb1\xcc\x81", "\xce\xac")) {
+        result = 6;
+    }
+
+    sl_name_query_free(names);
+    talloc_free(got);
+    free(query);
+    free(want);
+    free(latin);
+    return result;
+}
 #endif
 
 /*! @brief Receive one request with this header and payload on a new session */
@@ -4326,6 +4603,8 @@ int main(int argc, char *argv[])
              "CNID folder table: names that collide turn it off");
     TEST_int(utest_cnid_find_name_bound(), 0,
              "CNID wrapper accepts a MAXPATHLEN name, rejects one byte more");
+    TEST_int(utest_cnid_find_seeds_together(), 0,
+             "CNID wrapper: a query's seeds reach the backend in one search");
     TEST_int_or_skip(utest_conf_dircache_resolve_size(), 0,
                      "dircache_resolve_size: default, minimum, round-up, clamp");
     TEST_int_or_skip(utest_conf_listen_skips_failed_address(), 0,
@@ -4363,12 +4642,65 @@ int main(int argc, char *argv[])
                      "cnid_open: scheme names match without regard to case");
     TEST_int_or_skip(utest_cnid_open_missing_backend_refused(), 0,
                      "cnid_open: a backend this build lacks is refused");
+    TEST_int_or_skip(utest_cnid_mysql_open_drops_root(), 0,
+                     "cnid_open: a MySQL open that fails at the volume's "
+                     "folder gives up root");
     TEST_int(utest_cnid_scheme_registered(), 0,
              "cnid_scheme_registered: names the registered backends");
     TEST_int_or_skip(utest_cnid_sqlite_orphan_reported(), 0,
                      "cnid_open: a sqlite database left in the share root is reported");
     TEST_int_or_skip(utest_cnid_sqlite_creation_logged(), 0,
                      "cnid_open: creating a new sqlite database is logged once");
+    TEST_int_or_skip(utest_cnid_find_syntax(), 0,
+                     "cnid_find: wildcards, literal '%' and '_', and case");
+    TEST_int_or_skip(utest_cnid_find_exact_name(), 0,
+                     "cnid_find_exact: the whole name alone, past a buffer of "
+                     "names that contain it");
+    TEST_int_or_skip(utest_cnid_find_query_limit(), 0,
+                     "cnid_find: the results are matches of the whole query");
+    TEST_int_or_skip(utest_cnid_find_name_index(), 0,
+                     "cnid_find: a new sqlite database reads its name index");
+    TEST_int_or_skip(utest_cnid_name_index_moves(), 0,
+                     "cnid_find: the shared change log moves in bounded steps");
+    TEST_int_or_skip(utest_cnid_name_index_partial(), 0,
+                     "cnid_find: part of a name index on an empty table gives "
+                     "way to a whole one");
+    TEST_int_or_skip(utest_cnid_name_index_kept(), 0,
+                     "cnid_find: the name index outlasts a failed search and "
+                     "a failed move");
+    TEST_int_or_skip(utest_cnid_name_index_refused(), 0,
+                     "cnid_find: a name index that fails to create leaves "
+                     "nothing behind");
+    TEST_int_or_skip(utest_cnid_name_index_unused(), 0,
+                     "cnid_find: a name index a connection cannot use stays, "
+                     "and its searches read the table");
+    TEST_int_or_skip(utest_cnid_name_index_prepare_broken(), 0,
+                     "cnid_find: a two-seed search that does not prepare on a "
+                     "broken name index ends its use");
+    TEST_int_or_skip(utest_cnid_name_index_move_broken(), 0,
+                     "cnid_find: a move that finds the name index broken ends "
+                     "its use");
+    TEST_int_or_skip(utest_cnid_name_index_long_pattern(), 0,
+                     "cnid_find: a pattern past the GLOB limit reads the "
+                     "table and keeps the name index");
+    TEST_int_or_skip(utest_cnid_stale_names_kept(), 0,
+                     "cnid_open: a stale volume keeps its row while its "
+                     "full-text table stays, and goes once the table does");
+    TEST_int_or_skip(utest_cnid_find_walk_max(), 0,
+                     "cnid_find: a folder search of more than 16384 candidates "
+                     "scans the folder");
+    TEST_int_or_skip(utest_cnid_find_skipped_more(), 0,
+                     "cnid_find: a skipped out-of-range row keeps more matches "
+                     "reported");
+    TEST_int_or_skip(utest_cnid_find_skipped_fills(), 0,
+                     "cnid_find: skipped out-of-range rows leave the buffer "
+                     "full of matches");
+    TEST_int_or_skip(utest_cnid_find_latin1(), 0,
+                     "cnid_find: a volume of Latin-1 names folds their "
+                     "letters' case and matches no other letter");
+    TEST_int_or_skip(utest_cnid_find_seeds_once(), 0,
+                     "cnid_find: two seeds over the index take each match "
+                     "once");
     TEST(load_afp_conf_vols(&obj, LV_ALL), "load all volumes from config");
     obj.afp_version = 34;
     /* No IPC channel or dircache hint pipe in test harness */
@@ -5727,6 +6059,40 @@ int main(int argc, char *argv[])
              "catsearch: a long-name search matches an accented name");
     TEST_int(utest_catsearch_match_takes_its_entrys_id(&obj, vol, vid), 0,
              "catsearch: a match takes its CNID from its dircache entry");
+    TEST_int(utest_catsearch_db_exact_name(&obj, vol, vid), 0,
+             "catsearch: an exact name past 100 containing names is found");
+    TEST_int(utest_catsearch_db_exact_backslash(&obj, vol, vid), 0,
+             "catsearch: an exact name reads a backslash as itself");
+    TEST_int(utest_catsearch_db_exact_wildcards(&obj, vol, vid), 0,
+             "catsearch: an exact name reads '%' and '_' as themselves");
+    TEST_int(utest_catsearch_db_exact_dotted(&obj, vol, vid), 0,
+             "catsearch: an exact name finds the names that lower alike, "
+             "I with dot above included");
+#ifdef WITH_SPOTLIGHT
+    TEST_int_or_skip(utest_spotlight_long_query(vol), 0,
+                     "Spotlight converts a query longer than MAXPATHLEN "
+                     "whole");
+    TEST_int_or_skip(utest_spotlight_query_pieces(vol), 0,
+                     "Spotlight converts a long run of decomposed letters "
+                     "whole, and a casefold volume keeps the comparisons");
+#endif
+    TEST_int(utest_catsearch_db_exact_many(&obj, vol, vid), 0,
+             "catsearch: more than 100 files of one name are all found once "
+             "in the database");
+    TEST_int(utest_catsearch_db_one_at_a_time(&obj, vol, vid), 0,
+             "catsearch: one match a reply reaches the end of the search");
+    TEST_int(utest_catsearch_db_new_search(&obj, vol, vid), 0,
+             "catsearch: a paused search's position continues no other search");
+    TEST_int(utest_catsearch_db_interleaved(&obj, vol, vid), 0,
+             "catsearch: two paused searches continue each its own");
+    TEST_int(utest_catsearch_db_fifth(&obj, vol, vid), 0,
+             "catsearch: a new search that ends at once leaves four paused "
+             "ones their slots");
+    TEST_int(utest_catsearch_db_file_gone(&obj, vol, vid), 0,
+             "catsearch: a file removed outside AFP drops out of the search");
+    TEST_int(utest_catsearch_db_walks_past_cap(&obj, vol, vid), 0,
+             "catsearch: a name of more files than a search holds walks the "
+             "volume");
     TEST_int(utest_createfile_registers_in_its_folder(&obj, vol, vid), 0,
              "create: a file made through a path registers in its folder");
     TEST_int(utest_openfork_registers_in_its_folder(&obj, vol, vid), 0,

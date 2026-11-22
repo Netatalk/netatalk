@@ -228,6 +228,9 @@ int afp_enumerate_ext2(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
                        size_t *rbuflen);
 
 /* from catsearch.c */
+/* CNIDs a search of the database holds at most; a name of more files walks
+ * the volume instead */
+extern unsigned int catsearch_db_max_results;
 int afp_catsearch(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
                   size_t *rbuflen);
 int afp_catsearch_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,

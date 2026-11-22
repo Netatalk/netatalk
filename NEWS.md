@@ -4,6 +4,18 @@ Netatalk Changelog
 Changes in 4.7.0
 ----------------
 
+* UPD: Spotlight: name searches of the cnid backend follow Apple's query
+  syntax, and new sqlite CNID databases index the names (SQLite 3.34 or
+  later with FTS5), GitHub #3476
+* UPD: cnid: for faster name searches on an existing volume, stop netatalk
+  and delete its `<volume>.sqlite*` CNID files from its `vol dbpath`
+  directory, by default `$localstatedir/netatalk/CNID/<volume>`, or
+  `.AppleDB` inside a private volume. Netatalk rebuilds them from the files
+  on disk, with the new index; `dbd` does so at once. On MySQL, drop the
+  volume's table, GitHub #3476
+* BREAKING: libatalk: the CNID search interface in `atalk/cnid.h` changed,
+  and `atalk/sl_names.h` is a new installed header; software built against
+  libatalk that searches the CNID database must be updated, GitHub #3476
 * NEW: netatalk: `--single-user` (`-u`) runs an AFP server without root for
   the invoking account, authenticating with SRP against the user's own
   verifier directory (`afppasswd -c -p`), with `-P`/`--pidfile` for its PID

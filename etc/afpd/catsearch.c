@@ -819,6 +819,26 @@ static int rslt_add(const AFPObj *obj, struct vol *vol, struct path *path,
 #define NUM_ROUNDS 200
 
 /*!
+ * @brief Count an entry of a search and tell whether the search pauses
+ *
+ * Mac OS 9 clients time out on slow commands, so every NUM_ROUNDS entries a
+ * call pauses once the clock has left the second the call started in.
+ *
+ * @param[in,out] rounds  entries left before the next look at the clock
+ * @param[in]     start   coarse_time() when the call started
+ * @returns true when the search pauses
+ */
+static bool catsearch_time_up(int *rounds, time_t start)
+{
+    if (--*rounds > 0) {
+        return false;
+    }
+
+    *rounds = NUM_ROUNDS;
+    return coarse_time() != start;
+}
+
+/*!
  * @brief Search the directory tree of a volume for FPCatSearch, resuming at a
  * saved position
  *
@@ -906,7 +926,7 @@ static int catsearch(const AFPObj *obj,
     }
 
     /* So we are beginning... */
-    start_time = time(NULL);
+    start_time = coarse_time();
 
     while ((cidx = reducestack()) != -1) {
         if ((currentdir = dirlookup(vol, dstack[cidx].ds_did)) == NULL) {
@@ -1059,14 +1079,9 @@ static int catsearch(const AFPObj *obj,
                 }
             }
 
-            /* MacOS 9 doesn't like servers executing commands longer than few seconds */
-            if (--num_rounds <= 0) {
-                if (start_time != time(NULL)) {
-                    result = AFP_OK;
-                    goto catsearch_pause;
-                }
-
-                num_rounds = NUM_ROUNDS;
+            if (catsearch_time_up(&num_rounds, start_time)) {
+                result = AFP_OK;
+                goto catsearch_pause;
             }
         } /* while ((entry=readdir(dirpos)) != NULL) */
 
@@ -1096,20 +1111,118 @@ catsearch_end:
     return result;
 } /* catsearch() */
 
+unsigned int catsearch_db_max_results = 1U << 20;
+
+/* Searches of the database a session keeps paused at once */
+#define CATSEARCH_DB_SLOTS 4
+
+/* A search of the database that a position continues */
+struct catsearch_db_search {
+    uint32_t gen;               /*!< its number in the position, 0 if free */
+    uint32_t pos;               /*!< CNIDs taken */
+    uint32_t count;             /*!< CNIDs found */
+    uint16_t vid;               /*!< volume searched */
+    size_t cap;                 /*!< room in cnids */
+    cnid_t *cnids;              /*!< the CNIDs, in CNID order */
+    char uname[MAXPATHLEN + 1]; /*!< name searched */
+};
+
+static struct catsearch_db_search catsearch_db_searches[CATSEARCH_DB_SLOTS];
+/* A new search runs here until it pauses, so one that ends in its first
+ * reply or walks the volume takes no paused one's slot */
+static struct catsearch_db_search catsearch_db_new;
+static uint32_t catsearch_db_gen;
+
+/*!
+ * @brief Free a search of the database and its slot
+ *
+ * @param[in,out] s  the search
+ */
+static void catsearch_db_drop(struct catsearch_db_search *s)
+{
+    free(s->cnids);
+    memset(s, 0, sizeof(*s));
+}
+
+/*!
+ * @brief Start a new search of the database
+ *
+ * @returns the search, numbered for the position, the room of its CNIDs kept
+ */
+static struct catsearch_db_search *catsearch_db_start(void)
+{
+    struct catsearch_db_search *s = &catsearch_db_new;
+    cnid_t *cnids = s->cnids;
+    size_t cap = s->cap;
+    memset(s, 0, sizeof(*s));
+    s->cnids = cnids;
+    s->cap = cap;
+
+    if (++catsearch_db_gen == 0) {
+        catsearch_db_gen = 1;
+    }
+
+    s->gen = catsearch_db_gen;
+    return s;
+}
+
+/*!
+ * @brief Keep a pausing search in a slot, the oldest giving way
+ *
+ * A search in a slot keeps it; a new one takes a free slot, or that of the
+ * search that started first.
+ *
+ * @param[in,out] s  the search
+ * @returns its slot
+ */
+static struct catsearch_db_search *catsearch_db_keep(
+    struct catsearch_db_search *s)
+{
+    struct catsearch_db_search *slot = &catsearch_db_searches[0];
+    cnid_t *cnids;
+    size_t cap;
+
+    if (s != &catsearch_db_new) {
+        return s;
+    }
+
+    for (int i = 1; i < CATSEARCH_DB_SLOTS && slot->gen != 0; i++) {
+        if (catsearch_db_searches[i].gen < slot->gen) {
+            slot = &catsearch_db_searches[i];
+        }
+    }
+
+    /* the room of the search that gives way serves the next new one */
+    cnids = slot->cnids;
+    cap = slot->cap;
+    *slot = *s;
+    memset(s, 0, sizeof(*s));
+    s->cnids = cnids;
+    s->cap = cap;
+    return slot;
+}
+
 /*!
  * @brief Search the CNID database by name for an FPCatSearch request
  *
- * A new search looks up the CNIDs of the lowercased uname through cnid_find.
- * Each call then resolves, stats, and tests the next CNIDs against the
- * criteria in c1 and c2. The search always covers all of the volume. A call
- * pauses after rmatches matches or 448 bytes of results. A CNID that no
- * longer resolves drops out, but a missing file fails the search.
+ * A new search takes the CNIDs of uname from cnid_find_exact(), which folds
+ * case and diacritics, so they hold every name crit_check() takes, growing
+ * its buffer while the database holds more, up to catsearch_db_max_results;
+ * a name of more files walks the volume through catsearch(), one walk a
+ * session, as a partial name does. The search covers all of the volume. Each
+ * call resolves, stats and tests the next CNIDs against c1 and c2, and pauses
+ * after rmatches matches, 448 bytes of results, or as catsearch_time_up()
+ * says. A CNID that fails to resolve, or whose file is gone, drops out. The
+ * position holds the CNIDs taken and the search's number, so it continues
+ * only the search of its volume and name. A search takes one of
+ * CATSEARCH_DB_SLOTS slots when it first pauses, the one that started first
+ * giving way, and frees it when it ends, at its last CNID or by a failure.
  *
  * @param[in]     obj       session object
  * @param[in]     vol       volume to search
  * @param[in]     uname     name on disk to look up
  * @param[in]     rmatches  maximum number of matches to return
- * @param[in,out] pos       catalog position, 0 for a new search
+ * @param[in,out] catpos    catalog position, all 0 for a new search
  * @param[out]    rbuf      result records
  * @param[in,out] nrecs     match count, raised for each record added
  * @param[out]    rsize     length of the result records
@@ -1121,70 +1234,95 @@ static int catsearch_db(const AFPObj *obj,
                         struct vol *vol,
                         const char *uname,
                         int rmatches,
-                        uint32_t *pos,
+                        uint32_t catpos[4],
                         char *rbuf,
                         uint32_t *nrecs,
                         int *rsize,
                         int ext)
 {
-    /* resbuf must be >= CNID_FIND_MIN_BUFLEN; see libatalk/cnid/cnid.c. */
-    static char resbuf[CNID_FIND_MIN_BUFLEN];
-    static uint32_t cur_pos;
-    static int num_matches;
+    struct catsearch_db_search *s = NULL;
     int ccr, r;
     int result = AFP_OK;
-    size_t namelen;
+    int num_rounds = NUM_ROUNDS;
+    time_t start_time = coarse_time();
     struct path path;
     char *rrbuf = rbuf;
-    char buffer[MAXPATHLEN + 2];
-    uint16_t flags = CONV_TOLOWER;
-    LOG(log_debug, logtype_afpd, "catsearch_db(req pos: %u): {pos: %u, name: %s}",
-        *pos, cur_pos, uname);
+    LOG(log_debug, logtype_afpd, "catsearch_db(req pos: %u, search: %u): "
+                                 "{name: %s}", catpos[0], catpos[1], uname);
 
-    if (*pos != 0 && *pos != cur_pos) {
-        result = AFPERR_CATCHNG;
-        goto catsearch_end;
+    /* search number 0: the walk of a name with more files than a search holds */
+    if (catpos[0] != 0 && catpos[1] == 0) {
+        return catsearch(obj, vol, vol->v_root, rmatches, &catpos[0], rbuf,
+                         nrecs, rsize, ext);
     }
 
-    if (cur_pos == 0 || *pos == 0) {
-        namelen = convert_charset(vol->v_volcharset,
-                                  vol->v_volcharset,
-                                  vol->v_maccharset,
-                                  uname,
-                                  strlen(uname),
-                                  buffer,
-                                  MAXPATHLEN,
-                                  &flags);
+    if (catpos[0] != 0) {
+        for (int i = 0; i < CATSEARCH_DB_SLOTS && s == NULL; i++) {
+            const struct catsearch_db_search *t = &catsearch_db_searches[i];
 
-        if (namelen == (size_t) -1) {
-            LOG(log_error, logtype_afpd, "catsearch_db: conversion error");
-            result = AFPERR_MISC;
-            goto catsearch_end;
+            if (t->gen == catpos[1] && t->pos == catpos[0]
+                    && t->vid == vol->v_vid && strcmp(t->uname, uname) == 0) {
+                s = &catsearch_db_searches[i];
+            }
         }
 
-        LOG(log_debug, logtype_afpd, "catsearch_db: %s", buffer);
-        AFP_CNID_START("cnid_find");
-        num_matches = cnid_find(vol->v_cdb,
-                                buffer,
-                                namelen,
-                                resbuf,
-                                sizeof(resbuf),
-                                NULL);
-        AFP_CNID_DONE();
-
-        if (num_matches == -1) {
-            result = AFPERR_MISC;
+        if (s == NULL) {
+            result = AFPERR_CATCHNG;
             goto catsearch_end;
         }
+    } else {
+        size_t want = MIN(CNID_FIND_MIN_RESULTS, catsearch_db_max_results);
+        bool more;
+        int found = 0;
+        s = catsearch_db_start();
+        s->vid = vol->v_vid;
+        strlcpy(s->uname, uname, sizeof(s->uname));
+
+        do {
+            if (want > s->cap) {
+                cnid_t *grown = realloc(s->cnids, want * sizeof(*s->cnids));
+
+                if (grown == NULL) {
+                    result = AFPERR_MISC;
+                    goto catsearch_done;
+                }
+
+                s->cnids = grown;
+                s->cap = want;
+            }
+
+            AFP_CNID_START("cnid_find_exact");
+            found = cnid_find_exact(vol->v_cdb, uname, strlen(uname), s->cnids,
+                                    s->cap * sizeof(*s->cnids), &more);
+            AFP_CNID_DONE();
+
+            if (found == -1) {
+                result = AFPERR_MISC;
+                goto catsearch_done;
+            }
+
+            want = MIN(s->cap * 8, catsearch_db_max_results);
+        } while (more && want > s->cap);
+
+        if (more) {
+            LOG(log_note, logtype_afpd,
+                "catsearch_db: more than %u files are named \"%s\", and the "
+                "search walks the volume", catsearch_db_max_results, uname);
+            catsearch_db_drop(s);
+            catpos[1] = 0;
+            return catsearch(obj, vol, vol->v_root, rmatches, &catpos[0], rbuf,
+                             nrecs, rsize, ext);
+        }
+
+        s->count = (uint32_t)found;
     }
 
-    while (cur_pos < num_matches) {
+    while (s->pos < s->count) {
         char *name;
         cnid_t cnid, did;
         char resolvebuf[12 + MAXPATHLEN + 1];
         struct dir *dir;
-        /* Next CNID to process from buffer */
-        memcpy(&cnid, resbuf + cur_pos * sizeof(cnid_t), sizeof(cnid_t));
+        cnid = s->cnids[s->pos++];
         did = cnid;
         AFP_CNID_START("cnid_resolve");
         name = cnid_resolve(vol->v_cdb, &did, resolvebuf, 12 + MAXPATHLEN + 1);
@@ -1195,7 +1333,7 @@ static int catsearch_db(const AFPObj *obj,
         }
 
         LOG(log_debug, logtype_afpd, "catsearch_db: {pos: %u, name:%s, cnid: %u}",
-            cur_pos, name, ntohl(cnid));
+            s->pos - 1, name, ntohl(cnid));
 
         if ((dir = dirlookup(vol, did)) == NULL) {
             goto next;
@@ -1211,14 +1349,16 @@ static int catsearch_db(const AFPObj *obj,
 
         if (of_stat(vol, &path) != 0) {
             switch (errno) {
+            /* a file removed outside AFP leaves its row; a walk would not
+             * find it either */
+            case ENOENT:
             case EACCES:
             case ELOOP:
                 goto next;
 
-            case ENOENT:
             default:
                 result = AFPERR_MISC;
-                goto catsearch_end;
+                goto catsearch_done;
             }
         }
 
@@ -1248,7 +1388,7 @@ static int catsearch_db(const AFPObj *obj,
 
         if (ccr < 0) {
             result = AFPERR_MISC;
-            goto catsearch_end;
+            goto catsearch_done;
         }
 
         if (ccr & 1) {
@@ -1259,37 +1399,36 @@ static int catsearch_db(const AFPObj *obj,
 
             if (r == 0) {
                 result = AFPERR_MISC;
-                goto catsearch_end;
+                goto catsearch_done;
             }
 
             *nrecs += r;
 
-            /* Number of matches limit */
-            if (--rmatches == 0) {
-                goto catsearch_pause;
-            }
-
-            /* Block size limit */
-            if (rrbuf - rbuf >= 448) {
+            if (--rmatches == 0 || rrbuf - rbuf >= 448) {
                 goto catsearch_pause;
             }
         }
 
 next:
-        cur_pos++;
+
+        if (catsearch_time_up(&num_rounds, start_time)) {
+            goto catsearch_pause;
+        }
     } /* while */
 
-    /* finished */
     result = AFPERR_EOF;
-    cur_pos = 0;
+catsearch_done:
+    catsearch_db_drop(s);
     goto catsearch_end;
 catsearch_pause:
-    *pos = cur_pos;
+    s = catsearch_db_keep(s);
+    catpos[0] = s->pos;
+    catpos[1] = s->gen;
 catsearch_end:
     /* Exiting catsearch: error condition */
     *rsize = rrbuf - rbuf;
-    LOG(log_debug, logtype_afpd, "catsearch_db(req pos: %u): {pos: %u}", *pos,
-        cur_pos);
+    LOG(log_debug, logtype_afpd, "catsearch_db(req pos: %u, search: %u)",
+        catpos[0], catpos[1]);
     return result;
 }
 
@@ -1575,8 +1714,8 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     if ((c1.rbitmap & (1U << FILPBIT_PDINFO))
             && !(c1.rbitmap & (1U << CATPBIT_PARTIAL))
             && (vol->v_flags & AFPVOL_SEARCHDB)) {
-        ret = catsearch_db(obj, vol, uname, rmatches, &catpos[0],
-                           rbuf + 24, &nrecs, &rsize, ext);
+        ret = catsearch_db(obj, vol, uname, rmatches, catpos, rbuf + 24,
+                           &nrecs, &rsize, ext);
     } else {
         ret = catsearch(obj, vol, vol->v_root, rmatches, &catpos[0], rbuf + 24, &nrecs,
                         &rsize, ext);
