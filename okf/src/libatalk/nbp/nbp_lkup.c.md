@@ -5,7 +5,7 @@ description: "NBP lookups through atalkd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/nbp/nbp_lkup.c"
 tags: ["libatalk/nbp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:30:53+11:00 }
 ---
 
 Part of the [libatalk/nbp](../nbp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -52,7 +52,7 @@ Called by: [main](../../bin/aecho/aecho.c.md#main), [main](../../bin/pap/pap.c.m
 int nbp_do_lookup_op(const char *, const char *, const char *, struct nbpnve *, const int, const struct at_addr *, const struct at_addr *, uint8_t)
 ```
 
-Defined at lines 77 to 291. Declared in [include/atalk/nbp.h](../../include/atalk/nbp.h.md).
+Defined at lines 77 to 294. Declared in [include/atalk/nbp.h](../../include/atalk/nbp.h.md).
 
 Send an NBP lookup operation and collect the distinct replies.
 

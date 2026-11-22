@@ -1,5 +1,5 @@
 {
-"commit": "e135eea93fe16486e7b8078c3c55b4fee4766b74",
+"commit": "7cfcd778acc4e4c7a1033837e007d0a735a870a8",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -55105,7 +55105,7 @@
 "file": "etc/atalkd/main.c",
 "id": "etc/atalkd/main.c#dumpconfig",
 "kind": "function",
-"line": 1651,
+"line": 1652,
 "static": false
 },
 {
@@ -57065,7 +57065,7 @@
 "file": "etc/atalkd/main.c",
 "id": "etc/atalkd/main.c#ifconfig",
 "kind": "function",
-"line": 1616,
+"line": 1617,
 "static": false
 },
 {

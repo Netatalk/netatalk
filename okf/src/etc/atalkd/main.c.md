@@ -5,7 +5,7 @@ description: "The atalkd daemon: startup, interface setup, timers, and signals."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/atalkd/main.c"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:30:53+11:00 }
 ---
 
 Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -231,7 +231,7 @@ Uses file-scope variables: `ciface`, `stabletimer`
 void setaddr(struct interface *iface, uint8_t phase, uint16_t net, uint8_t node, uint16_t first, uint16_t last)
 ```
 
-Defined at lines 1482 to 1601.
+Defined at lines 1482 to 1602.
 
 Set the AppleTalk address and net range of an interface and reopen its ports.
 
@@ -259,7 +259,7 @@ Uses file-scope variables: `atservNATSERV`
 int ifconfig(const char *iname, unsigned long cmd, struct sockaddr_at *sa)
 ```
 
-Defined at lines 1616 to 1640.
+Defined at lines 1617 to 1641.
 
 Run an interface ioctl with an AppleTalk address.
 
@@ -282,7 +282,7 @@ Called by: [addmulti](multicast.c.md#addmulti), [atalkd_exit](main.c.md#atalkd_e
 void dumpconfig(struct interface *iface)
 ```
 
-Defined at lines 1651 to 1691.
+Defined at lines 1652 to 1692.
 
 Print the configuration of an interface as an atalkd.conf line in debug mode.
 

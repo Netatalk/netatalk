@@ -5,7 +5,7 @@ description: "User quota of an NFS volume through rquotad."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/nfsquota.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:30:53+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -51,7 +51,7 @@ Called by: [getnfsquota](nfsquota.c.md#getnfsquota)
 int getnfsquota(struct vol *vol, const int uid, const uint32_t bsize, struct dqblk *dqp)
 ```
 
-Defined at lines 145 to 215.
+Defined at lines 145 to 217.
 
 Fetch a user's quota on an NFS volume from its rquotad.
 
