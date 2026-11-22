@@ -51,6 +51,43 @@ Available Spotlight backends:
 - **cnid**
   Uses *cnid_find()* against the CNID database for filename-oriented searches.
   It has no extra runtime dependencies beyond the *talloc* library and Netatalk's CNID database.
+  It reads the name comparisons of a query (*kMDItemFSName*,
+  *kMDItemDisplayName*, *_kMDItemFileName* and the any-attribute `*`, with
+  `==` or `!=`, joined by `&&` and `||`) in Apple's syntax: `*` matches any
+  run of characters, `?` one character, a backslash makes the next character
+  literal, and a value without wildcards matches the whole name. The `c`
+  modifier ignores case, `d` diacritics, and `w` anchors the value at word
+  boundaries rather than at the ends of the name; in text written without
+  spaces, such as Chinese, Japanese or Thai, every character starts a word.
+  On a volume whose **vol charset** is not UTF-8, the query and each name
+  convert to UTF-8 before they compare.
+  A *sqlite* CNID database that Netatalk creates holds a name index that
+  answers these searches without reading every row, when the SQLite library
+  has FTS5 and its trigram tokenizer (SQLite 3.34 or later); a search needs
+  3 characters in a row for it, so a two-character word of Chinese or
+  Japanese reads every row. A database without the index, as an older
+  Netatalk created it, answers them by reading its table. A *mysql* CNID
+  table that Netatalk creates holds each name folded for case and
+  diacritics, and in a search of the whole volume the server keeps the
+  names that hold the search's characters; a search inside a folder, and
+  every search of a table without folded names, keeps the names that hold
+  its digits and punctuation, whatever the table's collation, and Netatalk
+  matches each of them. To give an existing *sqlite* volume of
+  `vol charset = UTF8` the index, run `dbd -f` on it, which builds the
+  database again from the files on the volume. A *mysql* table keeps its
+  columns under `dbd -f`, so drop the volume's table and run `dbd` on the
+  volume, which fills the new table; until `dbd` has run, a search finds
+  only the files that clients have listed since. `dbd` takes UTF8 volumes
+  alone, and `dbd -f` on a volume of another charset empties the database
+  before it refuses the volume, so give such a volume the index by
+  deleting its *sqlite* database, or dropping its *mysql* table, and let
+  clients list the files again. Either way a file keeps its CNID only
+  where its metadata stores it; any other file gets a new CNID, which
+  breaks the Mac aliases and saved references that point to it, so back up
+  the database first, and run `dbd` with the volume's clients
+  disconnected, as dbd(1) says. The index and `Folded1` hold the names as
+  the volume's charset read them, so a change of `vol charset` takes the
+  same rebuild.
 
 - **localsearch**
   Uses the LocalSearch/Tracker SPARQL backend for broader file contents and metadata indexing/search.
@@ -76,13 +113,16 @@ queries, but may not match content queries such as `kMDItemTextContent`.
   results contain files whose names match any of the words.
 - To search for words that must appear next to each other, wrap the
   phrase in double quotes in the Finder search field, for example
-  `"two words"`. With the **cnid** backend a phrase matches as a
-  filename substring.
+  `"two words"`. With the **cnid** backend a phrase matches where the
+  query puts it: at the start of a word, as in `my two words.txt`, when
+  the comparison carries `w`, and anywhere in a name when it stands
+  between `*` wildcards.
 - Searching within a folder returns only results from that folder and
   its subfolders. With the **cnid** backend the restriction is applied
-  inside the CNID database; with the *mysql* CNID scheme that requires
-  MySQL 8.0 or MariaDB 10.2, and older servers fall back to a
-  volume-wide search that is filtered afterwards.
+  inside the CNID database. With the *mysql* CNID scheme the server walks
+  the folder, which takes MySQL 8.0 or MariaDB 10.2; an older server, or
+  a walk that fails or that MariaDB's `max_recursive_iterations` cuts
+  short, searches the volume and keeps the matches inside the folder.
 
 The **localsearch** and **xapian** backends do not yet support quoted
 phrase searches.

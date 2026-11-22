@@ -35,6 +35,7 @@
 
 #include <atalk/cnid.h>
 #include <atalk/logger.h>
+#include <atalk/sl_names.h>
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
@@ -667,77 +668,68 @@ cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st,
 }
 
 /* --------------- */
+/* A search's database and folder, for cnid_find_narrows() */
+struct cnid_find_search {
+    struct _cnid_db *cdb;
+    cnid_t scope_did;
+};
+
 /*!
- * @brief Search the CNID database for entries whose name contains a substring
+ * @brief sl_name_query_seeds() test: whether the backend narrows by a seed
  *
- * Centralises parameter validation so all CNID backends behave identically
- * against bad input.
- *
- * The optional @p more_available out-parameter, when non-NULL, is written
- * unconditionally on entry to false and again by the backend: false on
- * error, true iff the result set was truncated on success (more matches
- * exist than fit in @p buffer).
- *
- * @param[in]  cdb            CNID database handle
- * @param[in]  name           UTF-8 substring to search for, NUL-terminated
- * @param[in]  namelen        bytes in @p name, range 1..MAXPATHLEN
- * @param[out] buffer         caller-provided buffer for matching CNIDs in network byte order
- * @param[in]  buflen         capacity of @p buffer in bytes, must be >= CNID_FIND_MIN_BUFLEN
- * @param[out] more_available set to true iff result set was truncated, NULL to opt out
- *
- * @returns number of CNIDs written to @p buffer on success, -1 on failure
- *          (errno = CNID_ERR_PARAM for invalid arguments, otherwise the
- *          backend's CNID_ERR_* classification, or 0 where it makes none)
+ * @param[in] seed  the seed
+ * @param[in] ctx   the search, a struct cnid_find_search
+ * @returns the backend's answer, false for a backend without the test
  */
-int cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen,
-              void *buffer, size_t buflen, bool *more_available)
+static bool cnid_find_narrows(const struct sl_name_pattern *seed, void *ctx)
 {
-    return cnid_find_scoped(cdb, name, namelen, CNID_INVALID,
-                            buffer, buflen, more_available);
+    const struct cnid_find_search *search = ctx;
+    struct _cnid_db *cdb = search->cdb;
+    return cdb->cnid_find_narrows != NULL
+           && cdb->cnid_find_narrows(cdb, seed, search->scope_did);
 }
 
 /*!
- * @brief cnid_find() restricted to the subtree of a directory
+ * @brief Find the CNIDs whose names match a query, in a directory's subtree
  *
- * Identical contract to cnid_find(); additionally, when @p scope_did
- * is not CNID_INVALID only entries lying underneath that directory
- * match. The scope directory itself is not a result.
+ * Centralises parameter validation so all CNID backends behave identically
+ * against bad input. A backend that narrows by every seed of the query reads
+ * their candidates in one search, otherwise every name. The results are the
+ * first matches of the whole query in CNID order, each once, so the buffer's
+ * room counts matches. With @p scope_did other than CNID_INVALID only entries
+ * beneath that directory match, the directory itself excluded.
+ *
+ * @p more_available, when non-NULL, is false after any failure, the
+ * wrapper's included, and true when more matches exist than fit.
  *
  * @param[in]  cdb            CNID database handle
- * @param[in]  name           UTF-8 substring to search for, NUL-terminated
- * @param[in]  namelen        bytes in @p name, range 1..MAXPATHLEN
+ * @param[in]  query          the name comparisons
  * @param[in]  scope_did      CNID of the scope directory in network byte
  *                            order, or CNID_INVALID for the whole volume
- * @param[out] buffer         caller-provided buffer for matching CNIDs in network byte order
- * @param[in]  buflen         capacity of @p buffer in bytes, must be >= CNID_FIND_MIN_BUFLEN
- * @param[out] more_available set to true iff result set was truncated, NULL to opt out
- *
+ * @param[out] buffer         receives the CNIDs in network byte order
+ * @param[in]  buflen         capacity of @p buffer in bytes, at least
+ *                            CNID_FIND_MIN_BUFLEN
+ * @param[out] more_available set to true when more matches exist than fit,
+ *                            NULL to opt out
  * @returns number of CNIDs written to @p buffer on success, -1 on failure
  *          (errno = CNID_ERR_PARAM for invalid arguments, otherwise the
  *          backend's CNID_ERR_* classification, or 0 where it makes none)
  */
-int cnid_find_scoped(struct _cnid_db *cdb, const char *name,
-                     size_t namelen, cnid_t scope_did,
-                     void *buffer, size_t buflen, bool *more_available)
+int cnid_find_scoped(struct _cnid_db *cdb, const struct sl_name_query *query,
+                     cnid_t scope_did, void *buffer, size_t buflen,
+                     bool *more_available)
 {
-    int ret;
+    const struct sl_name_pattern *seeds[CNID_FIND_MAX_SEEDS];
+    struct cnid_find_search search = { cdb, scope_did };
+    int nseeds;
 
     if (more_available) {
         *more_available = false;
     }
 
-    if (cdb == NULL || cdb->cnid_find == NULL) {
+    if (cdb == NULL || cdb->cnid_find == NULL || query == NULL) {
         LOG(log_error, logtype_cnid,
             "cnid_find: backend does not support cnid_find");
-        errno = CNID_ERR_PARAM;
-        return -1;
-    }
-
-    if (name == NULL || namelen == 0
-            || namelen > (size_t)MAXPATHLEN) {
-        LOG(log_error, logtype_cnid,
-            "cnid_find: invalid name (namelen=%zu, max=%zu)",
-            namelen, (size_t)MAXPATHLEN);
         errno = CNID_ERR_PARAM;
         return -1;
     }
@@ -750,10 +742,123 @@ int cnid_find_scoped(struct _cnid_db *cdb, const char *name,
         return -1;
     }
 
+    nseeds = sl_name_query_seeds(query, seeds, CNID_FIND_MAX_SEEDS,
+                                 cnid_find_narrows, &search);
     errno = 0;
-    ret = cdb->cnid_find(cdb, name, namelen, scope_did,
-                         buffer, buflen, more_available);
+    return cdb->cnid_find(cdb, query, nseeds > 0 ? seeds : NULL, nseeds,
+                          scope_did, buffer, buflen, more_available);
+}
+
+/*!
+ * @brief Find the CNIDs for a name string, within names or as whole names
+ *
+ * @param[in]  cdb            CNID database handle
+ * @param[in]  name           the name in the volume's charset, UTF-8 for a
+ *                            handle without a volume, NUL-terminated
+ * @param[in]  namelen        bytes in @p name, range 1..MAXPATHLEN
+ * @param[in]  exact          match whole names, the name's wildcards escaped
+ * @param[in]  flags          SL_NAMES_CASE and SL_NAMES_DIACRITIC bits
+ * @param[out] buffer         receives the CNIDs in network byte order
+ * @param[in]  buflen         capacity of @p buffer in bytes
+ * @param[out] more_available set to true when more matches exist than fit,
+ *                            NULL to opt out
+ * @returns the number of CNIDs, or -1 as cnid_find_scoped() fails
+ */
+static int cnid_find_string(struct _cnid_db *cdb, const char *name,
+                            size_t namelen, bool exact, unsigned int flags,
+                            void *buffer, size_t buflen, bool *more_available)
+{
+    struct sl_name_query *query;
+    int ret;
+
+    if (more_available) {
+        *more_available = false;
+    }
+
+    if (name == NULL || namelen == 0
+            || namelen > (size_t)MAXPATHLEN) {
+        LOG(log_error, logtype_cnid,
+            "cnid_find: invalid name (namelen=%zu, max=%zu)",
+            namelen, (size_t)MAXPATHLEN);
+        errno = CNID_ERR_PARAM;
+        return -1;
+    }
+
+    /* the name and the names it matches come in the volume's charset */
+    if ((query = sl_name_query_term_in(name, namelen, exact, flags,
+                                       cdb != NULL && cdb->cnid_db_vol != NULL
+                                       ? cdb->cnid_db_vol->v_volcharset
+                                       : CH_UTF8)) == NULL) {
+        errno = CNID_ERR_BUSY;
+        return -1;
+    }
+
+    ret = cnid_find_scoped(cdb, query, CNID_INVALID, buffer, buflen,
+                           more_available);
+    sl_name_query_free(query);
     return ret;
+}
+
+/*!
+ * @brief Search the CNID database for entries whose name contains a term
+ *
+ * The term follows Spotlight's value syntax: '*' matches any run of
+ * characters, '?' one character, and a backslash makes the next character
+ * literal; a backslash at the end means itself. Letters match without regard
+ * to case. Centralises parameter validation so all CNID backends behave
+ * identically against bad input.
+ *
+ * @p more_available, when non-NULL, is false after any failure, the
+ * wrapper's included, and true when more matches exist than fit.
+ *
+ * @param[in]  cdb            CNID database handle
+ * @param[in]  name           term to search for in the volume's charset,
+ *                            UTF-8 for a handle without a volume,
+ *                            NUL-terminated
+ * @param[in]  namelen        bytes in @p name, range 1..MAXPATHLEN
+ * @param[out] buffer         receives the CNIDs in network byte order
+ * @param[in]  buflen         capacity of @p buffer in bytes, at least
+ *                            CNID_FIND_MIN_BUFLEN
+ * @param[out] more_available set to true when more matches exist than fit,
+ *                            NULL to opt out
+ * @returns number of CNIDs written to @p buffer on success, -1 on failure
+ *          (errno = CNID_ERR_PARAM for invalid arguments, CNID_ERR_BUSY
+ *          when the term does not parse, otherwise the backend's CNID_ERR_*
+ *          classification, or 0 where it makes none)
+ */
+int cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen,
+              void *buffer, size_t buflen, bool *more_available)
+{
+    return cnid_find_string(cdb, name, namelen, false, SL_NAMES_CASE, buffer,
+                            buflen, more_available);
+}
+
+/*!
+ * @brief cnid_find() for whole names, every character of the name literal
+ *
+ * Letters match without regard to case or diacritics, so the result holds
+ * every name that a comparison without regard to case takes, I with dot
+ * above against i included, for a caller such as Catalog Search that
+ * compares each name itself.
+ *
+ * @param[in]  cdb            CNID database handle
+ * @param[in]  name           name to search for in the volume's charset,
+ *                            UTF-8 for a handle without a volume,
+ *                            NUL-terminated
+ * @param[in]  namelen        bytes in @p name, range 1..MAXPATHLEN
+ * @param[out] buffer         receives the CNIDs in network byte order
+ * @param[in]  buflen         capacity of @p buffer in bytes, at least
+ *                            CNID_FIND_MIN_BUFLEN
+ * @param[out] more_available set to true when more matches exist than fit,
+ *                            NULL to opt out
+ * @returns the number of CNIDs, or -1 as cnid_find() fails
+ */
+int cnid_find_exact(struct _cnid_db *cdb, const char *name, size_t namelen,
+                    void *buffer, size_t buflen, bool *more_available)
+{
+    return cnid_find_string(cdb, name, namelen, true,
+                            SL_NAMES_CASE | SL_NAMES_DIACRITIC, buffer, buflen,
+                            more_available);
 }
 
 /*!

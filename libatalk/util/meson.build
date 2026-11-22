@@ -16,6 +16,7 @@ util_sources = [
     'server_ipc.c',
     'server_lock.c',
     'sigpipe.c',
+    'sl_names.c',
     'socket.c',
     'strdicasecmp.c',
     'unix.c',

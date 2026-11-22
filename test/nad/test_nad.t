@@ -163,6 +163,15 @@ sub file_contents { return $fixture->file_contents(@_); }
                                            $outside, '--force', 'find', 'local_match'
     );
     is($local_find->{out}, "$local\n", 'filesystem search finds the local file');
+    my $local_glob = $fixture->succeeds_at(
+                                           'forced find reads a volume search\'s wildcards',
+                                           $outside, '--force', 'find', 'LOCAL_M?TCH'
+    );
+    is($local_glob->{out}, "$local\n",
+       'filesystem search matches as a volume search does');
+    my $empty = $fixture->run_at($outside, '--force', 'find', '');
+    ok($empty->{status} >> 8 == 1 && $empty->{out} =~ /empty search term/,
+       'filesystem search refuses an empty term as a volume search does');
 }
 
 {

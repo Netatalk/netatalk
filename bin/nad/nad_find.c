@@ -37,7 +37,7 @@
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
 #include <atalk/directory.h>
-#include <atalk/unicode.h>
+#include <atalk/sl_names.h>
 #include <atalk/util.h>
 
 #include "nad.h"
@@ -60,19 +60,18 @@ static void usage_find(void)
 }
 
 /*!
- * @brief Search a directory tree outside a volume for names that contain a
- * string
+ * @brief Search a directory tree outside a volume for names a query matches
  *
- * The call prints each path whose last component contains @p needle, and it
- * descends into directories without following symbolic links. The match is
- * case-sensitive.
+ * The call prints each path whose last component the query matches, and it
+ * descends into directories without following symbolic links.
  *
- * @param[in]  path    path to search from
- * @param[in]  needle  string to look for
- * @param[out] found   receives 1 after a match
+ * @param[in]  path   path to search from
+ * @param[in]  query  the name comparison, as a volume's search reads it
+ * @param[out] found  receives 1 after a match
  * @returns 0, or -1 for an error, which ends the search
  */
-static int filesystem_find(const char *path, const char *needle, int *found)
+static int filesystem_find(const char *path, const struct sl_name_query *query,
+                           int *found)
 {
     struct stat st;
     const char *base;
@@ -85,7 +84,7 @@ static int filesystem_find(const char *path, const char *needle, int *found)
     base = strrchr(path, '/');
     base = base ? base + 1 : path;
 
-    if (strstr(base, needle) != NULL) {
+    if (sl_name_query_match(query, base, strlen(base))) {
         printf("%s\n", path);
         *found = 1;
     }
@@ -117,7 +116,7 @@ static int filesystem_find(const char *path, const char *needle, int *found)
             return -1;
         }
 
-        if (filesystem_find(child, needle, found) != 0) {
+        if (filesystem_find(child, query, found) != 0) {
             closedir(dir);
             return -1;
         }
@@ -247,9 +246,9 @@ bstring bjoin_inv(const struct bstrList *bl, const bstring sep)
  * @brief Run the nad find command, which searches a volume for entries by name
  *
  * The -v option names the volume, and the current directory is the default.
- * In a volume the call lowercases the name, asks the CNID database for
- * matches, and prints the full path of each. Outside a volume it searches
- * the directory tree for names that contain the string.
+ * In a volume the call asks the CNID database for matches and prints the
+ * full path of each. Outside a volume it searches the directory tree for
+ * the names that the same search in a volume matches.
  *
  * @param[in] argc  argument count, starting one word before find
  * @param[in] argv  argument vector, starting one word before find
@@ -292,41 +291,47 @@ int nad_find(int argc, char **argv, AFPObj *obj)
         return 1;
     }
 
+    if (argv[optind][0] == '\0') {
+        NAD_FATAL("empty search term");
+    }
+
     if (vol.vol->v_path == NULL) {
+        const char *term = argv[optind];
+        /* the term and the names on disk come in the unix charset */
+        struct sl_name_query *query = sl_name_query_term_in(term, strlen(term),
+                                                            false,
+                                                            SL_NAMES_CASE,
+                                                            CH_UNIX);
         int found = 0;
-        ret = filesystem_find(srchvol, argv[optind], &found) == 0 && found ? 0 : 1;
+
+        if (query == NULL) {
+            NAD_FATAL("invalid search term");
+        }
+
+        ret = filesystem_find(srchvol, query, &found) == 0 && found ? 0 : 1;
+        sl_name_query_free(query);
         closevol(&vol);
         free((void *)srchvol);
         return ret;
     }
 
     free((void *)srchvol);
-    uint16_t flags = CONV_TOLOWER;
-    char namebuf[MAXPATHLEN + 1];
-
-    /* an empty source converts to nothing and leaves namebuf unwritten */
-    if (argv[optind][0] == '\0') {
-        NAD_FATAL("empty search term");
-    }
-
-    if (convert_charset(CH_UNIX,
-                        CH_UNIX,
-                        vol.vol->v_maccharset,
-                        argv[optind],
-                        strlen(argv[optind]),
-                        namebuf,
-                        MAXPATHLEN,
-                        &flags) == (size_t) -1) {
-        NAD_FATAL("conversion error");
-    }
-
     int count;
     /* Must be >= CNID_FIND_MIN_BUFLEN; see libatalk/cnid/cnid.c. */
     char resbuf[CNID_FIND_MIN_BUFLEN];
+    /* the database holds names in the volume's charset */
+    char term[MAXPATHLEN + 1];
+    size_t termlen = convert_string(CH_UNIX, vol.vol->v_volcharset,
+                                    argv[optind], strlen(argv[optind]), term,
+                                    sizeof(term));
+
+    if (termlen == (size_t) -1) {
+        NAD_FATAL("the search term does not convert to the volume's charset");
+    }
 
     if ((count = cnid_find(vol.vol->v_cdb,
-                           namebuf,
-                           strlen(namebuf),
+                           term,
+                           termlen,
                            resbuf,
                            sizeof(resbuf),
                            NULL)) < 1) {

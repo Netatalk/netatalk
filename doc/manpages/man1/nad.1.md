@@ -391,7 +391,10 @@ Find files and directories.
 
 This returns a list of paths that wholly or partially match the given name.
 Inside AFP volumes, the CNID database is searched. With **\-\-force** outside
-AFP volumes, the filesystem is traversed from the selected path.
+AFP volumes, the filesystem is traversed from the selected path. Either way
+the name matches anywhere in a file name without regard to case, `*` and `?`
+in it are wildcards, a backslash makes the next character literal, and an
+empty name is refused.
 
 It takes one option:
 
