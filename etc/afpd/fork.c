@@ -432,6 +432,9 @@ static int getforkparams(const AFPObj *obj, struct ofork *ofork,
                 return AFPERR_NOOBJ;
             }
 
+            /* a self-healing movecwd() replaces a stale entry with curdir */
+            dir = curdir;
+
             if (lstat(path.u_name, st) == 0) {
                 path.st_valid = 1;
             } else if (adp == NULL || errno != ENOENT) {

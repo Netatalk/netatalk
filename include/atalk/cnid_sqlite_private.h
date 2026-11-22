@@ -32,6 +32,10 @@ typedef struct CNID_sqlite_private {
     sqlite3_stmt *cnid_del_didname_stmt;
     sqlite3_stmt *cnid_del_devino_stmt;
     sqlite3_stmt *cnid_dirlist_stmt;
+    sqlite3_stmt *cnid_delete_row_stmt;
+    sqlite3_stmt *cnid_update_row_stmt;
+    sqlite3_stmt *cnid_del_devino_other_stmt;
+    sqlite3_stmt *cnid_check_row_stmt;
     /*! Name index searches by seed count: [0] NULL without an index */
     sqlite3_stmt *cnid_find_index_stmt[CNID_FIND_MAX_SEEDS];
     /*! The same for folder searches */

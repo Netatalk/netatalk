@@ -81,11 +81,15 @@ extern int catsearch_ext_ids(AFPObj *obj, uint16_t vid, uint32_t reqmatches,
                              const void *spec2, uint16_t speclen, cnid_t *ids,
                              uint32_t max, uint32_t *nids, uint32_t *nrecs,
                              uint32_t *walked);
+extern int catsearch_from(AFPObj *obj, uint16_t vid, uint32_t reqmatches,
+                          unsigned char pos[16], const char *name,
+                          uint32_t *nrecs, cnid_t *pdid);
 extern int createdir(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int createfile(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int createfile_soft(AFPObj *obj, uint16_t vid, cnid_t did,
                            const char *name);
 extern int create_disk_file(const char *path);
+extern int create_disk_file_stat(const char *path, struct stat *st);
 extern int write_disk_file(const char *path, const void *data, size_t len);
 extern int disk_file_is(const char *path, const void *want, size_t len);
 extern int delete (AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
@@ -145,6 +149,7 @@ extern int bytelock_ext(AFPObj *obj, uint16_t refnum, int end, int clear,
 extern int checkaccess(AFPObj *obj, uint16_t vid, cnid_t did,
                        const char *name, uint32_t rights);
 extern int resolveid(AFPObj *obj, uint16_t vid, cnid_t cnid);
+extern int deleteid(AFPObj *obj, uint16_t vid, cnid_t cnid);
 extern int createid(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
                     cnid_t *id);
 extern int next_second(const char *path);
@@ -179,6 +184,7 @@ extern int listextattr(AFPObj *obj, uint16_t vid, cnid_t did,
                        size_t *replylen);
 extern void pack_appledouble(uint8_t *buf, const uint32_t *entry, uint16_t n);
 extern void drop_entry(const struct vol *vol, cnid_t did, char *name);
+extern void alarm_wakes(int sig);
 
 /* the heads reply_params() skips: the bitmap and the fork reference of an
  * FPOpenFork reply, the bitmap of FPGetForkParms, the two bitmaps and the

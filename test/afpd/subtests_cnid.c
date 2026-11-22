@@ -25,13 +25,16 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
+#include <inttypes.h>
 #include <pwd.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/param.h>
 #include <sys/stat.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <sqlite3.h>
@@ -46,9 +49,11 @@
 
 #include "afpfunc_helpers.h"
 #include "desktop.h"
+#include "faultinject.h"
 #include "subtests_cnid.h"
 #include "subtests_conf.h"
 #include "test.h"
+#include "test_capabilities.h"
 #include "volume.h"
 
 /*
@@ -3118,7 +3123,8 @@ static char *fake_resolve_name;
  *        to reject
  */
 static char *fake_cnid_resolve(struct _cnid_db *cdb _U_, cnid_t *id,
-                               void *buffer _U_, size_t len _U_)
+                               void *buffer _U_, size_t len _U_,
+                               uint64_t *dev _U_, uint64_t *ino _U_)
 {
     *id = htonl(2);
     return fake_resolve_name;
@@ -3672,6 +3678,144 @@ exit:
 }
 
 /*!
+ * @brief cnid_lookup() drops by CNID a surplus row with an out-of-range parent
+ *
+ * @param[in] vol  the harness's open volume
+ *
+ * @returns 0 when the lookup answers CNID_ERR_NOTFOUND and the surplus row is
+ *          gone, a step number otherwise, or TEST_SKIP without a second
+ *          SQLite connection, on a backend that records no device, or where
+ *          the volume's CNID sequence cannot be read
+ */
+int utest_cnid_dup_row_parent_out_of_range(struct vol *vol)
+{
+    sqlite3 *peer;
+    sqlite3_stmt *check = NULL;
+    char *uuid = NULL;
+    char *sql = NULL;
+    char name_a[] = "cnid_dup_pa";
+    struct stat st;
+    cnid_t id;
+    bool planted = false;
+    int result = 0;
+
+    if ((peer = cnid_peer_open(vol)) == NULL) {
+        return TEST_SKIP;
+    }
+
+    if (vol->v_cdb->cnid_db_flags & CNID_FLAG_NODEV) {
+        sqlite3_close(peer);
+        return TEST_SKIP;
+    }
+
+    if ((uuid = uuid_strip_dashes(vol->v_uuid)) == NULL) {
+        sqlite3_close(peer);
+        return 1;
+    }
+
+    long long saved_seq = cnid_peer_get_seq(peer, uuid);
+
+    if (saved_seq < 0) {
+        free(uuid);
+        sqlite3_close(peer);
+        return TEST_SKIP;
+    }
+
+    /* A matches the lookup by name and parent, B by device and inode with a
+     * parent of 2^32 + 3 */
+    if (asprintf(&sql,
+                 "INSERT INTO \"%s\" (Id, Name, Did, DevNo, InodeNo) VALUES "
+                 "(99999905, 'cnid_dup_pa', 2, 525252, 626262), "
+                 "(99999906, 'cnid_dup_pb', 4294967299, 727272, 828282)",
+                 uuid) == -1) {
+        sql = NULL;
+        result = 2;
+        goto exit;
+    }
+
+    if (sqlite3_exec(peer, sql, NULL, NULL, NULL) != SQLITE_OK) {
+        result = 2;
+        goto exit;
+    }
+
+    planted = true;
+    free(sql);
+    sql = NULL;
+
+    /* A comes first: SQLite reads OR terms in order; table scans go by Id */
+    if (asprintf(&sql,
+                 "SELECT Id,Did,Name,DevNo,InodeNo FROM \"%s\" "
+                 "WHERE (Name = 'cnid_dup_pa' AND Did = 2) "
+                 "OR (DevNo = 727272 AND InodeNo = 828282)",
+                 uuid) == -1) {
+        sql = NULL;
+        result = 6;
+        goto exit;
+    }
+
+    if (sqlite3_prepare_v2(peer, sql, -1, &check, NULL) != SQLITE_OK) {
+        result = 6;
+        goto exit;
+    }
+
+    if (sqlite3_step(check) != SQLITE_ROW
+            || sqlite3_column_int64(check, 0) != 99999905) {
+        sqlite3_finalize(check);
+        result = 6;
+        goto exit;
+    }
+
+    sqlite3_finalize(check);
+    free(sql);
+    sql = NULL;
+    memset(&st, 0, sizeof(st));
+    st.st_dev = 727272;
+    st.st_ino = 828282;
+    errno = 0;
+    id = cnid_lookup(vol->v_cdb, &st, htonl(2), name_a, strlen(name_a));
+
+    if (id != CNID_INVALID || CNID_ERRNO() != CNID_ERR_NOTFOUND) {
+        result = 3;
+        goto exit;
+    }
+
+    if (asprintf(&sql, "SELECT COUNT(*) FROM \"%s\" WHERE Id = 99999906",
+                 uuid) == -1) {
+        sql = NULL;
+        result = 4;
+        goto exit;
+    }
+
+    if (sqlite3_prepare_v2(peer, sql, -1, &check, NULL) != SQLITE_OK) {
+        result = 4;
+        goto exit;
+    }
+
+    if (sqlite3_step(check) != SQLITE_ROW
+            || sqlite3_column_int(check, 0) != 0) {
+        result = 5;
+    }
+
+    sqlite3_finalize(check);
+exit:
+
+    if (sql) {
+        free(sql);
+    }
+
+    if (planted && asprintf(&sql, "DELETE FROM \"%s\" WHERE Id IN "
+                                  "(99999905, 99999906)", uuid) != -1) {
+        sqlite3_exec(peer, sql, NULL, NULL, NULL);
+        free(sql);
+    }
+
+    cnid_peer_set_seq(peer, uuid, saved_seq);
+    free(uuid);
+    sqlite3_close(peer);
+    return result;
+}
+
+/*!
  * @brief The process's supplementary groups
  *
  * @param[out] ngroups  their number
@@ -3708,6 +3852,1029 @@ static bool cnid_groups_are(const gid_t *groups, int ngroups)
                 && memcmp(now, groups, (size_t)n * sizeof(gid_t)) == 0;
     free(now);
     return same;
+}
+
+/*!
+ * @brief cnid_delete_row() deletes only while parent, name, dev and ino match
+ *
+ * @param[in] vol  the harness's open volume
+ *
+ * @returns 0 when calls that each change one of the four keep the row and
+ *          answer 0, the call with the row's own removes it and answers 1,
+ *          and one more answers 0
+ */
+int utest_cnid_delete_row_conditional(struct vol *vol)
+{
+    static char name[] = "cnid_delete_row";
+    static char other[] = "cnid_delete_rox";
+    char path[MAXPATHLEN + 1];
+    char buf[CNID_MAX_PATH_LEN];
+    struct stat st;
+    /* a parent the row does not record */
+    const cnid_t elsewhere = htonl(ntohl(DIRDID_ROOT) + 1);
+    const size_t len = strlen(name);
+    cnid_t id = CNID_INVALID;
+    cnid_t probe;
+    uint64_t dev;
+    uint64_t ino;
+    int kept[4] = { -1, -1, -1, -1 };
+    bool row_kept = false;
+    int gone = -1;
+    int again = -1;
+    int ret = -1;
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (create_disk_file(path) != 0 || stat(path, &st) != 0
+            || (id = cnid_add(vol->v_cdb, &st, DIRDID_ROOT, name, strlen(name),
+                              CNID_INVALID)) == CNID_INVALID) {
+        goto out;
+    }
+
+    dev = cnid_row_dev(vol->v_cdb, &st);
+    ino = (uint64_t)st.st_ino;
+    kept[0] = cnid_delete_row(vol->v_cdb, id, DIRDID_ROOT, name, len, dev,
+                              ino + 1);
+    kept[1] = cnid_delete_row(vol->v_cdb, id, DIRDID_ROOT, name, len, dev + 1,
+                              ino);
+    kept[2] = cnid_delete_row(vol->v_cdb, id, elsewhere, name, len, dev, ino);
+    kept[3] = cnid_delete_row(vol->v_cdb, id, DIRDID_ROOT, other, len, dev,
+                              ino);
+    probe = id;
+    row_kept = cnid_resolve(vol->v_cdb, &probe, buf, sizeof(buf)) != NULL;
+    gone = cnid_delete_row(vol->v_cdb, id, DIRDID_ROOT, name, len, dev, ino);
+    again = cnid_delete_row(vol->v_cdb, id, DIRDID_ROOT, name, len, dev, ino);
+
+    if (kept[0] == 0 && kept[1] == 0 && kept[2] == 0 && kept[3] == 0
+            && row_kept && gone == 1 && again == 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "cnid_delete_row: another inode %d, device %d, "
+                        "parent %d, name %d, the row %s, its own %d, once "
+                        "more %d\n", kept[0], kept[1], kept[2], kept[3],
+                row_kept ? "kept" : "gone", gone, again);
+    }
+
+out:
+
+    if (id != CNID_INVALID && gone != 1) {
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    unlink(path);
+    return ret;
+}
+
+/*!
+ * @brief cnid_update_row() rewrites only while parent, name, dev and ino match
+ *
+ * @param[in] vol  the harness's open volume
+ *
+ * @returns 0 when calls that each change one of the four keep the row and
+ *          the other row and answer 0, the call with the row's own answers 1,
+ *          the row then records the stat and the other row is gone, and one
+ *          more answers 0
+ */
+int utest_cnid_update_row_conditional(struct vol *vol)
+{
+    static char name[] = "cnid_update_row";
+    static char other[] = "cnid_update_rox";
+    static char held[] = "cnid_update_held";
+    char path[MAXPATHLEN + 1];
+    char hpath[MAXPATHLEN + 1];
+    char buf[CNID_MAX_PATH_LEN];
+    struct stat st;
+    struct stat hst;
+    /* a parent the row does not record */
+    const cnid_t elsewhere = htonl(ntohl(DIRDID_ROOT) + 1);
+    const size_t len = strlen(name);
+    cnid_t id = CNID_INVALID;
+    cnid_t hid = CNID_INVALID;
+    cnid_t probe;
+    uint64_t dev;
+    uint64_t ino;
+    uint64_t now_dev = 0;
+    uint64_t now_ino = 0;
+    int kept[4] = { -1, -1, -1, -1 };
+    bool other_kept = false;
+    bool holds = false;
+    int changed = -1;
+    int again = -1;
+    int ret = -1;
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(hpath, sizeof(hpath), "%s/%s", vol->v_path, held);
+
+    /* a file's row, and another's with the identity the first row takes */
+    if (create_disk_file(path) != 0 || stat(path, &st) != 0
+            || (id = cnid_add(vol->v_cdb, &st, DIRDID_ROOT, name, len,
+                              CNID_INVALID)) == CNID_INVALID
+            || create_disk_file(hpath) != 0 || stat(hpath, &hst) != 0
+            || (hid = cnid_add(vol->v_cdb, &hst, DIRDID_ROOT, held,
+                               strlen(held), CNID_INVALID)) == CNID_INVALID) {
+        goto out;
+    }
+
+    dev = cnid_row_dev(vol->v_cdb, &st);
+    ino = (uint64_t)st.st_ino;
+    kept[0] = cnid_update_row(vol->v_cdb, id, DIRDID_ROOT, name, len, dev,
+                              ino + 1, &hst, NULL, NULL);
+    kept[1] = cnid_update_row(vol->v_cdb, id, DIRDID_ROOT, name, len, dev + 1,
+                              ino, &hst, NULL, NULL);
+    kept[2] = cnid_update_row(vol->v_cdb, id, elsewhere, name, len, dev, ino,
+                              &hst, NULL, NULL);
+    kept[3] = cnid_update_row(vol->v_cdb, id, DIRDID_ROOT, other, len, dev,
+                              ino, &hst, NULL, NULL);
+    probe = hid;
+    other_kept = cnid_resolve(vol->v_cdb, &probe, buf, sizeof(buf)) != NULL;
+    changed = cnid_update_row(vol->v_cdb, id, DIRDID_ROOT, name, len, dev, ino,
+                              &hst, NULL, NULL);
+    again = cnid_update_row(vol->v_cdb, id, DIRDID_ROOT, name, len, dev, ino,
+                            &hst, NULL, NULL);
+    probe = id;
+    holds = cnid_resolve_row(vol->v_cdb, &probe, buf, sizeof(buf), &now_dev,
+                             &now_ino) != NULL
+            && cnid_row_holds(vol->v_cdb, now_dev, now_ino, &hst);
+    probe = hid;
+
+    if (kept[0] == 0 && kept[1] == 0 && kept[2] == 0 && kept[3] == 0
+            && other_kept && changed == 1 && again == 0 && holds
+            && cnid_resolve(vol->v_cdb, &probe, buf, sizeof(buf)) == NULL
+            && CNID_ERRNO() == CNID_ERR_NOTFOUND) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "cnid_update_row: another inode %d, device %d, "
+                        "parent %d, name %d, the other row %s, its own %d, "
+                        "once more %d, the row %s\n",
+                kept[0], kept[1], kept[2], kept[3],
+                other_kept ? "kept" : "gone", changed, again,
+                holds ? "moved" : "unmoved");
+    }
+
+out:
+
+    if (id != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    if (hid != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, hid);
+    }
+
+    unlink(path);
+    unlink(hpath);
+    return ret;
+}
+
+/* the statement run_hook_sql() runs, whether the hook ran, and whether the
+ * statement did */
+static const char *hook_sql;
+static int hook_fired;
+static int hook_ran;
+
+/*!
+ * @brief Run hook_sql on the backend's connection ahead of its statement
+ */
+static void run_hook_sql(void *con)
+{
+    hook_fired = 1;
+    hook_ran = fi.sql.exec(con, hook_sql) == 0;
+}
+
+/*!
+ * @brief cnid_update_row() of a row moved before its hold keeps the other row
+ *
+ * @param[in] vol  the harness's open volume
+ *
+ * @returns 0 when the call answers 0, the other row stays and the row is
+ *          where the other session moved it, 1 otherwise, -1 when the
+ *          fixture failed, or TEST_SKIP without the fault-injection shim
+ */
+int utest_cnid_update_row_moved_keeps_other(struct vol *vol)
+{
+    static char name[] = "cnid_update_rbk";
+    static char held[] = "cnid_update_rbh";
+    static char moved[] = "cnid_update_rbm";
+    const bool mysql = vol->v_cnidscheme != NULL
+                       && strcasecmp(vol->v_cnidscheme, "mysql") == 0;
+    char path[MAXPATHLEN + 1];
+    char hpath[MAXPATHLEN + 1];
+    const char *quote = mysql ? "`" : "\"";
+    char buf[CNID_MAX_PATH_LEN];
+    char *uuid = NULL;
+    char *sql = NULL;
+    const char *now = NULL;
+    struct stat st;
+    struct stat hst;
+    cnid_t id = CNID_INVALID;
+    cnid_t hid = CNID_INVALID;
+    cnid_t probe;
+    bool held_kept = false;
+    int changed = -1;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(hpath, sizeof(hpath), "%s/%s", vol->v_path, held);
+    fault_inject_reset();
+
+    /* the row, and another file's row with the identity the row is to take */
+    if (create_disk_file(path) != 0 || stat(path, &st) != 0
+            || (id = cnid_add(vol->v_cdb, &st, DIRDID_ROOT, name,
+                              strlen(name), CNID_INVALID)) == CNID_INVALID
+            || create_disk_file(hpath) != 0 || stat(hpath, &hst) != 0
+            || (hid = cnid_add(vol->v_cdb, &hst, DIRDID_ROOT, held,
+                               strlen(held), CNID_INVALID)) == CNID_INVALID
+            || (uuid = uuid_strip_dashes(vol->v_uuid)) == NULL
+            || asprintf(&sql,
+                        "UPDATE %s%s%s SET Name = '%s' WHERE Id = %" PRIu32,
+                        quote, uuid, quote, moved, ntohl(id)) == -1) {
+        sql = NULL;
+        goto out;
+    }
+
+    /* the move lands ahead of SQLite's BEGIN and of InnoDB's row lock, which
+     * the check's FOR UPDATE takes */
+    hook_sql = sql;
+    hook_fired = 0;
+    hook_ran = 0;
+    fi.sql.hook = run_hook_sql;
+    fi.sql.prefix = mysql ? "SELECT Id FROM" : "BEGIN";
+    changed = cnid_update_row(vol->v_cdb, id, DIRDID_ROOT, name, strlen(name),
+                              cnid_row_dev(vol->v_cdb, &st),
+                              (uint64_t)st.st_ino, &hst, NULL, NULL);
+    fault_inject_reset();
+    probe = hid;
+    held_kept = cnid_resolve(vol->v_cdb, &probe, buf, sizeof(buf)) != NULL;
+    probe = id;
+    now = cnid_resolve(vol->v_cdb, &probe, buf, sizeof(buf));
+
+    if (hook_ran && changed == 0 && held_kept && now != NULL
+            && strcmp(now, moved) == 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "cnid_update_row, its row moved before the hold: %d, "
+                        "the move %s, the other row %s, the row at %s\n",
+                changed,
+                !hook_fired ? "never ran" : hook_ran ? "ran" : "failed",
+                held_kept ? "kept" : "gone", now != NULL ? now : "no name");
+        ret = 1;
+    }
+
+out:
+    fault_inject_reset();
+    free(sql);
+    free(uuid);
+
+    if (id != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    if (hid != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, hid);
+    }
+
+    unlink(path);
+    unlink(hpath);
+    return ret;
+}
+
+/* the handle and the other row's CNID that replace_reads_other_row() reads,
+ * and whether it found the row */
+static struct _cnid_db *replace_cdb;
+static cnid_t replace_other;
+static int replace_read;
+
+/*!
+ * @brief A replace that reads another row through the update's own handle
+ *
+ * @returns 0
+ */
+static int replace_reads_other_row(void *arg _U_)
+{
+    char buf[CNID_MAX_PATH_LEN];
+    cnid_t probe = replace_other;
+    replace_read = cnid_resolve(replace_cdb, &probe, buf, sizeof(buf)) != NULL;
+    return 0;
+}
+
+/*!
+ * @brief cnid_update_row() whose replace reads another row changes only its own
+ *
+ * @param[in] vol  the harness's open volume
+ *
+ * @returns 0 when the call answers 1, the row records the stat and the other
+ *          row its own file, 1 otherwise, or -1 when the fixture failed
+ */
+int utest_cnid_update_row_replace_calls(struct vol *vol)
+{
+    static char name[] = "cnid_update_rpl";
+    static char other[] = "cnid_update_rpo";
+    static char repl[] = "cnid_update_rpr";
+    char path[MAXPATHLEN + 1];
+    char opath[MAXPATHLEN + 1];
+    char rpath[MAXPATHLEN + 1];
+    char buf[CNID_MAX_PATH_LEN];
+    struct stat st;
+    struct stat ost;
+    struct stat rst;
+    cnid_t id = CNID_INVALID;
+    cnid_t oid = CNID_INVALID;
+    cnid_t probe;
+    uint64_t now_dev = 0;
+    uint64_t now_ino = 0;
+    bool holds = false;
+    bool other_kept = false;
+    int changed = -1;
+    int ret = -1;
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(opath, sizeof(opath), "%s/%s", vol->v_path, other);
+    snprintf(rpath, sizeof(rpath), "%s/%s", vol->v_path, repl);
+
+    /* the row, another file's row, and the stat the row is to take */
+    if (create_disk_file(path) != 0 || stat(path, &st) != 0
+            || (id = cnid_add(vol->v_cdb, &st, DIRDID_ROOT, name,
+                              strlen(name), CNID_INVALID)) == CNID_INVALID
+            || create_disk_file(opath) != 0 || stat(opath, &ost) != 0
+            || (oid = cnid_add(vol->v_cdb, &ost, DIRDID_ROOT, other,
+                               strlen(other), CNID_INVALID)) == CNID_INVALID
+            || create_disk_file(rpath) != 0 || stat(rpath, &rst) != 0) {
+        goto out;
+    }
+
+    replace_cdb = vol->v_cdb;
+    replace_other = oid;
+    replace_read = 0;
+    changed = cnid_update_row(vol->v_cdb, id, DIRDID_ROOT, name, strlen(name),
+                              cnid_row_dev(vol->v_cdb, &st),
+                              (uint64_t)st.st_ino, &rst,
+                              replace_reads_other_row, NULL);
+    probe = id;
+    holds = cnid_resolve_row(vol->v_cdb, &probe, buf, sizeof(buf), &now_dev,
+                             &now_ino) != NULL
+            && cnid_row_holds(vol->v_cdb, now_dev, now_ino, &rst);
+    probe = oid;
+    other_kept = cnid_resolve_row(vol->v_cdb, &probe, buf, sizeof(buf),
+                                  &now_dev, &now_ino) != NULL
+                 && cnid_row_holds(vol->v_cdb, now_dev, now_ino, &ost);
+
+    if (changed == 1 && replace_read && holds && other_kept) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "cnid_update_row whose replace read another row: %d, "
+                        "the read %s, the row %s, the other row %s\n", changed,
+                replace_read ? "found it" : "failed",
+                holds ? "changed" : "unchanged",
+                other_kept ? "kept" : "changed");
+        ret = 1;
+    }
+
+out:
+
+    if (id != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    if (oid != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, oid);
+    }
+
+    unlink(path);
+    unlink(opath);
+    unlink(rpath);
+    return ret;
+}
+
+/*!
+ * @brief Run a statement on a volume's MySQL connection ahead of a stamp read
+ *
+ * @param[in] vol  the harness's open volume
+ * @param[in] sql  the statement
+ * @returns 1 when the statement ran, 0 when it failed, or -1 when the shim
+ *          reached no stamp read
+ */
+static int reconnect_step(struct vol *vol, const char *sql)
+{
+    char stamp[sizeof(vol->v_stamp)];
+    fault_inject_reset();
+    hook_sql = sql;
+    hook_fired = 0;
+    hook_ran = 0;
+    fi.sql.hook = run_hook_sql;
+    fi.sql.prefix = "SELECT Stamp";
+    (void)cnid_getstamp(vol->v_cdb, stamp, sizeof(stamp));
+    fault_inject_reset();
+    return hook_fired ? hook_ran : -1;
+}
+
+/*!
+ * @brief cnid_update_row() on a connection the server dropped reconnects
+ *
+ * A session variable set before the drop tells the new session from the
+ * old one.
+ *
+ * @param[in] vol  the harness's open volume
+ *
+ * @returns 0 when the call answers 1, the row records the stat and the
+ *          connection is a new session, 1 otherwise, -1 when the fixture
+ *          failed, or TEST_SKIP on a backend other than MySQL or without the
+ *          fault-injection shim
+ */
+int utest_cnid_update_row_after_reconnect(struct vol *vol)
+{
+    static char name[] = "cnid_update_rcn";
+    static char other[] = "cnid_update_rco";
+    const bool mysql = vol->v_cnidscheme != NULL
+                       && strcasecmp(vol->v_cnidscheme, "mysql") == 0;
+    char path[MAXPATHLEN + 1];
+    char opath[MAXPATHLEN + 1];
+    char buf[CNID_MAX_PATH_LEN];
+    struct stat st;
+    struct stat ost;
+    cnid_t id = CNID_INVALID;
+    cnid_t probe;
+    uint64_t now_dev = 0;
+    uint64_t now_ino = 0;
+    bool holds = false;
+    int dropping = -1;
+    int renewed = -1;
+    int changed = -1;
+    int ret = -1;
+
+    if (!mysql || !test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(opath, sizeof(opath), "%s/%s", vol->v_path, other);
+
+    if (create_disk_file(path) != 0 || stat(path, &st) != 0
+            || (id = cnid_add(vol->v_cdb, &st, DIRDID_ROOT, name,
+                              strlen(name), CNID_INVALID)) == CNID_INVALID
+            || create_disk_file(opath) != 0 || stat(opath, &ost) != 0) {
+        goto out;
+    }
+
+    /* the server drops the connection once it idles for a second */
+    if ((dropping = reconnect_step(vol, "SET SESSION wait_timeout = 1, "
+                                        "@fi_drop = 1")) != 1) {
+        goto out;
+    }
+
+    sleep(2);
+    changed = cnid_update_row(vol->v_cdb, id, DIRDID_ROOT, name, strlen(name),
+                              cnid_row_dev(vol->v_cdb, &st),
+                              (uint64_t)st.st_ino, &ost, NULL, NULL);
+    /* the subquery has a second row while the old session's variable
+     * lives, and SET reports that error, which MariaDB's DO drops */
+    renewed = reconnect_step(vol, "SET @fi_seen = (SELECT 1 UNION ALL SELECT "
+                                  "2 FROM DUAL WHERE @fi_drop IS NOT NULL)");
+    probe = id;
+    holds = cnid_resolve_row(vol->v_cdb, &probe, buf, sizeof(buf), &now_dev,
+                             &now_ino) != NULL
+            && cnid_row_holds(vol->v_cdb, now_dev, now_ino, &ost);
+
+    if (changed == 1 && holds && renewed == 1) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "cnid_update_row after a dropped connection: %d, the "
+                        "row %s, the session %s\n", changed,
+                holds ? "changed" : "unchanged",
+                renewed == 1 ? "new" : renewed == 0 ? "the old one"
+                : "unread");
+        ret = 1;
+    }
+
+out:
+
+    /* a session the server kept keeps its timeout */
+    if (dropping == 1 && renewed != 1) {
+        (void)reconnect_step(vol, "SET SESSION wait_timeout = DEFAULT");
+    }
+
+    if (id != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    unlink(path);
+    unlink(opath);
+    return ret;
+}
+
+/*!
+ * @brief A MySQL open that fails after its connect closes the connection
+ *
+ * @param[in] vol  the harness's open volume
+ *
+ * @returns 0 when the open answers NULL and its session has ended, 1
+ *          otherwise, or TEST_SKIP on a backend other than MySQL or without
+ *          the fault-injection shim
+ */
+int utest_cnid_mysql_failed_open_closes(struct vol *vol)
+{
+    const bool mysql = vol->v_cnidscheme != NULL
+                       && strcasecmp(vol->v_cnidscheme, "mysql") == 0;
+    const struct timespec tick = { .tv_nsec = 100 * 1000 * 1000 };
+    struct _cnid_db *cdb;
+    int locked;
+    int same = 0;
+    int ret;
+
+    if (!mysql || !test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    /* the open's session takes a named lock, which only its end releases */
+    fault_inject_reset();
+    hook_sql = "DO GET_LOCK('fi_failed_open', 0)";
+    hook_fired = 0;
+    hook_ran = 0;
+    fi.sql.hook = run_hook_sql;
+    fi.sql.prefix = "SELECT @@character_set_results";
+    fi.sql.fail = 1;
+    cdb = cnid_open(vol, "mysql", 0);
+    locked = hook_ran;
+    fault_inject_reset();
+
+    /* the SET fails while the lock is held, as its subquery has two rows */
+    for (int i = 0; locked && i < 20 && !same; i++) {
+        same = reconnect_step(vol, "SET @fi_same = (SELECT 1 UNION ALL "
+                                   "SELECT 2 FROM DUAL WHERE IS_USED_LOCK("
+                                   "'fi_failed_open') IS NOT NULL)") == 1;
+
+        if (!same) {
+            nanosleep(&tick, NULL);
+        }
+    }
+
+    if (cdb == NULL && same) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "cnid_open of MySQL failing after its connect: %s, "
+                        "its session %s\n",
+                cdb != NULL ? "opened" : "failed",
+                !locked ? "untraced" : same ? "ended" : "still open");
+        ret = 1;
+    }
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+    }
+
+    return ret;
+}
+
+/* the volume whose connection replace_drops_connection() lets the server
+ * drop, the row its CNID call reads, and whether the drop was armed */
+static struct vol *replace_vol;
+static cnid_t replace_id;
+static int replace_dropping;
+
+/*!
+ * @brief A replace whose CNID call meets a connection the server dropped
+ *
+ * @returns 0
+ */
+static int replace_drops_connection(void *arg _U_)
+{
+    char buf[CNID_MAX_PATH_LEN];
+    cnid_t probe = replace_id;
+    replace_dropping = reconnect_step(replace_vol,
+                                      "SET SESSION wait_timeout = 1, "
+                                      "@fi_drop = 1");
+    sleep(2);
+    (void)cnid_resolve(replace_vol->v_cdb, &probe, buf, sizeof(buf));
+    return 0;
+}
+
+/*!
+ * @brief cnid_update_row() whose connection drops in the hold answers -1
+ *
+ * @param[in] vol  the harness's open volume
+ *
+ * @returns 0 when the call answers -1 and the row still records the file, 1
+ *          otherwise, -1 when the fixture failed, or TEST_SKIP on a backend
+ *          other than MySQL or without the fault-injection shim
+ */
+int utest_cnid_update_row_dropped_in_hold(struct vol *vol)
+{
+    static char name[] = "cnid_update_rrc";
+    static char other[] = "cnid_update_rro";
+    const bool mysql = vol->v_cnidscheme != NULL
+                       && strcasecmp(vol->v_cnidscheme, "mysql") == 0;
+    char path[MAXPATHLEN + 1];
+    char opath[MAXPATHLEN + 1];
+    char buf[CNID_MAX_PATH_LEN];
+    struct stat st;
+    struct stat ost;
+    cnid_t id = CNID_INVALID;
+    cnid_t probe;
+    uint64_t now_dev = 0;
+    uint64_t now_ino = 0;
+    bool kept = false;
+    int renewed = -1;
+    int changed = -2;
+    int ret = -1;
+
+    if (!mysql || !test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(opath, sizeof(opath), "%s/%s", vol->v_path, other);
+
+    if (create_disk_file(path) != 0 || stat(path, &st) != 0
+            || (id = cnid_add(vol->v_cdb, &st, DIRDID_ROOT, name,
+                              strlen(name), CNID_INVALID)) == CNID_INVALID
+            || create_disk_file(opath) != 0 || stat(opath, &ost) != 0) {
+        goto out;
+    }
+
+    replace_vol = vol;
+    replace_id = id;
+    replace_dropping = -1;
+    changed = cnid_update_row(vol->v_cdb, id, DIRDID_ROOT, name, strlen(name),
+                              cnid_row_dev(vol->v_cdb, &st),
+                              (uint64_t)st.st_ino, &ost,
+                              replace_drops_connection, NULL);
+    probe = id;
+    kept = cnid_resolve_row(vol->v_cdb, &probe, buf, sizeof(buf), &now_dev,
+                            &now_ino) != NULL
+           && cnid_row_holds(vol->v_cdb, now_dev, now_ino, &st);
+    /* the subquery has a second row while the dropped session lives */
+    renewed = reconnect_step(vol, "SET @fi_seen = (SELECT 1 UNION ALL SELECT "
+                                  "2 FROM DUAL WHERE @fi_drop IS NOT NULL)");
+
+    if (replace_dropping != 1) {
+        fprintf(stderr, "cnid_update_row, its connection dropped in the "
+                        "hold: the drop not armed\n");
+    } else if (changed == -1 && kept && renewed == 1) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "cnid_update_row, its connection dropped in the "
+                        "hold: %d, the row %s, the session %s\n", changed,
+                kept ? "kept" : "changed or unread",
+                renewed == 1 ? "new" : renewed == 0 ? "the old one"
+                : "unread");
+        ret = 1;
+    }
+
+out:
+    /* a session the server kept keeps its timeout otherwise */
+    (void)reconnect_step(vol, "SET SESSION wait_timeout = DEFAULT");
+
+    if (id != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    unlink(path);
+    unlink(opath);
+    return ret;
+}
+
+/*!
+ * @brief cnid_add() keeps the CNID of a stale row rewritten before the delete
+ *
+ * @param[in] vol  the harness's open volume
+ *
+ * @returns 0 when the add answers the row's CNID, 1 when it answers another
+ *          or the other session's write did not run, -1 when the fixture
+ *          failed, or TEST_SKIP without the fault-injection shim
+ */
+int utest_cnid_lookup_row_changed(struct vol *vol)
+{
+    static char name[] = "cnid_lookup_chg";
+    static char other[] = "cnid_lookup_chr";
+    const bool mysql = vol->v_cnidscheme != NULL
+                       && strcasecmp(vol->v_cnidscheme, "mysql") == 0;
+    const char *quote = mysql ? "`" : "\"";
+    char path[MAXPATHLEN + 1];
+    char opath[MAXPATHLEN + 1];
+    char *uuid = NULL;
+    char *sql = NULL;
+    struct stat st;
+    struct stat ost;
+    cnid_t id = CNID_INVALID;
+    cnid_t oid = CNID_INVALID;
+    cnid_t got = CNID_INVALID;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(opath, sizeof(opath), "%s/%s", vol->v_path, other);
+    fault_inject_reset();
+
+    /* another file takes the file's name, its own row deleted; the rewrite
+     * sets the inode alone, as the files share a device whose number SQLite
+     * would keep as a float from SQL text past 2^63 */
+    if (create_disk_file_stat(path, &st) != 0
+            || (id = cnid_add(vol->v_cdb, &st, DIRDID_ROOT, name,
+                              strlen(name), CNID_INVALID)) == CNID_INVALID
+            || create_disk_file_stat(opath, &ost) != 0
+            || (oid = cnid_add(vol->v_cdb, &ost, DIRDID_ROOT, other,
+                               strlen(other), CNID_INVALID)) == CNID_INVALID
+            || cnid_delete(vol->v_cdb, oid) != 0
+            || rename(opath, path) != 0
+            || (uuid = uuid_strip_dashes(vol->v_uuid)) == NULL
+            || asprintf(&sql,
+                        "UPDATE %s%s%s SET InodeNo = %" PRIu64
+                        " WHERE Id = %" PRIu32, quote, uuid, quote,
+                        (uint64_t)ost.st_ino, ntohl(id)) == -1) {
+        sql = NULL;
+        goto out;
+    }
+
+    hook_sql = sql;
+    hook_fired = 0;
+    hook_ran = 0;
+    fi.sql.hook = run_hook_sql;
+    fi.sql.prefix = "DELETE FROM";
+    got = cnid_add(vol->v_cdb, &ost, DIRDID_ROOT, name, strlen(name),
+                   CNID_INVALID);
+    fault_inject_reset();
+
+    if (hook_ran && got == id) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "cnid_add, its stale row rewritten before the "
+                        "lookup's delete: %u for the row's %u, the rewrite "
+                        "%s\n", ntohl(got), ntohl(id),
+                !hook_fired ? "never ran" : hook_ran ? "ran"
+                : "failed");
+        ret = 1;
+    }
+
+out:
+    fault_inject_reset();
+    free(sql);
+    sql = NULL;
+    free(uuid);
+
+    if (got != CNID_INVALID && got != id) {
+        cnid_delete(vol->v_cdb, got);
+    }
+
+    /* the other file's row, where the fixture stopped before its delete */
+    if (oid != CNID_INVALID && oid != got) {
+        cnid_delete(vol->v_cdb, oid);
+    }
+
+    if (id != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    unlink(path);
+    unlink(opath);
+    return ret;
+}
+
+/*!
+ * @brief cnid_lookup() keeps stale rows changed before its delete
+ *
+ * @param[in] vol  the harness's open volume
+ *
+ * @returns 0 when both lookups answer CNID_ERR_NOTFOUND and every row they
+ *          read stays, 1 otherwise, -1 when the fixture failed, or TEST_SKIP
+ *          without the fault-injection shim
+ */
+int utest_cnid_lookup_rows_changed(struct vol *vol)
+{
+    static char moved[] = "cnid_lookup_mvd";
+    static char was[] = "cnid_lookup_was";
+    static char name[] = "cnid_lookup_two";
+    static char other[] = "cnid_lookup_oth";
+    const bool mysql = vol->v_cnidscheme != NULL
+                       && strcasecmp(vol->v_cnidscheme, "mysql") == 0;
+    const char *quote = mysql ? "`" : "\"";
+    char mpath[MAXPATHLEN + 1];
+    char npath[MAXPATHLEN + 1];
+    char opath[MAXPATHLEN + 1];
+    char buf[CNID_MAX_PATH_LEN];
+    char *uuid = NULL;
+    char *sql = NULL;
+    struct stat mst;
+    struct stat nst;
+    struct stat ost;
+    cnid_t rid = CNID_INVALID;
+    cnid_t aid = CNID_INVALID;
+    cnid_t bid = CNID_INVALID;
+    cnid_t probe;
+    cnid_t got_moved = CNID_INVALID;
+    cnid_t got_two = CNID_INVALID;
+    unsigned int moved_errno = 0;
+    unsigned int two_errno = 0;
+    bool moved_kept = false;
+    bool both_kept = false;
+    int moved_write = -1;
+    int two_write = -1;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    snprintf(mpath, sizeof(mpath), "%s/%s", vol->v_path, moved);
+    snprintf(npath, sizeof(npath), "%s/%s", vol->v_path, name);
+    snprintf(opath, sizeof(opath), "%s/%s", vol->v_path, other);
+    fault_inject_reset();
+
+    /* a file whose row records the name it had before it moved */
+    if (create_disk_file(mpath) != 0 || stat(mpath, &mst) != 0
+            || (rid = cnid_add(vol->v_cdb, &mst, DIRDID_ROOT, was,
+                               strlen(was), CNID_INVALID)) == CNID_INVALID
+            || (uuid = uuid_strip_dashes(vol->v_uuid)) == NULL
+            || asprintf(&sql,
+                        "UPDATE %s%s%s SET Name = '%s' WHERE Id = %" PRIu32,
+                        quote, uuid, quote, moved, ntohl(rid)) == -1) {
+        sql = NULL;
+        goto out;
+    }
+
+    hook_sql = sql;
+    hook_fired = 0;
+    hook_ran = 0;
+    fi.sql.hook = run_hook_sql;
+    fi.sql.prefix = "DELETE FROM";
+    got_moved = cnid_lookup(vol->v_cdb, &mst, DIRDID_ROOT, moved,
+                            strlen(moved));
+    moved_errno = CNID_ERRNO();
+    fault_inject_reset();
+    moved_write = hook_fired ? hook_ran : -1;
+    probe = rid;
+    moved_kept = cnid_resolve(vol->v_cdb, &probe, buf, sizeof(buf)) != NULL;
+    free(sql);
+    sql = NULL;
+
+    /* one row meets the name, another the inode of the file at the name */
+    if (create_disk_file(npath) != 0 || stat(npath, &nst) != 0
+            || (aid = cnid_add(vol->v_cdb, &nst, DIRDID_ROOT, name,
+                               strlen(name), CNID_INVALID)) == CNID_INVALID
+            || create_disk_file(opath) != 0 || stat(opath, &ost) != 0
+            || (bid = cnid_add(vol->v_cdb, &ost, DIRDID_ROOT, other,
+                               strlen(other), CNID_INVALID)) == CNID_INVALID
+            || asprintf(&sql,
+                        "UPDATE %s%s%s SET InodeNo = InodeNo + 1000000 "
+                        "WHERE Id = %" PRIu32 " OR Id = %" PRIu32, quote,
+                        uuid, quote, ntohl(aid), ntohl(bid)) == -1) {
+        sql = NULL;
+        goto out;
+    }
+
+    hook_sql = sql;
+    hook_fired = 0;
+    hook_ran = 0;
+    fi.sql.hook = run_hook_sql;
+    fi.sql.prefix = "DELETE FROM";
+    got_two = cnid_lookup(vol->v_cdb, &ost, DIRDID_ROOT, name, strlen(name));
+    two_errno = CNID_ERRNO();
+    fault_inject_reset();
+    two_write = hook_fired ? hook_ran : -1;
+    probe = aid;
+    both_kept = cnid_resolve(vol->v_cdb, &probe, buf, sizeof(buf)) != NULL;
+    probe = bid;
+    both_kept = both_kept
+                && cnid_resolve(vol->v_cdb, &probe, buf, sizeof(buf)) != NULL;
+
+    if (moved_write == 1 && got_moved == CNID_INVALID
+            && moved_errno == CNID_ERR_NOTFOUND && moved_kept
+            && two_write == 1 && got_two == CNID_INVALID
+            && two_errno == CNID_ERR_NOTFOUND && both_kept) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "cnid_lookup, its rows changed before its delete: "
+                        "the moved file's write %s, its lookup %u errno %#x, "
+                        "its row %s, the two rows' write %s, their lookup %u "
+                        "errno %#x, the rows %s\n",
+                moved_write < 0 ? "never ran" : moved_write ? "ran" : "failed",
+                ntohl(got_moved), moved_errno, moved_kept ? "kept" : "gone",
+                two_write < 0 ? "never ran" : two_write ? "ran" : "failed",
+                ntohl(got_two), two_errno,
+                both_kept ? "kept" : "not both kept");
+        ret = 1;
+    }
+
+out:
+    fault_inject_reset();
+    free(sql);
+    sql = NULL;
+    free(uuid);
+
+    if (rid != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, rid);
+    }
+
+    if (aid != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, aid);
+    }
+
+    if (bid != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, bid);
+    }
+
+    unlink(mpath);
+    unlink(npath);
+    unlink(opath);
+    return ret;
+}
+
+/*!
+ * @brief Conditional row writes keep a row renamed by case alone
+ *
+ * @param[in] vol  the harness's open volume
+ *
+ * @returns 0 when both calls with the old name answer 0 and keep the renamed
+ *          row, and the delete by the resolved name answers 1, 1 otherwise,
+ *          or -1 when the fixture failed
+ */
+int utest_cnid_row_case_renamed(struct vol *vol)
+{
+    static char name[] = "cnid_row_Case";
+    static char lower[] = "cnid_row_case";
+    static char held[] = "cnid_row_held";
+    static char accented[] = "cnid_row_caf\xc3\xa9";
+    char path[MAXPATHLEN + 1];
+    char hpath[MAXPATHLEN + 1];
+    char apath[MAXPATHLEN + 1];
+    char buf[CNID_MAX_PATH_LEN];
+    struct stat st;
+    struct stat hst;
+    struct stat ast;
+    const size_t len = strlen(name);
+    const char *now = NULL;
+    cnid_t id = CNID_INVALID;
+    cnid_t aid = CNID_INVALID;
+    cnid_t probe;
+    uint64_t dev;
+    uint64_t ino;
+    bool kept = false;
+    int gone = -1;
+    int changed = -1;
+    int accented_gone = -1;
+    int ret = -1;
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(hpath, sizeof(hpath), "%s/%s", vol->v_path, held);
+    snprintf(apath, sizeof(apath), "%s/%s", vol->v_path, accented);
+
+    /* the row at its new name, another file's stat for the update, and a
+     * row whose name is not ASCII */
+    if (create_disk_file(path) != 0 || stat(path, &st) != 0
+            || (id = cnid_add(vol->v_cdb, &st, DIRDID_ROOT, name, len,
+                              CNID_INVALID)) == CNID_INVALID
+            || cnid_update(vol->v_cdb, id, &st, DIRDID_ROOT, lower,
+                           strlen(lower)) != 0
+            || create_disk_file(hpath) != 0 || stat(hpath, &hst) != 0
+            || create_disk_file(apath) != 0 || stat(apath, &ast) != 0
+            || (aid = cnid_add(vol->v_cdb, &ast, DIRDID_ROOT, accented,
+                               strlen(accented), CNID_INVALID))
+            == CNID_INVALID) {
+        goto out;
+    }
+
+    dev = cnid_row_dev(vol->v_cdb, &st);
+    ino = (uint64_t)st.st_ino;
+    gone = cnid_delete_row(vol->v_cdb, id, DIRDID_ROOT, name, len, dev, ino);
+    changed = cnid_update_row(vol->v_cdb, id, DIRDID_ROOT, name, len, dev, ino,
+                              &hst, NULL, NULL);
+    probe = id;
+    now = cnid_resolve(vol->v_cdb, &probe, buf, sizeof(buf));
+    kept = now != NULL && strcmp(now, lower) == 0;
+    probe = aid;
+
+    if ((now = cnid_resolve(vol->v_cdb, &probe, buf, sizeof(buf))) != NULL) {
+        accented_gone = cnid_delete_row(vol->v_cdb, aid, DIRDID_ROOT, now,
+                                        strlen(now),
+                                        cnid_row_dev(vol->v_cdb, &ast),
+                                        (uint64_t)ast.st_ino);
+    }
+
+    if (gone == 0 && changed == 0 && kept && accented_gone == 1) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "cnid_delete_row and cnid_update_row by the old case: "
+                        "%d and %d, the row %s, the non-ASCII row's delete "
+                        "%d\n", gone, changed, kept ? "kept" : "changed",
+                accented_gone);
+        ret = 1;
+    }
+
+out:
+
+    if (id != CNID_INVALID && gone != 1) {
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    if (aid != CNID_INVALID && accented_gone != 1) {
+        cnid_delete(vol->v_cdb, aid);
+    }
+
+    unlink(path);
+    unlink(hpath);
+    unlink(apath);
+    return ret;
 }
 
 /*!

@@ -85,6 +85,12 @@ struct sl_name_pattern;
 struct sl_name_query;
 
 /*!
+ * Replaces the object at a row's name once cnid_update_row() matched the row,
+ * inside its hold if any: 0, or -1 with errno set
+ */
+typedef int (*cnid_replace_fn)(void *arg);
+
+/*!
  * This is instance of CNID database object.
  */
 typedef struct _cnid_db {
@@ -97,14 +103,21 @@ typedef struct _cnid_db {
     cnid_t (*cnid_add)(struct _cnid_db *cdb, const struct stat *st, cnid_t did,
                        const char *name, size_t, cnid_t hint);
     int (*cnid_delete)(struct _cnid_db *cdb, cnid_t id);
+    int (*cnid_delete_row)(struct _cnid_db *cdb, cnid_t id, cnid_t did,
+                           const char *name, size_t len, uint64_t dev,
+                           uint64_t ino);
     cnid_t (*cnid_get)(struct _cnid_db *cdb, cnid_t did, const char *name,
                        size_t);
     cnid_t (*cnid_lookup)(struct _cnid_db *cdb, const struct stat *st,
                           cnid_t did, const char *name, size_t);
     char *(*cnid_resolve)(struct _cnid_db *cdb, cnid_t *id, void *buffer,
-                          size_t len);
+                          size_t len, uint64_t *dev, uint64_t *ino);
     int (*cnid_update)(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
                        cnid_t did, const char *name, size_t len);
+    int (*cnid_update_row)(struct _cnid_db *cdb, cnid_t id, cnid_t did,
+                           const char *name, size_t len, uint64_t dev,
+                           uint64_t ino, const struct stat *st,
+                           cnid_replace_fn replace, void *arg);
     void (*cnid_close)(struct _cnid_db *cdb);
     int (*cnid_getstamp)(struct _cnid_db *cdb, void *buffer, const size_t len);
     int (*cnid_find)(struct _cnid_db *cdb, const struct sl_name_query *query,
@@ -154,6 +167,9 @@ bool cnid_scheme_registered(const char *name);
 cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
                 const char *name, const size_t len, cnid_t hint);
 int    cnid_delete(struct _cnid_db *cdb, cnid_t id);
+int    cnid_delete_row(struct _cnid_db *cdb, cnid_t id, cnid_t did,
+                       const char *name, size_t len, uint64_t dev,
+                       uint64_t ino);
 cnid_t cnid_get(struct _cnid_db *cdb, const cnid_t did, char *name,
                 const size_t len);
 int    cnid_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len);
@@ -161,9 +177,18 @@ cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st,
                    const cnid_t did, char *name, const size_t len);
 char  *cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
                     size_t len);
+char  *cnid_resolve_row(struct _cnid_db *cdb, cnid_t *id, void *buffer,
+                        size_t len, uint64_t *dev, uint64_t *ino);
+bool   cnid_row_holds(const struct _cnid_db *cdb, uint64_t dev, uint64_t ino,
+                      const struct stat *st);
+uint64_t cnid_row_dev(const struct _cnid_db *cdb, const struct stat *st);
 int    cnid_update(struct _cnid_db *cdb, const cnid_t id,
                    const struct stat *st, const cnid_t did, char *name,
                    const size_t len);
+int    cnid_update_row(struct _cnid_db *cdb, cnid_t id, cnid_t did,
+                       const char *name, size_t len, uint64_t dev,
+                       uint64_t ino, const struct stat *st,
+                       cnid_replace_fn replace, void *arg);
 int    cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen,
                  void *buffer, size_t buflen, bool *more_available);
 int    cnid_find_scoped(struct _cnid_db *cdb,

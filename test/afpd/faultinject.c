@@ -1217,6 +1217,34 @@ int renameat(int olddirfd, const char *oldpath, int newdirfd,
     return real_renameat(olddirfd, oldpath, newdirfd, newpath);
 }
 
+typedef int (*rename_fn)(const char *, const char *);
+static rename_fn real_rename;
+
+/*!
+ * @brief rename() interposer that runs fi.rename_hook.fn after its rename
+ */
+int rename(const char *oldpath, const char *newpath)
+{
+    int ret;
+
+    if (!real_rename) {
+        real_rename = (rename_fn)dlsym(RTLD_NEXT, "rename");
+    }
+
+    ret = real_rename(oldpath, newpath);
+
+    if (ret == 0 && fi.rename_hook.fn != NULL && fi.rename_hook.to != NULL
+            && newpath != NULL && strcmp(newpath, fi.rename_hook.to) == 0) {
+        const int saved_errno = errno;
+        void (*fn)(void) = fi.rename_hook.fn;
+        fi.rename_hook.fn = NULL;
+        fn();
+        errno = saved_errno;
+    }
+
+    return ret;
+}
+
 typedef int (*unlink_fn)(const char *);
 static unlink_fn real_unlink;
 
@@ -1259,10 +1287,7 @@ static void stat_watched(const char *path)
 }
 
 /*!
- * @brief The stat() and lstat() interposers' shared body: every call on
- *        fi.stat_name fails with fi.stat_errno, as a stale mount's would,
- *        and counts in fi.stat_calls; a call on fi.stat_dev_name reports
- *        fi.stat_dev as the device, as a mount point's would
+ * @brief The stat()/lstat() interposers' body for fi.stat_name and fi.stat_dev
  *
  * <sys/stat.h> renames the definitions where libc versions the calls (glibc
  * stat64 under 64-bit offsets, NetBSD __stat50), so the real function is
@@ -1299,15 +1324,18 @@ static int fi_stat_call(stat_fn *real, void *self, const char *name64,
 
     if (fi.stat_name != NULL && strcmp(path, fi.stat_name) == 0) {
         fi.stat_calls++;
-        errno = fi.stat_errno;
-        return -1;
+
+        if (fi.stat_calls > fi.stat_pass) {
+            errno = fi.stat_errno;
+            return -1;
+        }
     }
 
     int ret = (*real)(path, buf);
 
-    if (ret == 0 && fi.stat_dev_name != NULL
-            && strcmp(path, fi.stat_dev_name) == 0) {
-        buf->st_dev = fi.stat_dev;
+    if (ret == 0 && fi.stat_dev.path != NULL
+            && strcmp(path, fi.stat_dev.path) == 0) {
+        buf->st_dev = fi.stat_dev.dev;
     }
 
     return ret;
@@ -1492,5 +1520,253 @@ int fsetxattr(int fd, const char *name, const void *value, size_t size,
     return real_fsetxattr(fd, name, value, size, flags);
 }
 #endif /* __linux__ */
+
+/* sqlite3 and MYSQL stay incomplete: the shim builds without either
+ * library's headers, and an interposer that a binary never calls is inert */
+struct sqlite3;
+struct st_mysql;
+
+typedef int (*sqlite3_exec_fn)(struct sqlite3 *, const char *,
+                               int (*)(void *, int, char **, char **), void *,
+                               char **);
+typedef int (*mysql_query_fn)(struct st_mysql *, const char *);
+static sqlite3_exec_fn real_sqlite3_exec;
+static mysql_query_fn real_mysql_query;
+
+/*! @brief Run a statement on a sqlite connection through the real call */
+static int fi_sqlite_exec(void *con, const char *sql)
+{
+    return real_sqlite3_exec(con, sql, NULL, NULL, NULL);
+}
+
+/*! @brief Run a statement on a MySQL connection through the real call */
+static int fi_mysql_exec(void *con, const char *sql)
+{
+    return real_mysql_query(con, sql);
+}
+
+/*!
+ * @brief Run fi.sql.hook once ahead of a statement starting with fi.sql.prefix
+ *
+ * @returns 1 when the hook ran, else 0
+ */
+static int fi_sql_statement(void *con, const char *sql,
+                            int (*exec)(void *, const char *))
+{
+    void (*fn)(void *) = fi.sql.hook;
+
+    if (fn != NULL && sql != NULL && fi.sql.prefix != NULL
+            && strncmp(sql, fi.sql.prefix, strlen(fi.sql.prefix)) == 0) {
+        fi.sql.hook = NULL;
+        fi.sql.exec = exec;
+        fn(con);
+        return 1;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief sqlite3_exec() interposer that runs fi_sql_statement() first
+ */
+int sqlite3_exec(struct sqlite3 *con, const char *sql,
+                 int (*callback)(void *, int, char **, char **), void *arg,
+                 char **errmsg)
+{
+    if (!real_sqlite3_exec) {
+        real_sqlite3_exec = (sqlite3_exec_fn)dlsym(RTLD_NEXT, "sqlite3_exec");
+    }
+
+    fi_sql_statement(con, sql, fi_sqlite_exec);
+    return real_sqlite3_exec(con, sql, callback, arg, errmsg);
+}
+
+/*!
+ * @brief mysql_query() interposer that runs fi_sql_statement() first
+ */
+int mysql_query(struct st_mysql *con, const char *sql)
+{
+    if (!real_mysql_query) {
+        real_mysql_query = (mysql_query_fn)dlsym(RTLD_NEXT, "mysql_query");
+    }
+
+    if (fi_sql_statement(con, sql, fi_mysql_exec) && fi.sql.fail) {
+        fi.sql.fail = 0;
+        return 1;
+    }
+
+    return real_mysql_query(con, sql);
+}
+
+struct sqlite3_stmt;
+struct st_mysql_stmt;
+
+typedef int (*sqlite3_step_fn)(struct sqlite3_stmt *);
+typedef const char *(*sqlite3_sql_fn)(struct sqlite3_stmt *);
+typedef struct sqlite3 *(*sqlite3_db_handle_fn)(struct sqlite3_stmt *);
+static sqlite3_step_fn real_sqlite3_step;
+static sqlite3_sql_fn real_sqlite3_sql;
+static sqlite3_db_handle_fn real_sqlite3_db_handle;
+
+/*!
+ * @brief sqlite3_step() interposer that runs fi_sql_statement() first
+ */
+int sqlite3_step(struct sqlite3_stmt *stmt)
+{
+    if (!real_sqlite3_step) {
+        real_sqlite3_step = (sqlite3_step_fn)dlsym(RTLD_NEXT, "sqlite3_step");
+        real_sqlite3_sql = (sqlite3_sql_fn)dlsym(RTLD_NEXT, "sqlite3_sql");
+        real_sqlite3_db_handle =
+            (sqlite3_db_handle_fn)dlsym(RTLD_NEXT, "sqlite3_db_handle");
+    }
+
+    if (!real_sqlite3_exec) {
+        real_sqlite3_exec = (sqlite3_exec_fn)dlsym(RTLD_NEXT, "sqlite3_exec");
+    }
+
+    if (fi.sql.hook != NULL && real_sqlite3_sql != NULL
+            && real_sqlite3_db_handle != NULL) {
+        fi_sql_statement(real_sqlite3_db_handle(stmt), real_sqlite3_sql(stmt),
+                         fi_sqlite_exec);
+    }
+
+    return real_sqlite3_step(stmt);
+}
+
+typedef struct st_mysql_stmt *(*mysql_stmt_init_fn)(struct st_mysql *);
+typedef int (*mysql_stmt_prepare_fn)(struct st_mysql_stmt *, const char *,
+                                     unsigned long);
+typedef int (*mysql_stmt_execute_fn)(struct st_mysql_stmt *);
+static mysql_stmt_init_fn real_mysql_stmt_init;
+static mysql_stmt_prepare_fn real_mysql_stmt_prepare;
+static mysql_stmt_execute_fn real_mysql_stmt_execute;
+
+/*! A MySQL statement's connection and the start of its text, which the
+ *  client library hands back through no call */
+struct fi_mysql_stmt {
+    struct st_mysql_stmt *stmt;
+    struct st_mysql *con;
+    char sql[128];
+};
+
+#define FI_MYSQL_STMTS 128
+static struct fi_mysql_stmt fi_mysql_stmts[FI_MYSQL_STMTS];
+
+/*!
+ * @brief The shim's record of a MySQL statement
+ *
+ * @param[in] stmt  the statement
+ * @param[in] make  hand back a free record when the statement has none
+ * @returns the record, or NULL
+ */
+static struct fi_mysql_stmt *fi_mysql_stmt_record(
+    const struct st_mysql_stmt *stmt, int make)
+{
+    struct fi_mysql_stmt *spare = NULL;
+
+    for (size_t i = 0; i < FI_MYSQL_STMTS; i++) {
+        if (fi_mysql_stmts[i].stmt == stmt) {
+            return &fi_mysql_stmts[i];
+        }
+
+        if (spare == NULL && fi_mysql_stmts[i].stmt == NULL) {
+            spare = &fi_mysql_stmts[i];
+        }
+    }
+
+    return make ? spare : NULL;
+}
+
+/*!
+ * @brief mysql_stmt_init() interposer that records the statement's connection
+ */
+struct st_mysql_stmt *mysql_stmt_init(struct st_mysql *con)
+{
+    struct st_mysql_stmt *stmt;
+    struct fi_mysql_stmt *rec;
+
+    if (!real_mysql_stmt_init) {
+        real_mysql_stmt_init =
+            (mysql_stmt_init_fn)dlsym(RTLD_NEXT, "mysql_stmt_init");
+    }
+
+    stmt = real_mysql_stmt_init(con);
+
+    if (stmt != NULL && (rec = fi_mysql_stmt_record(stmt, 1)) != NULL) {
+        rec->stmt = stmt;
+        rec->con = con;
+        rec->sql[0] = '\0';
+    }
+
+    return stmt;
+}
+
+/*!
+ * @brief mysql_stmt_prepare() interposer that records the statement's start
+ */
+int mysql_stmt_prepare(struct st_mysql_stmt *stmt, const char *sql,
+                       unsigned long length)
+{
+    struct fi_mysql_stmt *rec;
+
+    if (!real_mysql_stmt_prepare) {
+        real_mysql_stmt_prepare =
+            (mysql_stmt_prepare_fn)dlsym(RTLD_NEXT, "mysql_stmt_prepare");
+    }
+
+    if (sql != NULL && (rec = fi_mysql_stmt_record(stmt, 0)) != NULL) {
+        size_t n = length < sizeof(rec->sql) ? length : sizeof(rec->sql) - 1;
+        memcpy(rec->sql, sql, n);
+        rec->sql[n] = '\0';
+    }
+
+    return real_mysql_stmt_prepare(stmt, sql, length);
+}
+
+/*!
+ * @brief mysql_stmt_execute() interposer that runs fi_sql_statement() first
+ */
+int mysql_stmt_execute(struct st_mysql_stmt *stmt)
+{
+    const struct fi_mysql_stmt *rec;
+
+    if (!real_mysql_stmt_execute) {
+        real_mysql_stmt_execute =
+            (mysql_stmt_execute_fn)dlsym(RTLD_NEXT, "mysql_stmt_execute");
+    }
+
+    if (!real_mysql_query) {
+        real_mysql_query = (mysql_query_fn)dlsym(RTLD_NEXT, "mysql_query");
+    }
+
+    if (fi.sql.hook != NULL && (rec = fi_mysql_stmt_record(stmt, 0)) != NULL) {
+        fi_sql_statement(rec->con, rec->sql, fi_mysql_exec);
+    }
+
+    return real_mysql_stmt_execute(stmt);
+}
+
+/* the client library's my_bool or bool result, a byte either way */
+typedef char (*mysql_stmt_close_fn)(struct st_mysql_stmt *);
+static mysql_stmt_close_fn real_mysql_stmt_close;
+
+/*!
+ * @brief mysql_stmt_close() interposer, which frees the statement's record
+ */
+char mysql_stmt_close(struct st_mysql_stmt *stmt)
+{
+    struct fi_mysql_stmt *rec;
+
+    if (!real_mysql_stmt_close) {
+        real_mysql_stmt_close =
+            (mysql_stmt_close_fn)dlsym(RTLD_NEXT, "mysql_stmt_close");
+    }
+
+    if (stmt != NULL && (rec = fi_mysql_stmt_record(stmt, 0)) != NULL) {
+        rec->stmt = NULL;
+    }
+
+    return real_mysql_stmt_close(stmt);
+}
 
 #endif /* FAULTINJECT_PRELOAD */

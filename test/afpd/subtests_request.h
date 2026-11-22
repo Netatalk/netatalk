@@ -39,6 +39,47 @@ extern int utest_hard_create_refreshes_entry(AFPObj *obj, struct vol *vol);
 extern int utest_symlink_refusal_keeps_locks(AFPObj *obj, struct vol *vol);
 extern int utest_setfileparms_held_symlink_kept(AFPObj *obj, struct vol *vol);
 extern int utest_held_conversion_keeps_metadata(AFPObj *obj, struct vol *vol);
+extern int utest_symlink_conversion_keeps_cnid(AFPObj *obj, struct vol *vol);
+extern int utest_symlink_conversion_update_fails(AFPObj *obj,
+                                                 struct vol *vol);
+extern int utest_symlink_conversion_late_failure(AFPObj *obj,
+                                                 struct vol *vol);
+extern int utest_symlink_conversion_needs_cnid(AFPObj *obj, struct vol *vol);
+extern int utest_symlink_conversion_replaced_file(AFPObj *obj,
+                                                  struct vol *vol);
+extern int utest_symlink_conversion_link_identity(AFPObj *obj,
+                                                  struct vol *vol);
+extern int utest_symlink_conversion_row_moved(AFPObj *obj, struct vol *vol);
+extern int utest_symlink_conversion_row_dropped(AFPObj *obj, struct vol *vol);
+extern int utest_symlink_conversion_hold_refused(AFPObj *obj,
+                                                 struct vol *vol);
+extern int utest_symlink_conversion_replaced_meanwhile(AFPObj *obj,
+                                                       struct vol *vol);
+extern int utest_symlink_conversion_held_file_meanwhile(AFPObj *obj,
+                                                        struct vol *vol);
+extern int utest_symlink_conversion_replaced_in_checks(AFPObj *obj,
+                                                       struct vol *vol);
+extern int utest_symlink_conversion_stat_fails_in_checks(AFPObj *obj,
+                                                         struct vol *vol);
+extern int utest_symlink_conversion_denied_meanwhile(AFPObj *obj,
+                                                     struct vol *vol);
+extern int utest_symlink_conversion_stage_unlisted(AFPObj *obj,
+                                                   struct vol *vol);
+extern int utest_symlink_conversion_changed_meanwhile(AFPObj *obj,
+                                                      struct vol *vol);
+extern int utest_symlink_conversion_rolled_back(AFPObj *obj,
+                                                struct vol *vol);
+extern int utest_symlink_conversion_row_case(AFPObj *obj, struct vol *vol);
+extern int utest_symlink_conversion_window_lookup(AFPObj *obj,
+                                                  struct vol *vol);
+extern int utest_symlink_conversion_window_listing(AFPObj *obj,
+                                                   struct vol *vol);
+extern int utest_symlink_conversion_answer_lost(AFPObj *obj,
+                                                struct vol *vol);
+extern int utest_symlink_conversion_validated_entry(AFPObj *obj,
+                                                    struct vol *vol);
+extern int utest_symlink_conversion_link_unstatable(AFPObj *obj,
+                                                    struct vol *vol);
 extern int utest_symlink_conversion_refused_under_deny(AFPObj *obj,
                                                        struct vol *vol);
 extern int utest_setfileparms_cnid_failure_closes(AFPObj *obj,
