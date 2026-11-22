@@ -5,7 +5,7 @@ description: "MySQL CNID backend."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/cnid/cnid_mysql.c"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 ---
 
 Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorde
 
 ### cnid_mysql_module
 
-Initialized at line 2820 as `struct _cnid_module`. Assigns:
+Initialized at line 3448 as `struct _cnid_module`. Assigns:
 
 * `cnid_open`: [cnid_mysql_open](cnid_mysql.c.md#cnid_mysql_open)
 
@@ -39,7 +39,7 @@ Initialized at line 2820 as `struct _cnid_module`. Assigns:
 static bool cnid_mysql_hint_usable(cnid_t hint)
 ```
 
-Defined at lines 132 to 136.
+Defined at lines 140 to 144.
 
 Tell whether a CNID hint from AppleDouble or EA metadata is safe to bind.
 
@@ -58,7 +58,7 @@ Called by: [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add)
 static int init_prepared_stmt_lookup(CNID_mysql_private *db)
 ```
 
-Defined at lines 147 to 194.
+Defined at lines 155 to 202.
 
 Prepare the lookup statement of a MySQL CNID table.
 
@@ -81,7 +81,7 @@ Uses file-scope variables: `lookup_param`, `lookup_result`, `lookup_result_dev`,
 static void cnid_mysql_folded_param(MYSQL_BIND *param)
 ```
 
-Defined at lines 203 to 209.
+Defined at lines 211 to 217.
 
 Point a statement parameter at the folded name.
 
@@ -100,7 +100,7 @@ Uses file-scope variables: `stmt_param_folded`, `stmt_param_folded_len`
 static void cnid_mysql_fold_param(const char *name, size_t len, charset_t charset)
 ```
 
-Defined at lines 221 to 234.
+Defined at lines 229 to 242.
 
 Fold a name into the statement parameter of the folded column.
 
@@ -123,7 +123,7 @@ Uses file-scope variables: `stmt_param_folded`, `stmt_param_folded_len`
 static int init_prepared_stmt_add(CNID_mysql_private *db)
 ```
 
-Defined at lines 246 to 296.
+Defined at lines 254 to 304.
 
 Prepare the insert statement for a new entry, numbered by AUTO_INCREMENT.
 
@@ -148,7 +148,7 @@ Mentioned in the documentation of: [init_prepared_stmt_put](cnid_mysql.c.md#init
 static int init_prepared_stmt_put(CNID_mysql_private *db)
 ```
 
-Defined at lines 307 to 350.
+Defined at lines 315 to 358.
 
 Prepare the insert statement for an entry with an explicit CNID.
 
@@ -171,7 +171,7 @@ Uses file-scope variables: `put_param`, `stmt_param_dev`, `stmt_param_did`, `stm
 static int init_prepared_stmt_get(CNID_mysql_private *db)
 ```
 
-Defined at lines 358 to 384.
+Defined at lines 366 to 392.
 
 Prepare the statement that finds the CNID of a name in a directory.
 
@@ -192,7 +192,7 @@ Uses file-scope variables: `get_param`, `get_result`, `get_result_id`, `stmt_par
 static int init_prepared_stmt_delete(CNID_mysql_private *db)
 ```
 
-Defined at lines 392 to 411.
+Defined at lines 400 to 419.
 
 Prepare the statement that removes an entry by CNID.
 
@@ -207,15 +207,15 @@ Called by: [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
 
 Uses file-scope variables: `delete_param`, `stmt_param_id`
 
-### init_prepared_stmt_resolve
+### init_prepared_stmt_delete_row
 
 ```c
-static int init_prepared_stmt_resolve(CNID_mysql_private *db)
+static int init_prepared_stmt_delete_row(CNID_mysql_private *db)
 ```
 
-Defined at lines 419 to 445.
+Defined at lines 427 to 462.
 
-Prepare the statement that finds the parent and the name of a CNID.
+Prepare the delete of a row by CNID, parent, name, device and inode.
 
 Parameters:
 * `db`: MySQL backend state with the connection and the table name
@@ -226,7 +226,91 @@ Calls: [asprintf](../compat/misc.c.md#asprintf)
 
 Called by: [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
 
-Uses file-scope variables: `resolve_param`, `resolve_result`, `resolve_result_did`, `resolve_result_name`, `resolve_result_name_len`, `stmt_param_id`
+Uses file-scope variables: `delete_row_param`, `stmt_param_dev`, `stmt_param_did`, `stmt_param_id`, `stmt_param_ino`, `stmt_param_name`, `stmt_param_name_len`
+
+### init_prepared_stmt_update_row
+
+```c
+static int init_prepared_stmt_update_row(CNID_mysql_private *db)
+```
+
+Defined at lines 470 to 511.
+
+Prepare the conditional update of a row's device and inode.
+
+Parameters:
+* `db`: MySQL backend state with the connection and the table name
+
+Returns: 0, or -1 when preparing or binding fails
+
+Calls: [asprintf](../compat/misc.c.md#asprintf)
+
+Called by: [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
+
+Uses file-scope variables: `stmt_param_dev`, `stmt_param_did`, `stmt_param_id`, `stmt_param_ino`, `stmt_param_name`, `stmt_param_name_len`, `stmt_param_newdev`, `stmt_param_newino`, `update_row_param`
+
+### init_prepared_stmt_del_devino_other
+
+```c
+static int init_prepared_stmt_del_devino_other(CNID_mysql_private *db)
+```
+
+Defined at lines 519 to 547.
+
+Prepare the removal of the other rows that record a device and inode.
+
+Parameters:
+* `db`: MySQL backend state with the connection and the table name
+
+Returns: 0, or -1 when preparing or binding fails
+
+Calls: [asprintf](../compat/misc.c.md#asprintf)
+
+Called by: [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
+
+Uses file-scope variables: `del_devino_other_param`, `stmt_param_id`, `stmt_param_newdev`, `stmt_param_newino`
+
+### init_prepared_stmt_check_row
+
+```c
+static int init_prepared_stmt_check_row(CNID_mysql_private *db)
+```
+
+Defined at lines 555 to 590.
+
+Prepare the update's check of its row, which locks it on InnoDB.
+
+Parameters:
+* `db`: MySQL backend state with the connection and the table name
+
+Returns: 0, or -1 when preparing or binding fails
+
+Calls: [asprintf](../compat/misc.c.md#asprintf)
+
+Called by: [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
+
+Uses file-scope variables: `check_row_param`, `stmt_param_dev`, `stmt_param_did`, `stmt_param_id`, `stmt_param_ino`, `stmt_param_name`, `stmt_param_name_len`
+
+### init_prepared_stmt_resolve
+
+```c
+static int init_prepared_stmt_resolve(CNID_mysql_private *db)
+```
+
+Defined at lines 598 to 630.
+
+Prepare the read of a CNID's parent, name, device and inode.
+
+Parameters:
+* `db`: MySQL backend state with the connection and the table name
+
+Returns: 0, or -1 when preparing or binding fails
+
+Calls: [asprintf](../compat/misc.c.md#asprintf)
+
+Called by: [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
+
+Uses file-scope variables: `resolve_param`, `resolve_result`, `resolve_result_dev`, `resolve_result_did`, `resolve_result_ino`, `resolve_result_name`, `resolve_result_name_len`, `stmt_param_id`
 
 ### init_prepared_stmt_purge
 
@@ -234,7 +318,7 @@ Uses file-scope variables: `resolve_param`, `resolve_result`, `resolve_result_di
 static int init_prepared_stmt_purge(CNID_mysql_private *db)
 ```
 
-Defined at lines 456 to 490.
+Defined at lines 641 to 675.
 
 Prepare the statement that removes every entry clashing with an update.
 
@@ -257,7 +341,7 @@ Uses file-scope variables: `purge_param`, `stmt_param_dev`, `stmt_param_did`, `s
 static int init_prepared_stmt_dirlist(CNID_mysql_private *db)
 ```
 
-Defined at lines 498 to 535.
+Defined at lines 683 to 720.
 
 Prepare the statement that lists the rows of one folder.
 
@@ -272,15 +356,33 @@ Called by: [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
 
 Uses file-scope variables: `dirlist_param`, `dirlist_param_max`, `dirlist_result`, `dirlist_result_dev`, `dirlist_result_id`, `dirlist_result_ino`, `dirlist_result_name`, `dirlist_result_name_len`, `stmt_param_did`
 
+### cnid_mysql_set_name_is
+
+```c
+static void cnid_mysql_set_name_is(CNID_mysql_private *db, const char *charset)
+```
+
+Defined at lines 736 to 754.
+
+Set the SQL that compares a row's name with a name read back.
+
+Name converts to the results charset, as a read converts it, and compares as bytes: an unchanged name matches whatever the column's charset, and a name that differs in case alone does not. A charset name the SQL cannot carry falls back to the table's collation.
+
+Parameters:
+* `db`: MySQL backend state
+* `charset`: the connection's character_set_results, or NULL when a read hands names back as stored
+
+Called by: [cnid_mysql_open](cnid_mysql.c.md#cnid_mysql_open)
+
 ### init_prepared_stmt
 
 ```c
 static int init_prepared_stmt(CNID_mysql_private *db)
 ```
 
-Defined at lines 550 to 569.
+Defined at lines 767 to 791.
 
-Prepare all 8 statements of a MySQL CNID table.
+Prepare the statements of a MySQL CNID table.
 
 A failure closes every statement and sets CNID_ERR_DB, which ends the session. The lookup or purge before an add's or an update's insert then finds its statement NULL in [cnid_mysql_stmt_execute()](cnid_mysql.c.md#cnid_mysql_stmt_execute), which prepares them all again.
 
@@ -289,9 +391,9 @@ Parameters:
 
 Returns: 0, or -1 with errno CNID_ERR_DB when one fails
 
-Calls: [close_prepared_stmt](cnid_mysql.c.md#close_prepared_stmt), [init_prepared_stmt_add](cnid_mysql.c.md#init_prepared_stmt_add), [init_prepared_stmt_delete](cnid_mysql.c.md#init_prepared_stmt_delete), [init_prepared_stmt_dirlist](cnid_mysql.c.md#init_prepared_stmt_dirlist), [init_prepared_stmt_get](cnid_mysql.c.md#init_prepared_stmt_get), [init_prepared_stmt_lookup](cnid_mysql.c.md#init_prepared_stmt_lookup), [init_prepared_stmt_purge](cnid_mysql.c.md#init_prepared_stmt_purge), [init_prepared_stmt_put](cnid_mysql.c.md#init_prepared_stmt_put), [init_prepared_stmt_resolve](cnid_mysql.c.md#init_prepared_stmt_resolve)
+Calls: [close_prepared_stmt](cnid_mysql.c.md#close_prepared_stmt), [init_prepared_stmt_add](cnid_mysql.c.md#init_prepared_stmt_add), [init_prepared_stmt_check_row](cnid_mysql.c.md#init_prepared_stmt_check_row), [init_prepared_stmt_del_devino_other](cnid_mysql.c.md#init_prepared_stmt_del_devino_other), [init_prepared_stmt_delete](cnid_mysql.c.md#init_prepared_stmt_delete), [init_prepared_stmt_delete_row](cnid_mysql.c.md#init_prepared_stmt_delete_row), [init_prepared_stmt_dirlist](cnid_mysql.c.md#init_prepared_stmt_dirlist), [init_prepared_stmt_get](cnid_mysql.c.md#init_prepared_stmt_get), [init_prepared_stmt_lookup](cnid_mysql.c.md#init_prepared_stmt_lookup), [init_prepared_stmt_purge](cnid_mysql.c.md#init_prepared_stmt_purge), [init_prepared_stmt_put](cnid_mysql.c.md#init_prepared_stmt_put), [init_prepared_stmt_resolve](cnid_mysql.c.md#init_prepared_stmt_resolve), [init_prepared_stmt_update_row](cnid_mysql.c.md#init_prepared_stmt_update_row)
 
-Called by: [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add), [cnid_mysql_open](cnid_mysql.c.md#cnid_mysql_open), [cnid_mysql_stmt_execute](cnid_mysql.c.md#cnid_mysql_stmt_execute), [cnid_mysql_update](cnid_mysql.c.md#cnid_mysql_update)
+Called by: [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add), [cnid_mysql_open](cnid_mysql.c.md#cnid_mysql_open), [cnid_mysql_stmt_execute](cnid_mysql.c.md#cnid_mysql_stmt_execute), [cnid_mysql_update](cnid_mysql.c.md#cnid_mysql_update), [cnid_mysql_update_row](cnid_mysql.c.md#cnid_mysql_update_row)
 
 ### close_prepared_stmt
 
@@ -299,7 +401,7 @@ Called by: [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add), [cnid_mysql_open](c
 static void close_prepared_stmt(CNID_mysql_private *db)
 ```
 
-Defined at lines 580 to 594.
+Defined at lines 802 to 818.
 
 Close and clear the backend's prepared MySQL statements.
 
@@ -308,7 +410,7 @@ NULL-safe, and NULLs each statement after closing it. A failed recovery leaves a
 Parameters:
 * `db`: backend private data holding the statement pointers
 
-Called by: [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add), [cnid_mysql_close](cnid_mysql.c.md#cnid_mysql_close), [cnid_mysql_stmt_execute](cnid_mysql.c.md#cnid_mysql_stmt_execute), [cnid_mysql_update](cnid_mysql.c.md#cnid_mysql_update), [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
+Called by: [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add), [cnid_mysql_close](cnid_mysql.c.md#cnid_mysql_close), [cnid_mysql_drop_stmts](cnid_mysql.c.md#cnid_mysql_drop_stmts), [cnid_mysql_stmt_execute](cnid_mysql.c.md#cnid_mysql_stmt_execute), [cnid_mysql_update](cnid_mysql.c.md#cnid_mysql_update), [cnid_mysql_update_row](cnid_mysql.c.md#cnid_mysql_update_row), [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
 
 ### cnid_mysql_set_errno
 
@@ -316,7 +418,7 @@ Called by: [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add), [cnid_mysql_close](
 static void cnid_mysql_set_errno(unsigned int mysql_error_code)
 ```
 
-Defined at lines 607 to 624.
+Defined at lines 831 to 848.
 
 Classify a MySQL error code as a CNID_ERR_* errno.
 
@@ -325,7 +427,7 @@ Lock wait timeouts and deadlocks become CNID_ERR_BUSY, because the lock frees ag
 Parameters:
 * `mysql_error_code`: MySQL error number, or 0 for a failure without one
 
-Called by: [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add), [cnid_mysql_drain_results](cnid_mysql.c.md#cnid_mysql_drain_results), [cnid_mysql_execute](cnid_mysql.c.md#cnid_mysql_execute), [cnid_mysql_get](cnid_mysql.c.md#cnid_mysql_get), [cnid_mysql_getstamp](cnid_mysql.c.md#cnid_mysql_getstamp), [cnid_mysql_lookup](cnid_mysql.c.md#cnid_mysql_lookup), [cnid_mysql_open](cnid_mysql.c.md#cnid_mysql_open), [cnid_mysql_resolve](cnid_mysql.c.md#cnid_mysql_resolve), [cnid_mysql_stmt_execute](cnid_mysql.c.md#cnid_mysql_stmt_execute), [cnid_mysql_update](cnid_mysql.c.md#cnid_mysql_update)
+Called by: [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add), [cnid_mysql_drain_results](cnid_mysql.c.md#cnid_mysql_drain_results), [cnid_mysql_execute](cnid_mysql.c.md#cnid_mysql_execute), [cnid_mysql_get](cnid_mysql.c.md#cnid_mysql_get), [cnid_mysql_getstamp](cnid_mysql.c.md#cnid_mysql_getstamp), [cnid_mysql_lookup](cnid_mysql.c.md#cnid_mysql_lookup), [cnid_mysql_open](cnid_mysql.c.md#cnid_mysql_open), [cnid_mysql_resolve](cnid_mysql.c.md#cnid_mysql_resolve), [cnid_mysql_stmt_execute](cnid_mysql.c.md#cnid_mysql_stmt_execute), [cnid_mysql_update](cnid_mysql.c.md#cnid_mysql_update), [cnid_mysql_update_row](cnid_mysql.c.md#cnid_mysql_update_row), [cnid_mysql_update_row_failed](cnid_mysql.c.md#cnid_mysql_update_row_failed)
 
 ### cnid_mysql_drain_results
 
@@ -333,7 +435,7 @@ Called by: [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add), [cnid_mysql_drain_r
 static int cnid_mysql_drain_results(MYSQL *con)
 ```
 
-Defined at lines 636 to 656.
+Defined at lines 860 to 880.
 
 Drain the remaining results of a multi-statement batch.
 
@@ -354,7 +456,7 @@ Called by: [cnid_mysql_empty](cnid_mysql.c.md#cnid_mysql_empty)
 static int cnid_mysql_empty(const CNID_mysql_private *db, int depleted)
 ```
 
-Defined at lines 670 to 691.
+Defined at lines 894 to 915.
 
 Empty the volume's table, restart its CNIDs at 17 and write Depleted.
 
@@ -376,7 +478,7 @@ Called by: [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add), [cnid_mysql_wipe](c
 static int cnid_mysql_stmt_execute(CNID_mysql_private *db, MYSQL_STMT **stmtp)
 ```
 
-Defined at lines 706 to 755.
+Defined at lines 930 to 979.
 
 Execute a prepared statement and reprepare after CR_SERVER_LOST.
 
@@ -390,7 +492,7 @@ Returns: 0, or -1 with errno classified
 
 Calls: [close_prepared_stmt](cnid_mysql.c.md#close_prepared_stmt), [cnid_mysql_set_errno](cnid_mysql.c.md#cnid_mysql_set_errno), [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
 
-Called by: [cnid_mysql_delete](cnid_mysql.c.md#cnid_mysql_delete), [cnid_mysql_dirlist](cnid_mysql.c.md#cnid_mysql_dirlist), [cnid_mysql_get](cnid_mysql.c.md#cnid_mysql_get), [cnid_mysql_lookup](cnid_mysql.c.md#cnid_mysql_lookup), [cnid_mysql_resolve](cnid_mysql.c.md#cnid_mysql_resolve), [cnid_mysql_update](cnid_mysql.c.md#cnid_mysql_update)
+Called by: [cnid_mysql_delete](cnid_mysql.c.md#cnid_mysql_delete), [cnid_mysql_delete_row](cnid_mysql.c.md#cnid_mysql_delete_row), [cnid_mysql_dirlist](cnid_mysql.c.md#cnid_mysql_dirlist), [cnid_mysql_get](cnid_mysql.c.md#cnid_mysql_get), [cnid_mysql_lookup](cnid_mysql.c.md#cnid_mysql_lookup), [cnid_mysql_resolve](cnid_mysql.c.md#cnid_mysql_resolve), [cnid_mysql_update](cnid_mysql.c.md#cnid_mysql_update)
 
 Mentioned in the documentation of: [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
 
@@ -400,7 +502,7 @@ Mentioned in the documentation of: [init_prepared_stmt](cnid_mysql.c.md#init_pre
 static int cnid_mysql_execute(MYSQL *con, const char *sql)
 ```
 
-Defined at lines 767 to 779.
+Defined at lines 991 to 1003.
 
 Run an SQL statement or batch on a connection.
 
@@ -414,7 +516,7 @@ Returns: 0, or -1 with errno classified
 
 Calls: [cnid_mysql_set_errno](cnid_mysql.c.md#cnid_mysql_set_errno)
 
-Called by: [cnid_mysql_empty](cnid_mysql.c.md#cnid_mysql_empty), [cnid_mysql_getstamp](cnid_mysql.c.md#cnid_mysql_getstamp), [cnid_mysql_open](cnid_mysql.c.md#cnid_mysql_open)
+Called by: [cnid_mysql_empty](cnid_mysql.c.md#cnid_mysql_empty), [cnid_mysql_getstamp](cnid_mysql.c.md#cnid_mysql_getstamp), [cnid_mysql_hold](cnid_mysql.c.md#cnid_mysql_hold), [cnid_mysql_open](cnid_mysql.c.md#cnid_mysql_open), [cnid_mysql_release](cnid_mysql.c.md#cnid_mysql_release)
 
 ### cnid_mysql_escape
 
@@ -422,7 +524,7 @@ Called by: [cnid_mysql_empty](cnid_mysql.c.md#cnid_mysql_empty), [cnid_mysql_get
 static char * cnid_mysql_escape(MYSQL *con, const char *s)
 ```
 
-Defined at lines 788 to 812.
+Defined at lines 1012 to 1036.
 
 Escape a string for a quoted literal of SQL text.
 
@@ -440,7 +542,7 @@ Called by: [cnid_mysql_open](cnid_mysql.c.md#cnid_mysql_open)
 int cnid_mysql_delete(struct _cnid_db *cdb, const cnid_t id)
 ```
 
-Defined at lines 821 to 839.
+Defined at lines 1045 to 1063.
 
 Remove a CNID from the MySQL table.
 
@@ -452,9 +554,214 @@ Returns: 0, or -1 with errno classified
 
 Calls: [cnid_mysql_stmt_execute](cnid_mysql.c.md#cnid_mysql_stmt_execute)
 
-Called by: [cnid_mysql_lookup](cnid_mysql.c.md#cnid_mysql_lookup), [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new)
+Called by: [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new)
 
 Uses file-scope variables: `stmt_param_id`
+
+### cnid_mysql_delete_row
+
+```c
+static int cnid_mysql_delete_row(struct _cnid_db *cdb, const cnid_t id, const cnid_t did, const char *name, size_t len, uint64_t dev, uint64_t ino)
+```
+
+Defined at lines 1078 to 1108.
+
+Remove a CNID's row while it records a parent, name, device and inode.
+
+Parameters:
+* `cdb`: CNID database
+* `id`: CNID in network order, not 0
+* `did`: parent the row must record, in network order
+* `name`: name the row must record, as a read handed it back
+* `len`: length of name, up to MAXPATHLEN
+* `dev`: device the row must record
+* `ino`: inode the row must record
+
+Returns: 1 when the row went, 0 when no row matched, or -1 with errno classified
+
+Calls: [cnid_mysql_stmt_execute](cnid_mysql.c.md#cnid_mysql_stmt_execute)
+
+Called by: [cnid_mysql_lookup](cnid_mysql.c.md#cnid_mysql_lookup), [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new)
+
+Uses file-scope variables: `stmt_param_dev`, `stmt_param_did`, `stmt_param_id`, `stmt_param_ino`, `stmt_param_name`, `stmt_param_name_len`
+
+### cnid_mysql_hold
+
+```c
+static int cnid_mysql_hold(CNID_mysql_private *db)
+```
+
+Defined at lines 1120 to 1154.
+
+Hold a CNID table's rows for a conditional update.
+
+On InnoDB the update's check locks its row in a transaction, and on any other engine, or one the open could not read, the hold locks the table. There, a user who may not lock tables gets no hold for the handle's updates.
+
+Parameters:
+* `db`: MySQL backend state
+
+Returns: 0, or -1 with errno classified
+
+Calls: [asprintf](../compat/misc.c.md#asprintf), [cnid_mysql_execute](cnid_mysql.c.md#cnid_mysql_execute)
+
+Called by: [cnid_mysql_update_row](cnid_mysql.c.md#cnid_mysql_update_row)
+
+Mentioned in the documentation of: [cnid_mysql_release](cnid_mysql.c.md#cnid_mysql_release)
+
+### cnid_mysql_release
+
+```c
+static int cnid_mysql_release(const CNID_mysql_private *db, bool keep)
+```
+
+Defined at lines 1165 to 1186.
+
+End a hold of [cnid_mysql_hold()](cnid_mysql.c.md#cnid_mysql_hold).
+
+A table lock ends the same way either way: its engine cannot undo writes.
+
+Parameters:
+* `db`: MySQL backend state
+* `keep`: keep the hold's writes, or roll them back on InnoDB
+
+Returns: 0, or -1 with errno classified, or unchanged when keep is false
+
+Calls: [cnid_mysql_execute](cnid_mysql.c.md#cnid_mysql_execute)
+
+Called by: [cnid_mysql_update_row](cnid_mysql.c.md#cnid_mysql_update_row), [cnid_mysql_update_row_end](cnid_mysql.c.md#cnid_mysql_update_row_end)
+
+### cnid_mysql_drop_stmts
+
+```c
+static void cnid_mysql_drop_stmts(CNID_mysql_private *db)
+```
+
+Defined at lines 1199 to 1204.
+
+Drop the prepared statements after a failed conditional update.
+
+After a reconnect, MariaDB's client keeps handles the new session lacks, whose executes answer ER_UNKNOWN_STMT_HANDLER or CR_COMMANDS_OUT_OF_SYNC, and a restarted server can reuse the thread ID. An update fails rarely, and preparing again costs less than telling those failures apart. Until a later call prepares them, a listing looks its names up one by one.
+
+Parameters:
+* `db`: MySQL backend state
+
+Calls: [close_prepared_stmt](cnid_mysql.c.md#close_prepared_stmt)
+
+Called by: [cnid_mysql_update_row](cnid_mysql.c.md#cnid_mysql_update_row), [cnid_mysql_update_row_end](cnid_mysql.c.md#cnid_mysql_update_row_end)
+
+### cnid_mysql_update_row_end
+
+```c
+static void cnid_mysql_update_row_end(CNID_mysql_private *db)
+```
+
+Defined at lines 1211 to 1215.
+
+End a failed conditional update's hold, and drop the statements.
+
+Parameters:
+* `db`: MySQL backend state
+
+Calls: [cnid_mysql_drop_stmts](cnid_mysql.c.md#cnid_mysql_drop_stmts), [cnid_mysql_release](cnid_mysql.c.md#cnid_mysql_release)
+
+Called by: [cnid_mysql_update_row](cnid_mysql.c.md#cnid_mysql_update_row), [cnid_mysql_update_row_failed](cnid_mysql.c.md#cnid_mysql_update_row_failed), [cnid_mysql_update_row_lost](cnid_mysql.c.md#cnid_mysql_update_row_lost)
+
+### cnid_mysql_update_row_failed
+
+```c
+static int cnid_mysql_update_row_failed(CNID_mysql_private *db, MYSQL_STMT *stmt)
+```
+
+Defined at lines 1224 to 1236.
+
+Report a failed statement and end the hold, rolling back on InnoDB.
+
+Parameters:
+* `db`: MySQL backend state
+* `stmt`: the statement that failed
+
+Returns: -1 with errno classified
+
+Calls: [cnid_mysql_set_errno](cnid_mysql.c.md#cnid_mysql_set_errno), [cnid_mysql_update_row_end](cnid_mysql.c.md#cnid_mysql_update_row_end)
+
+Called by: [cnid_mysql_update_row](cnid_mysql.c.md#cnid_mysql_update_row)
+
+### cnid_mysql_update_row_lost
+
+```c
+static int cnid_mysql_update_row_lost(CNID_mysql_private *db)
+```
+
+Defined at lines 1244 to 1251.
+
+End a conditional update that lost its hold to a reconnect.
+
+Parameters:
+* `db`: MySQL backend state
+
+Returns: -1 with errno CNID_ERR_BUSY
+
+Calls: [cnid_mysql_update_row_end](cnid_mysql.c.md#cnid_mysql_update_row_end)
+
+Called by: [cnid_mysql_update_row](cnid_mysql.c.md#cnid_mysql_update_row)
+
+### cnid_mysql_update_row_params
+
+```c
+static void cnid_mysql_update_row_params(const struct _cnid_db *cdb, cnid_t id, cnid_t did, const char *name, size_t len, uint64_t dev, uint64_t ino, const struct stat *st)
+```
+
+Defined at lines 1267 to 1281.
+
+Set the parameters of a conditional update's statements.
+
+Every handle in a process shares the statements' parameter buffers.
+
+Parameters:
+* `cdb`: CNID database
+* `id`: CNID in network order
+* `did`: parent the row must record, in network order
+* `name`: name the row must record
+* `len`: length of name, up to MAXPATHLEN
+* `dev`: device the row must record
+* `ino`: inode the row must record
+* `st`: stat whose device and inode the row takes
+
+Calls: [cnid_row_dev](cnid.c.md#cnid_row_dev)
+
+Called by: [cnid_mysql_update_row](cnid_mysql.c.md#cnid_mysql_update_row)
+
+Uses file-scope variables: `stmt_param_dev`, `stmt_param_did`, `stmt_param_id`, `stmt_param_ino`, `stmt_param_name`, `stmt_param_name_len`, `stmt_param_newdev`, `stmt_param_newino`
+
+### cnid_mysql_update_row
+
+```c
+static int cnid_mysql_update_row(struct _cnid_db *cdb, const cnid_t id, const cnid_t did, const char *name, size_t len, uint64_t dev, uint64_t ino, const struct stat *st, cnid_replace_fn replace, void *arg)
+```
+
+Defined at lines 1307 to 1421.
+
+Give a CNID's row a stat's device and inode while it still matches.
+
+The hold spans the check, replace and the update, so another session's delete of the row waits for the update, which removes another row with the stat's device and inode as stale. A reconnect in the hold fails the call rather than replay outside it. Without a hold, the update's own condition answers 0 for a row that changed after the check, after replace ran.
+
+Parameters:
+* `cdb`: CNID database
+* `id`: CNID in network order, not 0
+* `did`: parent the row must record, in network order
+* `name`: name the row must record, as a read handed it back
+* `len`: length of name, up to MAXPATHLEN
+* `dev`: device the row must record
+* `ino`: inode the row must record
+* `st`: stat whose device and inode the row takes
+* `replace`: runs inside the hold when the row matched, or NULL
+* `arg`: replace's argument
+
+Returns: 1 when the row changed, 0 when no row matched, the row already records the stat's device and inode or, without a hold, the row changed after the check, or -1 with errno classified, or with replace's errno when replace failed
+
+Calls: [close_prepared_stmt](cnid_mysql.c.md#close_prepared_stmt), [cnid_mysql_drop_stmts](cnid_mysql.c.md#cnid_mysql_drop_stmts), [cnid_mysql_hold](cnid_mysql.c.md#cnid_mysql_hold), [cnid_mysql_release](cnid_mysql.c.md#cnid_mysql_release), [cnid_mysql_set_errno](cnid_mysql.c.md#cnid_mysql_set_errno), [cnid_mysql_update_row_end](cnid_mysql.c.md#cnid_mysql_update_row_end), [cnid_mysql_update_row_failed](cnid_mysql.c.md#cnid_mysql_update_row_failed), [cnid_mysql_update_row_lost](cnid_mysql.c.md#cnid_mysql_update_row_lost), [cnid_mysql_update_row_params](cnid_mysql.c.md#cnid_mysql_update_row_params), [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
+
+Called by: [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new)
 
 ### cnid_mysql_close
 
@@ -462,7 +769,7 @@ Uses file-scope variables: `stmt_param_id`
 void cnid_mysql_close(struct _cnid_db *cdb)
 ```
 
-Defined at lines 846 to 871.
+Defined at lines 1428 to 1453.
 
 Close the MySQL connection of a CNID database and free the database.
 
@@ -479,7 +786,7 @@ Called by: [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new), [cnid_mysql_open](c
 int cnid_mysql_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st, cnid_t did, const char *name, size_t len)
 ```
 
-Defined at lines 890 to 974.
+Defined at lines 1472 to 1551.
 
 Rewrite the entry of a CNID with a new name, parent, and stat.
 
@@ -495,7 +802,7 @@ Parameters:
 
 Returns: 0, or -1 with errno classified, CNID_ERR_CORRUPT after the last attempt
 
-Calls: [close_prepared_stmt](cnid_mysql.c.md#close_prepared_stmt), [cnid_mysql_fold_param](cnid_mysql.c.md#cnid_mysql_fold_param), [cnid_mysql_set_errno](cnid_mysql.c.md#cnid_mysql_set_errno), [cnid_mysql_stmt_execute](cnid_mysql.c.md#cnid_mysql_stmt_execute), [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
+Calls: [close_prepared_stmt](cnid_mysql.c.md#close_prepared_stmt), [cnid_mysql_fold_param](cnid_mysql.c.md#cnid_mysql_fold_param), [cnid_mysql_set_errno](cnid_mysql.c.md#cnid_mysql_set_errno), [cnid_mysql_stmt_execute](cnid_mysql.c.md#cnid_mysql_stmt_execute), [cnid_row_dev](cnid.c.md#cnid_row_dev), [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
 
 Called by: [cnid_mysql_lookup](cnid_mysql.c.md#cnid_mysql_lookup), [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new)
 
@@ -507,13 +814,13 @@ Uses file-scope variables: `stmt_param_dev`, `stmt_param_did`, `stmt_param_id`, 
 cnid_t cnid_mysql_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did, const char *name, size_t len)
 ```
 
-Defined at lines 996 to 1194.
+Defined at lines 1574 to 1786.
 
 Find the CNID of an object by name and parent or by device and inode.
 
-A single matching row is the answer. Two rows, one per index, are stale, and the call removes both.
+A single matching row is the answer. Two rows, one per index, are stale: the call removes each one that still records what it read.
 
-A row with another name or parent means a server-side move or a reused inode. When its CNID equals the hint of the current add, the row takes the new name and parent. Otherwise, and for a row with another device or inode, the call removes the row. Each removal reports CNID_ERR_NOTFOUND, so cnid_mysql_add inserts a new entry.
+A row with another name or parent means a server-side move or a reused inode. When its CNID equals the hint of the current add, the row takes the new name and parent. Otherwise, and for a row with another device or inode, the call removes the row while it still records what the call read. Each removal reports CNID_ERR_NOTFOUND: cnid_mysql_add inserts a new entry, or meets a row another session changed meanwhile and repeats the lookup.
 
 Parameters:
 * `cdb`: CNID database
@@ -524,11 +831,11 @@ Parameters:
 
 Returns: the CNID, or CNID_INVALID with errno classified, CNID_ERR_NOTFOUND for a missing entry
 
-Calls: [cnid_mysql_delete](cnid_mysql.c.md#cnid_mysql_delete), [cnid_mysql_set_errno](cnid_mysql.c.md#cnid_mysql_set_errno), [cnid_mysql_stmt_execute](cnid_mysql.c.md#cnid_mysql_stmt_execute), [cnid_mysql_update](cnid_mysql.c.md#cnid_mysql_update)
+Calls: [cnid_mysql_delete_row](cnid_mysql.c.md#cnid_mysql_delete_row), [cnid_mysql_set_errno](cnid_mysql.c.md#cnid_mysql_set_errno), [cnid_mysql_stmt_execute](cnid_mysql.c.md#cnid_mysql_stmt_execute), [cnid_mysql_update](cnid_mysql.c.md#cnid_mysql_update), [cnid_row_dev](cnid.c.md#cnid_row_dev)
 
 Called by: [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add), [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new)
 
-Uses file-scope variables: `lookup_result`, `lookup_result_dev`, `lookup_result_did`, `lookup_result_id`, `lookup_result_ino`, `lookup_result_name`, `stmt_param_dev`, `stmt_param_did`, `stmt_param_ino`, `stmt_param_name`, `stmt_param_name_len`
+Uses file-scope variables: `lookup_result`, `lookup_result_dev`, `lookup_result_did`, `lookup_result_id`, `lookup_result_ino`, `lookup_result_name`, `lookup_result_name_len`, `stmt_param_dev`, `stmt_param_did`, `stmt_param_ino`, `stmt_param_name`, `stmt_param_name_len`
 
 ### cnid_mysql_add
 
@@ -536,7 +843,7 @@ Uses file-scope variables: `lookup_result`, `lookup_result_dev`, `lookup_result_
 cnid_t cnid_mysql_add(struct _cnid_db *cdb, const struct stat *st, cnid_t did, const char *name, size_t len, cnid_t hint)
 ```
 
-Defined at lines 1216 to 1408.
+Defined at lines 1808 to 1995.
 
 Find the CNID of an object or add a new entry for it.
 
@@ -554,7 +861,7 @@ Parameters:
 
 Returns: the CNID, or CNID_INVALID with errno classified
 
-Calls: [close_prepared_stmt](cnid_mysql.c.md#close_prepared_stmt), [cnid_mysql_empty](cnid_mysql.c.md#cnid_mysql_empty), [cnid_mysql_fold_param](cnid_mysql.c.md#cnid_mysql_fold_param), [cnid_mysql_hint_usable](cnid_mysql.c.md#cnid_mysql_hint_usable), [cnid_mysql_lookup](cnid_mysql.c.md#cnid_mysql_lookup), [cnid_mysql_set_errno](cnid_mysql.c.md#cnid_mysql_set_errno), [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
+Calls: [close_prepared_stmt](cnid_mysql.c.md#close_prepared_stmt), [cnid_mysql_empty](cnid_mysql.c.md#cnid_mysql_empty), [cnid_mysql_fold_param](cnid_mysql.c.md#cnid_mysql_fold_param), [cnid_mysql_hint_usable](cnid_mysql.c.md#cnid_mysql_hint_usable), [cnid_mysql_lookup](cnid_mysql.c.md#cnid_mysql_lookup), [cnid_mysql_set_errno](cnid_mysql.c.md#cnid_mysql_set_errno), [cnid_row_dev](cnid.c.md#cnid_row_dev), [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
 
 Called by: [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new)
 
@@ -566,7 +873,7 @@ Uses file-scope variables: `stmt_param_dev`, `stmt_param_did`, `stmt_param_id`, 
 cnid_t cnid_mysql_get(struct _cnid_db *cdb, cnid_t did, const char *name, size_t len)
 ```
 
-Defined at lines 1423 to 1490.
+Defined at lines 2010 to 2077.
 
 Look up the CNID that a directory holds under a name.
 
@@ -589,12 +896,12 @@ Uses file-scope variables: `get_result`, `get_result_id`, `stmt_param_did`, `stm
 ### cnid_mysql_resolve
 
 ```c
-char * cnid_mysql_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
+char * cnid_mysql_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len, uint64_t *dev, uint64_t *ino)
 ```
 
-Defined at lines 1505 to 1569.
+Defined at lines 2094 to 2160.
 
-Resolve a CNID to its parent and name in the MySQL table.
+Resolve a CNID to its parent, name, device and inode.
 
 A contended database reports a classified errno, not a missing CNID, which afp_resolveid would turn into a permanent AFPERR_NOID.
 
@@ -603,6 +910,8 @@ Parameters:
 * `id`: CNID to resolve, receives the parent CNID or CNID_INVALID
 * `buffer`: receives the name
 * `len`: size of buffer
+* `dev`: receives the row's device
+* `ino`: receives the row's inode
 
 Returns: buffer, or NULL with errno classified
 
@@ -610,7 +919,7 @@ Calls: [cnid_mysql_set_errno](cnid_mysql.c.md#cnid_mysql_set_errno), [cnid_mysql
 
 Called by: [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new), [cnid_mysql_under](cnid_mysql.c.md#cnid_mysql_under)
 
-Uses file-scope variables: `resolve_result`, `resolve_result_did`, `resolve_result_name`, `resolve_result_name_len`, `stmt_param_id`
+Uses file-scope variables: `resolve_result`, `resolve_result_dev`, `resolve_result_did`, `resolve_result_ino`, `resolve_result_name`, `resolve_result_name_len`, `stmt_param_id`
 
 ### cnid_mysql_getstamp
 
@@ -618,7 +927,7 @@ Uses file-scope variables: `resolve_result`, `resolve_result_did`, `resolve_resu
 int cnid_mysql_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 ```
 
-Defined at lines 1581 to 1644.
+Defined at lines 2172 to 2235.
 
 Read the stamp of a volume from the volumes table.
 
@@ -641,7 +950,7 @@ Called by: [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new)
 static const char * cnid_mysql_like(const struct sl_name_pattern *seed, bool folded)
 ```
 
-Defined at lines 1660 to 1665.
+Defined at lines 2251 to 2256.
 
 The LIKE pattern a name search sends the server for a seed.
 
@@ -663,7 +972,7 @@ Called by: [cnid_mysql_find](cnid_mysql.c.md#cnid_mysql_find), [cnid_mysql_find_
 static bool cnid_mysql_find_folded(const CNID_mysql_private *db, cnid_t scope_did)
 ```
 
-Defined at lines 1678 to 1683.
+Defined at lines 2269 to 2274.
 
 Tell whether a name search compares the folded names.
 
@@ -685,7 +994,7 @@ Mentioned in the documentation of: [cnid_mysql_find](cnid_mysql.c.md#cnid_mysql_
 static bool cnid_mysql_find_narrows(struct _cnid_db *cdb, const struct sl_name_pattern *seed, cnid_t scope_did)
 ```
 
-Defined at lines 1693 to 1701.
+Defined at lines 2284 to 2292.
 
 Tell whether a seed's LIKE pattern narrows a name search.
 
@@ -706,7 +1015,7 @@ Called by: [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new)
 static bool cnid_mysql_folded_narrows(const struct sl_name_pattern *seed, void *ctx)
 ```
 
-Defined at lines 1712 to 1718.
+Defined at lines 2303 to 2309.
 
 Tell whether a seed's folded-name pattern narrows a volume search.
 
@@ -728,7 +1037,7 @@ Called by: [cnid_mysql_find](cnid_mysql.c.md#cnid_mysql_find)
 static bool cnid_mysql_find_cond(bool folded, int npat, char *cond, size_t size)
 ```
 
-Defined at lines 1732 to 1755.
+Defined at lines 2323 to 2346.
 
 Write the WHERE condition of a name search over its LIKE patterns.
 
@@ -750,7 +1059,7 @@ Called by: [cnid_mysql_find_prepare](cnid_mysql.c.md#cnid_mysql_find_prepare)
 static int cnid_mysql_find_prepare(CNID_mysql_private *db, MYSQL_STMT *stmt, int npat, bool folded, bool *scoped)
 ```
 
-Defined at lines 1773 to 1848.
+Defined at lines 2364 to 2439.
 
 Prepare a name search: a batch of the volume, or a folder's subtree.
 
@@ -775,7 +1084,7 @@ Called by: [cnid_mysql_find](cnid_mysql.c.md#cnid_mysql_find)
 static bool cnid_mysql_cut_short(MYSQL *con)
 ```
 
-Defined at lines 1862 to 1891.
+Defined at lines 2453 to 2482.
 
 Tell whether a folder search's walk stopped short of its subtree.
 
@@ -794,7 +1103,7 @@ Called by: [cnid_mysql_find](cnid_mysql.c.md#cnid_mysql_find)
 static int cnid_mysql_find_bind(MYSQL_STMT *stmt, bool scoped, unsigned long long *scope, bool binary, const char *const *likes, unsigned long *lens, int npat, unsigned long long *after, unsigned long long *batch, MYSQL_BIND *result)
 ```
 
-Defined at lines 1908 to 1949.
+Defined at lines 2499 to 2540.
 
 Bind a name search's parameters and its result columns.
 
@@ -820,7 +1129,7 @@ Called by: [cnid_mysql_find](cnid_mysql.c.md#cnid_mysql_find)
 static bool cnid_mysql_id_ok(unsigned long long id)
 ```
 
-Defined at lines 1959 to 1968.
+Defined at lines 2550 to 2559.
 
 Tell whether a row's Id is a CNID, logging one that is not.
 
@@ -839,7 +1148,7 @@ Called by: [cnid_mysql_find](cnid_mysql.c.md#cnid_mysql_find)
 static bool cnid_mysql_lowest(uint32_t *heap, int *n, int cap, uint32_t id)
 ```
 
-Defined at lines 1980 to 2017.
+Defined at lines 2571 to 2608.
 
 Keep the lowest Ids of an unordered stream of matches, in a max-heap.
 
@@ -859,7 +1168,7 @@ Called by: [cnid_mysql_find](cnid_mysql.c.md#cnid_mysql_find)
 static int cnid_mysql_id_order(const void *a, const void *b)
 ```
 
-Defined at lines 2026 to 2031.
+Defined at lines 2617 to 2622.
 
 Order two host-order Ids.
 
@@ -877,7 +1186,7 @@ Called by: [cnid_mysql_find](cnid_mysql.c.md#cnid_mysql_find)
 static int cnid_mysql_under(struct _cnid_db *cdb, struct cnid_mysql_scope *sc, cnid_t id)
 ```
 
-Defined at lines 2064 to 2101.
+Defined at lines 2655 to 2695.
 
 Tell whether an entry lies under a folder search's folder.
 
@@ -902,7 +1211,7 @@ Mentioned in the documentation of: [cnid_mysql_find](cnid_mysql.c.md#cnid_mysql_
 int cnid_mysql_find(struct _cnid_db *cdb, const struct sl_name_query *query, const struct sl_name_pattern *const *seeds, int nseeds, cnid_t scope_did, void *buffer, size_t buflen, bool *more_available)
 ```
 
-Defined at lines 2133 to 2343.
+Defined at lines 2727 to 2937.
 
 Find the CNIDs whose names match a query, for cnid_find.
 
@@ -930,7 +1239,7 @@ Called by: [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new)
 int cnid_mysql_wipe(struct _cnid_db *cdb)
 ```
 
-Defined at lines 2354 to 2378.
+Defined at lines 2948 to 2972.
 
 Empty the MySQL table of a volume and restart its CNIDs at 17.
 
@@ -951,7 +1260,7 @@ Called by: [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new)
 static int cnid_mysql_dirlist(struct _cnid_db *cdb, cnid_t did, size_t max, cnid_dirlist_fn fn, void *ctx)
 ```
 
-Defined at lines 2393 to 2424.
+Defined at lines 2987 to 3018.
 
 Hand at most max rows of one folder to fn.
 
@@ -978,7 +1287,7 @@ Uses file-scope variables: `dirlist_param_max`, `dirlist_result`, `dirlist_resul
 static struct _cnid_db * cnid_mysql_new(struct vol *vol)
 ```
 
-Defined at lines 2432 to 2455.
+Defined at lines 3026 to 3051.
 
 Allocate a CNID database object with the MySQL function table.
 
@@ -987,7 +1296,7 @@ Parameters:
 
 Returns: the object, or NULL when calloc fails
 
-Calls: [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add), [cnid_mysql_close](cnid_mysql.c.md#cnid_mysql_close), [cnid_mysql_delete](cnid_mysql.c.md#cnid_mysql_delete), [cnid_mysql_dirlist](cnid_mysql.c.md#cnid_mysql_dirlist), [cnid_mysql_find](cnid_mysql.c.md#cnid_mysql_find), [cnid_mysql_find_narrows](cnid_mysql.c.md#cnid_mysql_find_narrows), [cnid_mysql_get](cnid_mysql.c.md#cnid_mysql_get), [cnid_mysql_getstamp](cnid_mysql.c.md#cnid_mysql_getstamp), [cnid_mysql_lookup](cnid_mysql.c.md#cnid_mysql_lookup), [cnid_mysql_resolve](cnid_mysql.c.md#cnid_mysql_resolve), [cnid_mysql_update](cnid_mysql.c.md#cnid_mysql_update), [cnid_mysql_wipe](cnid_mysql.c.md#cnid_mysql_wipe)
+Calls: [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add), [cnid_mysql_close](cnid_mysql.c.md#cnid_mysql_close), [cnid_mysql_delete](cnid_mysql.c.md#cnid_mysql_delete), [cnid_mysql_delete_row](cnid_mysql.c.md#cnid_mysql_delete_row), [cnid_mysql_dirlist](cnid_mysql.c.md#cnid_mysql_dirlist), [cnid_mysql_find](cnid_mysql.c.md#cnid_mysql_find), [cnid_mysql_find_narrows](cnid_mysql.c.md#cnid_mysql_find_narrows), [cnid_mysql_get](cnid_mysql.c.md#cnid_mysql_get), [cnid_mysql_getstamp](cnid_mysql.c.md#cnid_mysql_getstamp), [cnid_mysql_lookup](cnid_mysql.c.md#cnid_mysql_lookup), [cnid_mysql_resolve](cnid_mysql.c.md#cnid_mysql_resolve), [cnid_mysql_update](cnid_mysql.c.md#cnid_mysql_update), [cnid_mysql_update_row](cnid_mysql.c.md#cnid_mysql_update_row), [cnid_mysql_wipe](cnid_mysql.c.md#cnid_mysql_wipe)
 
 Called by: [cnid_mysql_open](cnid_mysql.c.md#cnid_mysql_open)
 
@@ -997,7 +1306,7 @@ Called by: [cnid_mysql_open](cnid_mysql.c.md#cnid_mysql_open)
 struct _cnid_db * cnid_mysql_open(struct cnid_open_args *args)
 ```
 
-Defined at lines 2470 to 2818.
+Defined at lines 3066 to 3446.
 
 Open the MySQL CNID backend for a volume.
 
@@ -1008,7 +1317,7 @@ Parameters:
 
 Returns: the database, or NULL on error
 
-Calls: [asprintf](../compat/misc.c.md#asprintf), [become_root](../util/unix.c.md#become_root), [cnid_mysql_close](cnid_mysql.c.md#cnid_mysql_close), [cnid_mysql_escape](cnid_mysql.c.md#cnid_mysql_escape), [cnid_mysql_execute](cnid_mysql.c.md#cnid_mysql_execute), [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new), [cnid_mysql_set_errno](cnid_mysql.c.md#cnid_mysql_set_errno), [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt), [unbecome_root](../util/unix.c.md#unbecome_root), [uuid_strip_dashes](../util/cnid.c.md#uuid_strip_dashes)
+Calls: [asprintf](../compat/misc.c.md#asprintf), [become_root](../util/unix.c.md#become_root), [cnid_mysql_close](cnid_mysql.c.md#cnid_mysql_close), [cnid_mysql_escape](cnid_mysql.c.md#cnid_mysql_escape), [cnid_mysql_execute](cnid_mysql.c.md#cnid_mysql_execute), [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new), [cnid_mysql_set_errno](cnid_mysql.c.md#cnid_mysql_set_errno), [cnid_mysql_set_name_is](cnid_mysql.c.md#cnid_mysql_set_name_is), [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt), [unbecome_root](../util/unix.c.md#unbecome_root), [uuid_strip_dashes](../util/cnid.c.md#uuid_strip_dashes)
 
 Called through [`_cnid_module::cnid_open`](../../include/atalk/cnid.h.md#struct-_cnid_module) by: [cnid_open](cnid.c.md#cnid_open)
 
@@ -1018,7 +1327,7 @@ Dispatched via: [cnid_mysql_module](cnid_mysql.c.md#cnid_mysql_module)
 
 ### struct cnid_mysql_scope
 
-Defined at line 2039.
+Defined at line 2630.
 * `cnid_t scope`
 * `cnid_t did`
 * `bool under`
@@ -1030,4 +1339,4 @@ Defined at line 2039.
 
 # File-scope variables
 
-`add_param`, `delete_param`, `dirlist_param`, `dirlist_param_max`, `dirlist_result`, `dirlist_result_dev`, `dirlist_result_id`, `dirlist_result_ino`, `dirlist_result_name`, `dirlist_result_name_len`, `get_param`, `get_result`, `get_result_id`, `lookup_param`, `lookup_result`, `lookup_result_dev`, `lookup_result_did`, `lookup_result_id`, `lookup_result_ino`, `lookup_result_name`, `lookup_result_name_len`, `purge_param`, `put_param`, `resolve_param`, `resolve_result`, `resolve_result_did`, `resolve_result_name`, `resolve_result_name_len`, `stmt_param_dev`, `stmt_param_did`, `stmt_param_folded`, `stmt_param_folded_len`, `stmt_param_id`, `stmt_param_ino`, `stmt_param_name`, `stmt_param_name_len`
+`add_param`, `check_row_param`, `del_devino_other_param`, `delete_param`, `delete_row_param`, `dirlist_param`, `dirlist_param_max`, `dirlist_result`, `dirlist_result_dev`, `dirlist_result_id`, `dirlist_result_ino`, `dirlist_result_name`, `dirlist_result_name_len`, `get_param`, `get_result`, `get_result_id`, `lookup_param`, `lookup_result`, `lookup_result_dev`, `lookup_result_did`, `lookup_result_id`, `lookup_result_ino`, `lookup_result_name`, `lookup_result_name_len`, `purge_param`, `put_param`, `resolve_param`, `resolve_result`, `resolve_result_dev`, `resolve_result_did`, `resolve_result_ino`, `resolve_result_name`, `resolve_result_name_len`, `stmt_param_dev`, `stmt_param_did`, `stmt_param_folded`, `stmt_param_folded_len`, `stmt_param_id`, `stmt_param_ino`, `stmt_param_name`, `stmt_param_name_len`, `stmt_param_newdev`, `stmt_param_newino`, `update_row_param`

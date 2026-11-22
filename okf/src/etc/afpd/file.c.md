@@ -5,7 +5,7 @@ description: "File parameters and the AFP file commands: FPCreateFile, FPCopyFil
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/file.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -132,7 +132,7 @@ Returns: AFP_OK when replacement is allowed, AFPERR_OLOCK when DeleteInhibit is 
 
 Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_meta_open](../../include/atalk/adouble.h.md#ad_meta_open), [ad_metadataat](../../libatalk/adouble/ad_open.c.md#ad_metadataat), [of_findnameat](ofork.c.md#of_findnameat)
 
-Called by: [deletefile](file.c.md#deletefile), [of_closefork](ofork.c.md#of_closefork), [setfilparams](file.c.md#setfilparams)
+Called by: [deletefile](file.c.md#deletefile), [of_closefork](ofork.c.md#of_closefork), [replace_refused](file.c.md#replace_refused)
 
 ### replace_blocked
 
@@ -154,29 +154,120 @@ Returns: AFP_OK, AFPERR_BUSY for a deny mode or a lock, AFPERR_NOOBJ when the fi
 
 Calls: [of_delete_blocked](ofork.c.md#of_delete_blocked), [of_findname](ofork.c.md#of_findname), [of_get_locks](ofork.c.md#of_get_locks)
 
-Called by: [setfilparams](file.c.md#setfilparams)
+Called by: [replace_refused](file.c.md#replace_refused)
 
-### replace_with_symlink
+### replace_refused
 
 ```c
-static int replace_with_symlink(const char *path, const char *target)
+static int replace_refused(const struct vol *vol, struct path *path)
 ```
 
-Defined at lines 317 to 353.
+Defined at lines 312 to 316.
 
-Atomically replace a file with a symbolic link.
-
-Stage the symlink beside its destination and rename it over the file. symlink() supplies O_EXCL-like collision handling, so an existing temporary name is never overwritten. If staging or rename fails, the original file remains in place and the temporary symlink is removed when possible.
+Whether FPDelete's delete-inhibit and lock checks refuse a replace.
 
 Parameters:
-* `path`: path of the file to replace
-* `target`: symbolic link target
+* `vol`: volume of the file
+* `path`: the file in the working directory, with its stat
 
-Returns: 0 on success, -1 on error with errno set
+Returns: AFP_OK, or the refusal's answer: AFPERR_OLOCK, AFPERR_BUSY, AFPERR_NOOBJ or AFPERR_ACCESS
+
+Calls: [check_delete_inhibit](file.c.md#check_delete_inhibit), [replace_blocked](file.c.md#replace_blocked)
+
+Called by: [rename_staged_link](file.c.md#rename_staged_link), [setfilparams](file.c.md#setfilparams)
+
+### stage_symlink
+
+```c
+static int stage_symlink(const char *path, const char *target, char *tmppath, struct stat *lst)
+```
+
+Defined at lines 334 to 377.
+
+Stage a symbolic link beside a file, under a name of its own.
+
+symlink() supplies O_EXCL-like collision handling, so an existing name is never overwritten. The name is VFS_SYMLINK_STAGE, the process ID, a dash and a serial, a form that listings leave out and requests may not name.
+
+Parameters:
+* `path`: the file the link is to replace, relative to the working directory
+* `target`: symbolic link target
+* `tmppath`: receives the staged link's path, MAXPATHLEN + 1 bytes
+* `lst`: receives the staged link's lstat()
+
+Returns: 0, or -1 with errno set and no link left, unless the link's unlink failed too, which the log names
 
 Calls: [netatalk_unlink](../../libatalk/vfs/unix.c.md#netatalk_unlink)
 
+Called by: [symlink_keeps_cnid](file.c.md#symlink_keeps_cnid)
+
+Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
+
+### name_holds_file
+
+```c
+static int name_holds_file(const struct staged_link *link, struct stat *st)
+```
+
+Defined at lines 397 to 405.
+
+Whether a conversion's name still holds the file's device and inode.
+
+Parameters:
+* `link`: the staged link
+* `st`: the name's stat
+
+Returns: AFP_OK when it does, AFPERR_NOOBJ when the name holds another object, or the failed stat's answer
+
+Calls: [ostat](../../libatalk/util/unix.c.md#ostat), [stat_answer](directory.c.md#stat_answer)
+
+Called by: [rename_staged_link](file.c.md#rename_staged_link)
+
+### rename_staged_link
+
+```c
+static int rename_staged_link(void *arg)
+```
+
+Defined at lines 420 to 451.
+
+Rename a staged link over its file if the request's checks pass again.
+
+Another session can lock, delete or replace the file while the backend waits to hold its row. The name must hold the file as the request read it before the refusal checks, as closing their probes drops this process's locks on whatever the name holds, and after them with the same ctime: a new file can take the freed inode, and a changed one leaves the link's target, read from it, stale. A change within one ctime tick passes.
+
+Parameters:
+* `arg`: the staged link
+
+Returns: 0, or -1 with errno set
+
+Calls: [atalk_stat_ctime_timespec](../../include/atalk/compat.h.md#atalk_stat_ctime_timespec), [atalk_timespec_eq](../../include/atalk/compat.h.md#atalk_timespec_eq), [name_holds_file](file.c.md#name_holds_file), [replace_refused](file.c.md#replace_refused)
+
+Called by: [symlink_keeps_cnid](file.c.md#symlink_keeps_cnid)
+
+### symlink_keeps_cnid
+
+```c
+static int symlink_keeps_cnid(const struct vol *vol, struct path *path, const char *target, cnid_t *id)
+```
+
+Defined at lines 482 to 600.
+
+Replace a file with a symlink that keeps the file's CNID.
+
+The link keeps the CNID only while its row records the file's device and inode: a row another object left at the name stays that object's. Where it keeps the CNID, the backend renames the link over the file inside its hold of the row and gives the row the link's device and inode, so another session's lookup or listing that meets the link waits for the hold to end. On MySQL, a user who may not lock a table that the open did not read as InnoDB gets no hold: a row change after the backend's check then leaves the link without the CNID. A row another session moved or rewrote before the check leaves the file in place. An update that fails after the rename runs once more while the row still records the file. A row dropped before the check, or after such an update, leaves the link to take a CNID of its own.
+
+Parameters:
+* `vol`: volume of the file
+* `path`: the file, named in the working directory, which takes the link's stat
+* `target`: the link's target
+* `id`: the CNID the link keeps, CNID_INVALID when it keeps none, or after a failure the CNID read for the name or CNID_INVALID
+
+Returns: AFP_OK, the refusal's answer of a check at the rename, or AFPERR_MISC when the link could not be staged, the backend could not answer, another session moved or rewrote the row or changed the file, the replace failed, the link had no stat after it, or the row could not take the link
+
+Calls: [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [cnid_resolve_row](../../libatalk/cnid/cnid.c.md#cnid_resolve_row), [cnid_row_holds](../../libatalk/cnid/cnid.c.md#cnid_row_holds), [cnid_update_row](../../libatalk/cnid/cnid.c.md#cnid_update_row), [dir_remove](directory.c.md#dir_remove), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [netatalk_unlink](../../libatalk/vfs/unix.c.md#netatalk_unlink), [of_stat](ofork.c.md#of_stat), [rename_staged_link](file.c.md#rename_staged_link), [stage_symlink](file.c.md#stage_symlink), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
+
 Called by: [setfilparams](file.c.md#setfilparams)
+
+Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 
 ### default_type
 
@@ -184,7 +275,7 @@ Called by: [setfilparams](file.c.md#setfilparams)
 static int default_type(void *finder)
 ```
 
-Defined at lines 362 to 369.
+Defined at lines 609 to 616.
 
 Whether Finder info carries no real type and creator.
 
@@ -203,7 +294,7 @@ Uses file-scope variables: `old_ufinderi`, `ufinderi`
 void * get_finderinfo(const struct vol *vol, const char *upath, struct adouble *adp, void *data, int islink)
 ```
 
-Defined at lines 388 to 451.
+Defined at lines 635 to 698.
 
 Fill data with the Finder info of a file.
 
@@ -230,7 +321,7 @@ Uses file-scope variables: `ufinderi`
 char * set_name(const struct vol *vol, char *data, char *name, char *uname, cnid_t id, bool utf8)
 ```
 
-Defined at lines 469 to 513.
+Defined at lines 716 to 760.
 
 Append a name in AFP wire format to data.
 
@@ -256,7 +347,7 @@ Called by: [getdirparams](directory.c.md#getdirparams), [getmetadata](file.c.md#
 uint32_t get_id(struct vol *vol, struct adouble *adp, const struct stat *st, const cnid_t did, const char *upath, const int len)
 ```
 
-Defined at lines 548 to 639.
+Defined at lines 795 to 886.
 
 CNID of a file or directory, from the CNID database and the AppleDouble header.
 
@@ -286,7 +377,7 @@ Mentioned in the documentation of: [object_cnid](directory.c.md#object_cnid)
 int getmetadata(const AFPObj *obj, struct vol *vol, uint16_t bitmap, struct path *path, struct dir *dir, char *buf, size_t *buflen, struct adouble *adp)
 ```
 
-Defined at lines 667 to 1182.
+Defined at lines 914 to 1429.
 
 Pack the file parameters that bitmap selects into buf.
 
@@ -318,7 +409,7 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap, struct path *path, struct dir *dir, char *buf, size_t *buflen, int skip_fork_check)
 ```
 
-Defined at lines 1207 to 1274.
+Defined at lines 1454 to 1521.
 
 Pack the file parameters that bitmap selects and open the metadata they need.
 
@@ -348,7 +439,7 @@ Mentioned in the documentation of: [crit_mac_name](catsearch.c.md#crit_mac_name)
 static bool link_target_in(const char *upath, const struct stat *folder)
 ```
 
-Defined at lines 1283 to 1307.
+Defined at lines 1530 to 1554.
 
 Tell whether the file a link names is an entry of a folder.
 
@@ -368,7 +459,7 @@ Called by: [afp_createfile](file.c.md#afp_createfile)
 static int sidecar_locked(const struct vol *vol, const char *name)
 ```
 
-Defined at lines 1324 to 1343.
+Defined at lines 1571 to 1590.
 
 Whether a process other than this one may hold a lock on a ._ file.
 
@@ -390,7 +481,7 @@ Called by: [createfile_meta](file.c.md#createfile_meta)
 static int createfile_meta(const struct vol *vol, struct adouble *ad, const char *path)
 ```
 
-Defined at lines 1366 to 1394.
+Defined at lines 1613 to 1641.
 
 Open fresh metadata for a file that a create makes or empties.
 
@@ -417,7 +508,7 @@ Mentioned in the documentation of: [afp_createfile](file.c.md#afp_createfile), [
 static int createfile_truncate(const struct vol *vol, struct adouble *ad, const char *path)
 ```
 
-Defined at lines 1419 to 1454.
+Defined at lines 1666 to 1701.
 
 Empty an existing file for a hard create, under a write lock over the whole file on the create's own data descriptor.
 
@@ -442,7 +533,7 @@ Mentioned in the documentation of: [afp_createfile](file.c.md#afp_createfile)
 int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1483 to 1735.
+Defined at lines 1730 to 1982.
 
 FPCreateFile: create a file with its AppleDouble metadata.
 
@@ -469,7 +560,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1754 to 1829.
+Defined at lines 2001 to 2076.
 
 FPSetFileParms: set the parameters of a file.
 
@@ -496,7 +587,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int setfilparams(const AFPObj *obj, struct vol *vol, struct path *path, uint16_t f_bitmap, char *buf)
 ```
 
-Defined at lines 1872 to 2375.
+Defined at lines 2119 to 2592.
 
 Apply the file parameters that f_bitmap selects from buf.
 
@@ -513,7 +604,7 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_ACCESS, AFPERR_BITMAP, AFPERR_BUSY, AFPERR_MISC, or another AFPERR_* code
 
-Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_read](../../libatalk/adouble/ad_read.c.md#ad_read), [ad_setattr](../../libatalk/adouble/ad_attr.c.md#ad_setattr), [ad_setdate](../../libatalk/adouble/ad_date.c.md#ad_setdate), [ad_setid](../../libatalk/adouble/ad_attr.c.md#ad_setid), [ad_setname](../../libatalk/adouble/ad_attr.c.md#ad_setname), [check_access](directory.c.md#check_access), [check_delete_inhibit](file.c.md#check_delete_inhibit), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [default_type](file.c.md#default_type), [dir_modify](directory.c.md#dir_modify), [dir_remove](directory.c.md#dir_remove), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [file_access](directory.c.md#file_access), [get_id](file.c.md#get_id), [getdefextmap](../../libatalk/util/netatalk_conf.c.md#getdefextmap), [getextmap](../../libatalk/util/netatalk_conf.c.md#getextmap), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [of_ad](ofork.c.md#of_ad), [of_stat](ofork.c.md#of_stat), [ostat](../../libatalk/util/unix.c.md#ostat), [replace_blocked](file.c.md#replace_blocked), [replace_with_symlink](file.c.md#replace_with_symlink), [set_utc_offset](../../libatalk/adouble/ad_date.c.md#set_utc_offset), [setdirparams](directory.c.md#setdirparams), [setfilowner](unix.c.md#setfilowner), [setfilunixmode](unix.c.md#setfilunixmode), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [symlink_target_safe](file.c.md#symlink_target_safe)
+Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_read](../../libatalk/adouble/ad_read.c.md#ad_read), [ad_setattr](../../libatalk/adouble/ad_attr.c.md#ad_setattr), [ad_setdate](../../libatalk/adouble/ad_date.c.md#ad_setdate), [ad_setid](../../libatalk/adouble/ad_attr.c.md#ad_setid), [ad_setname](../../libatalk/adouble/ad_attr.c.md#ad_setname), [check_access](directory.c.md#check_access), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [default_type](file.c.md#default_type), [dir_modify](directory.c.md#dir_modify), [dir_remove](directory.c.md#dir_remove), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [file_access](directory.c.md#file_access), [get_id](file.c.md#get_id), [getdefextmap](../../libatalk/util/netatalk_conf.c.md#getdefextmap), [getextmap](../../libatalk/util/netatalk_conf.c.md#getextmap), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [of_ad](ofork.c.md#of_ad), [ostat](../../libatalk/util/unix.c.md#ostat), [replace_refused](file.c.md#replace_refused), [set_utc_offset](../../libatalk/adouble/ad_date.c.md#set_utc_offset), [setdirparams](directory.c.md#setdirparams), [setfilowner](unix.c.md#setfilowner), [setfilunixmode](unix.c.md#setfilunixmode), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [symlink_keeps_cnid](file.c.md#symlink_keeps_cnid), [symlink_target_safe](file.c.md#symlink_target_safe)
 
 Called by: [afp_setfildirparams](filedir.c.md#afp_setfildirparams), [afp_setfilparams](file.c.md#afp_setfilparams)
 
@@ -525,7 +616,7 @@ Uses file-scope variables: `Cur_Path` in [etc/afpd/directory.c](directory.c.md),
 int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src, char *dst, char *newname, struct adouble *adp)
 ```
 
-Defined at lines 2398 to 2478.
+Defined at lines 2615 to 2695.
 
 Rename a file together with its metadata and Mac name.
 
@@ -554,7 +645,7 @@ Calls through [`vfs_ops::vfs_renamefile`](../../include/atalk/vfs.h.md#struct-vf
 size_t mtoUTF8(const struct vol *vol, const char *src, size_t srclen, char *dest, size_t destlen)
 ```
 
-Defined at lines 2493 to 2504.
+Defined at lines 2710 to 2721.
 
 Convert a Mac charset name to decomposed UTF-8.
 
@@ -579,7 +670,7 @@ Called by: [cname_mtouname](directory.c.md#cname_mtouname), [copy_path_name](fil
 int copy_path_name(const struct vol *vol, char *newname, char *ibuf)
 ```
 
-Defined at lines 2518 to 2579.
+Defined at lines 2735 to 2796.
 
 Extract a new file name from an AFP path field.
 
@@ -602,7 +693,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_moveandrename](filedir.c
 int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2601 to 2791.
+Defined at lines 2818 to 3008.
 
 FPCopyFile: duplicate a file, possibly onto another volume.
 
@@ -629,7 +720,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int copyfile(struct vol *s_vol, struct vol *d_vol, struct dir *d_dir, int sfd, char *src, char *dst, char *newname, struct adouble *adp, int held)
 ```
 
-Defined at lines 2813 to 3001.
+Defined at lines 3030 to 3218.
 
 Duplicate a file with its metadata and resource fork at a new path.
 
@@ -660,7 +751,7 @@ Calls through [`vfs_ops::vfs_copyfile`](../../include/atalk/vfs.h.md#struct-vfs_
 int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib, cnid_t *idp)
 ```
 
-Defined at lines 3039 to 3148.
+Defined at lines 3256 to 3365.
 
 Delete a file and its AppleDouble metadata.
 
@@ -691,7 +782,7 @@ Mentioned in the documentation of: [of_delete_blocked](ofork.c.md#of_delete_bloc
 int afp_createid(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 3162 to 3249.
+Defined at lines 3379 to 3466.
 
 FPCreateID: return a file's CNID as its file ID.
 
@@ -716,7 +807,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int reenumerate_loop(struct dirent *de, char *mname, void *data)
 ```
 
-Defined at lines 3269 to 3297.
+Defined at lines 3486 to 3514.
 
 Register one directory entry with the CNID database.
 
@@ -739,7 +830,7 @@ Called by: [reenumerate_id](file.c.md#reenumerate_id)
 static int reenumerate_id(struct vol *vol, char *name, struct dir *dir)
 ```
 
-Defined at lines 3316 to 3352.
+Defined at lines 3533 to 3569.
 
 Register every entry of a directory with the CNID database after a stale lookup.
 
@@ -762,7 +853,7 @@ Called by: [afp_resolveid](file.c.md#afp_resolveid)
 int afp_resolveid(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 3374 to 3519.
+Defined at lines 3592 to 3740.
 
 FPResolveID: return the parameters of the file that a file ID names.
 
@@ -775,9 +866,9 @@ Parameters:
 * `rbuf`: reply block
 * `rbuflen`: reply buffer capacity on entry, reply length on return
 
-Returns: AFP_OK, AFPERR_NOID, AFPERR_NOOP, AFPERR_ACCESS, AFPERR_MISC when the CNID backend failed, or AFPERR_PARAM
+Returns: AFP_OK, AFPERR_NOID, AFPERR_NOOP, AFPERR_ACCESS, AFPERR_MISC when the CNID backend, a stat along the folder's path or the chdir into the folder failed, or AFPERR_PARAM
 
-Calls: [cnid_resolve](../../libatalk/cnid/cnid.c.md#cnid_resolve), [dirlookup](directory.c.md#dirlookup), [getfilparams](file.c.md#getfilparams), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [movecwd](directory.c.md#movecwd), [of_stat](ofork.c.md#of_stat), [reenumerate_id](file.c.md#reenumerate_id), [utompath](desktop.c.md#utompath)
+Calls: [cnid_resolve](../../libatalk/cnid/cnid.c.md#cnid_resolve), [dirlookup](directory.c.md#dirlookup), [getfilparams](file.c.md#getfilparams), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [lookup_inconclusive](directory.c.md#lookup_inconclusive), [movecwd](directory.c.md#movecwd), [of_stat](ofork.c.md#of_stat), [reenumerate_id](file.c.md#reenumerate_id), [utompath](desktop.c.md#utompath)
 
 Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md), `curdir` in [etc/afpd/directory.c](directory.c.md)
 
@@ -789,7 +880,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_deleteid(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 3538 to 3654.
+Defined at lines 3759 to 3878.
 
 FPDeleteID: delete the CNID record that a file ID names.
 
@@ -802,9 +893,9 @@ Parameters:
 * `rbuf`: reply block, unused
 * `rbuflen`: reply buffer capacity on entry, 0 on return
 
-Returns: AFP_OK, AFPERR_NOOBJ when only the record remained, AFPERR_NOID, AFPERR_NOOP, AFPERR_VLOCK, AFPERR_BADTYPE, AFPERR_MISC when the CNID backend failed, or AFPERR_PARAM
+Returns: AFP_OK, AFPERR_NOOBJ when only the record remained, AFPERR_NOID, AFPERR_NOOP, AFPERR_VLOCK, AFPERR_BADTYPE, AFPERR_MISC when the CNID backend, a stat or a chdir failed, or AFPERR_PARAM
 
-Calls: [cnid_delete](../../libatalk/cnid/cnid.c.md#cnid_delete), [cnid_resolve](../../libatalk/cnid/cnid.c.md#cnid_resolve), [dirlookup](directory.c.md#dirlookup), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [movecwd](directory.c.md#movecwd), [ostat](../../libatalk/util/unix.c.md#ostat)
+Calls: [cnid_delete](../../libatalk/cnid/cnid.c.md#cnid_delete), [cnid_resolve](../../libatalk/cnid/cnid.c.md#cnid_resolve), [dirlookup](directory.c.md#dirlookup), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [lookup_inconclusive](directory.c.md#lookup_inconclusive), [movecwd](directory.c.md#movecwd), [ostat](../../libatalk/util/unix.c.md#ostat)
 
 Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 
@@ -816,7 +907,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int exchange_meta_open(struct vol *vol, const struct path *path, struct adouble *adp)
 ```
 
-Defined at lines 3677 to 3732.
+Defined at lines 3901 to 3956.
 
 Open the metadata of an FPExchangeFiles operand by the file's own name, making it for a file without any.
 
@@ -841,7 +932,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 static struct adouble * find_adouble(const AFPObj *obj, struct vol *vol, struct path *path, struct ofork **of, struct adouble *adp, bool *held_meta)
 ```
 
-Defined at lines 3754 to 3799.
+Defined at lines 3978 to 4023.
 
 AppleDouble of an FPExchangeFiles operand after the access tests.
 
@@ -869,7 +960,7 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 3829 to 4287.
+Defined at lines 4053 to 4511.
 
 FPExchangeFiles: swap the contents of two files while each name keeps its file ID.
 
@@ -894,9 +985,20 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 
 ### struct reenum
 
-Defined at line 3252.
+Defined at line 3469.
 * `struct vol * vol`
 * `cnid_t did`
+
+### struct staged_link
+
+A staged link and the file it replaces.
+
+Defined at line 380.
+* `const struct vol * vol`
+* `struct path * file`: the file, named in the working directory, with the stat the request's checks read
+* `const char * tmppath`
+* `int refused`: the answer to a rename whose checks failed
+* `bool renamed`: the link took the file's name
 
 # Macros
 

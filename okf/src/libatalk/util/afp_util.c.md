@@ -5,7 +5,7 @@ description: "Names of AFP command and result codes for log messages."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/afp_util.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -49,7 +49,7 @@ Parameters:
 
 Returns: the constant name, or "not yet defined" for an unlisted code
 
-Called by: [afp_getextattr](../../etc/afpd/extattrs.c.md#afp_getextattr), [afp_listextattr](../../etc/afpd/extattrs.c.md#afp_listextattr), [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [afp_remextattr](../../etc/afpd/extattrs.c.md#afp_remextattr), [afp_setextattr](../../etc/afpd/extattrs.c.md#afp_setextattr), [dir_remove](../../etc/afpd/directory.c.md#dir_remove), [dirlookup_internal](../../etc/afpd/directory.c.md#dirlookup_internal), [getmetadata](../../etc/afpd/file.c.md#getmetadata)
+Called by: [afp_getextattr](../../etc/afpd/extattrs.c.md#afp_getextattr), [afp_listextattr](../../etc/afpd/extattrs.c.md#afp_listextattr), [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [afp_remextattr](../../etc/afpd/extattrs.c.md#afp_remextattr), [afp_setextattr](../../etc/afpd/extattrs.c.md#afp_setextattr), [dir_remove](../../etc/afpd/directory.c.md#dir_remove), [dirlookup_internal](../../etc/afpd/directory.c.md#dirlookup_internal), [getmetadata](../../etc/afpd/file.c.md#getmetadata), [movecwd](../../etc/afpd/directory.c.md#movecwd)
 
 # Macros
 

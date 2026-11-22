@@ -5,7 +5,7 @@ description: "21 files, 264 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/util"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 ---
 
 # Files
@@ -47,13 +47,13 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 
 # Called from
 
-* [etc/afpd](../etc/afpd.md): 284 calls
+* [etc/afpd](../etc/afpd.md): 286 calls
 * [libatalk/adouble](adouble.md): 29 calls
 * [libatalk/cnid](cnid.md): 26 calls
 * [libatalk/dsi](dsi.md): 23 calls
 * [bin/nad](../bin/nad.md): 22 calls
 * [etc/netatalk](../etc/netatalk.md): 17 calls
-* [libatalk/vfs](vfs.md): 13 calls
+* [libatalk/vfs](vfs.md): 14 calls
 * [etc/atalkd](../etc/atalkd.md): 12 calls
 * [etc/spotlight](../etc/spotlight.md): 9 calls
 * [etc/uams](../etc/uams.md): 9 calls
@@ -75,7 +75,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 
 * [getvolbyvid](util/netatalk_conf.c.md#getvolbyvid): 48 callers
 * [fullpathname](util/unix.c.md#fullpathname): 33 callers
-* [ostat](util/unix.c.md#ostat): 28 callers
+* [ostat](util/unix.c.md#ostat): 29 callers
 * [become_root](util/unix.c.md#become_root): 21 callers
 * [unbecome_root](util/unix.c.md#unbecome_root): 21 callers
 * [ipc_send_cache_hint](util/server_ipc.c.md#ipc_send_cache_hint): 18 callers

@@ -5,7 +5,7 @@ description: "AFP directory command handlers and path resolution helpers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/directory.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-30T10:57:24+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -77,7 +77,7 @@ Defined at line 69.
 
 ### struct enumerate_stats
 
-Defined at line 195.
+Defined at line 197.
 * `unsigned long long reads`: directory reads
 * `unsigned long long rereads`: reads by batches past index 1 whose listing no slot holds, not the root's
 * `unsigned long long changed`: reads of folders that changed, or may have, since their listing's read

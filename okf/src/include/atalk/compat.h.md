@@ -5,7 +5,7 @@ description: "Portability declarations for missing system and C library function
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/compat.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -105,7 +105,7 @@ Defined at lines 77 to 89.
 
 Return the stat ctime as a timespec, with tv_nsec 0 if unavailable.
 
-Called by: [ea_cache_entry](../../etc/afpd/ad_cache.c.md#ea_cache_entry), [rfork_stamp](../../etc/afpd/ad_cache.h.md#rfork_stamp), [sd_fetch](../../etc/afpd/enumerate.c.md#sd_fetch)
+Called by: [ea_cache_entry](../../etc/afpd/ad_cache.c.md#ea_cache_entry), [rename_staged_link](../../etc/afpd/file.c.md#rename_staged_link), [rfork_stamp](../../etc/afpd/ad_cache.h.md#rfork_stamp), [sd_fetch](../../etc/afpd/enumerate.c.md#sd_fetch)
 
 ### atalk_timespec_eq
 
@@ -117,7 +117,7 @@ Defined at lines 92 to 96.
 
 Tell whether two timespecs are the same instant.
 
-Called by: [rfork_buf_holds](../../etc/afpd/fork.c.md#rfork_buf_holds), [same_stamp](../../etc/afpd/volume.c.md#same_stamp), [sd_fetch](../../etc/afpd/enumerate.c.md#sd_fetch)
+Called by: [rename_staged_link](../../etc/afpd/file.c.md#rename_staged_link), [rfork_buf_holds](../../etc/afpd/fork.c.md#rfork_buf_holds), [same_stamp](../../etc/afpd/volume.c.md#same_stamp), [sd_fetch](../../etc/afpd/enumerate.c.md#sd_fetch)
 
 ### atalk_stat_atime_timespec
 

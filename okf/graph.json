@@ -1,5 +1,5 @@
 {
-"commit": "a4dae478640cbf2497ca078f1e6ab7c74e09f54e",
+"commit": "e135eea93fe16486e7b8078c3c55b4fee4766b74",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -11467,6 +11467,11 @@
 {
 "from": "etc/afpd/file.c#afp_deleteid",
 "kind": "call",
+"to": "etc/afpd/directory.c#lookup_inconclusive"
+},
+{
+"from": "etc/afpd/file.c#afp_deleteid",
+"kind": "call",
 "to": "etc/afpd/directory.c#movecwd"
 },
 {
@@ -13684,6 +13689,11 @@
 "from": "etc/afpd/file.c#afp_resolveid",
 "kind": "call",
 "to": "libatalk/util/netatalk_conf.c#getvolbyvid"
+},
+{
+"from": "etc/afpd/file.c#afp_resolveid",
+"kind": "call",
+"to": "etc/afpd/directory.c#lookup_inconclusive"
 },
 {
 "from": "etc/afpd/file.c#afp_resolveid",
@@ -15971,6 +15981,11 @@
 {
 "from": "etc/afpd/catsearch.c#catsearch",
 "kind": "use",
+"to": "etc/afpd/directory.c#curdir"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch",
+"kind": "use",
 "to": "etc/afpd/catsearch.c#dstack"
 },
 {
@@ -16127,6 +16142,11 @@
 "from": "etc/afpd/catsearch.c#catsearch_db",
 "kind": "use",
 "to": "etc/afpd/catsearch.c#catsearch_db_searches"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch_db",
+"kind": "use",
+"to": "etc/afpd/directory.c#curdir"
 },
 {
 "from": "etc/afpd/catsearch.c#catsearch_db_keep",
@@ -17547,6 +17567,11 @@
 {
 "from": "libatalk/cnid/cnid.c#cnid_add",
 "kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_row_dev"
+},
+{
+"from": "libatalk/cnid/cnid.c#cnid_add",
+"kind": "call",
 "to": "libatalk/cnid/cnid.c#dirtab_load"
 },
 {
@@ -17581,6 +17606,11 @@
 },
 {
 "from": "libatalk/cnid/cnid.c#cnid_delete",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#dirtab_off"
+},
+{
+"from": "libatalk/cnid/cnid.c#cnid_delete_row",
 "kind": "call",
 "to": "libatalk/cnid/cnid.c#dirtab_off"
 },
@@ -17742,6 +17772,11 @@
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_row_dev"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
+"kind": "call",
 "to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt"
 },
 {
@@ -17788,6 +17823,41 @@
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_delete",
 "kind": "use",
 "to": "libatalk/cnid/cnid_mysql.c#stmt_param_id"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_delete_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_stmt_execute"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_delete_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_dev"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_delete_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_did"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_delete_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_id"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_delete_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_ino"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_delete_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_delete_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name_len"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_dirlist",
@@ -17838,6 +17908,11 @@
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_drain_results",
 "kind": "call",
 "to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_errno"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_drop_stmts",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#close_prepared_stmt"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_empty",
@@ -18030,6 +18105,21 @@
 "to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_errno"
 },
 {
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_hold",
+"kind": "call",
+"to": "libatalk/compat/misc.c#asprintf"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_hold",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_execute"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_release",
+"kind": "doc",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_hold"
+},
+{
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_like",
 "kind": "call",
 "to": "libatalk/util/sl_names.c#sl_name_pattern_index_like"
@@ -18042,7 +18132,7 @@
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "call",
-"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_delete"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_delete_row"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
@@ -18058,6 +18148,11 @@
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "call",
 "to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_row_dev"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
@@ -18088,6 +18183,11 @@
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "use",
 "to": "libatalk/cnid/cnid_mysql.c#lookup_result_name"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#lookup_result_name_len"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
@@ -18132,6 +18232,11 @@
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new",
 "kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_delete_row"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new",
+"kind": "call",
 "to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_dirlist"
 },
 {
@@ -18168,6 +18273,11 @@
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new",
 "kind": "call",
 "to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new",
@@ -18212,6 +18322,11 @@
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_open",
 "kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_name_is"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_open",
+"kind": "call",
 "to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt"
 },
 {
@@ -18223,6 +18338,11 @@
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_open",
 "kind": "call",
 "to": "libatalk/util/cnid.c#uuid_strip_dashes"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_release",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_execute"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_resolve",
@@ -18242,7 +18362,17 @@
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_resolve",
 "kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#resolve_result_dev"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_resolve",
+"kind": "use",
 "to": "libatalk/cnid/cnid_mysql.c#resolve_result_did"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_resolve",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#resolve_result_ino"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_resolve",
@@ -18312,6 +18442,11 @@
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update",
 "kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_row_dev"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update",
+"kind": "call",
 "to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt"
 },
 {
@@ -18343,6 +18478,126 @@
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update",
 "kind": "use",
 "to": "libatalk/cnid/cnid_mysql.c#stmt_param_name_len"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#close_prepared_stmt"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_drop_stmts"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_hold"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_release"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_errno"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_end"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_failed"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_lost"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_params"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_end",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_drop_stmts"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_end",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_release"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_failed",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_errno"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_failed",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_end"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_lost",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_end"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_params",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_row_dev"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_params",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_dev"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_params",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_did"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_params",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_id"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_params",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_ino"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_params",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_params",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name_len"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_params",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_newdev"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_params",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_newino"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_wipe",
@@ -18397,9 +18652,49 @@
 "to": "libatalk/cnid/cnid.c#modules"
 },
 {
+"from": "libatalk/cnid/cnid.c#cnid_resolve",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_resolve_row"
+},
+{
 "from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_to_path",
 "kind": "doc",
 "to": "libatalk/cnid/cnid.c#cnid_resolve"
+},
+{
+"from": "libatalk/cnid/cnid.c#cnid_delete_row",
+"kind": "doc",
+"to": "libatalk/cnid/cnid.c#cnid_resolve_row"
+},
+{
+"from": "libatalk/cnid/cnid.c#cnid_resolve",
+"kind": "doc",
+"to": "libatalk/cnid/cnid.c#cnid_resolve_row"
+},
+{
+"from": "libatalk/cnid/cnid.c#cnid_row_holds",
+"kind": "doc",
+"to": "libatalk/cnid/cnid.c#cnid_resolve_row"
+},
+{
+"from": "libatalk/cnid/cnid.c#cnid_update_row",
+"kind": "doc",
+"to": "libatalk/cnid/cnid.c#cnid_resolve_row"
+},
+{
+"from": "libatalk/cnid/cnid.c#cnid_row_holds",
+"kind": "doc",
+"to": "libatalk/cnid/cnid.c#cnid_row_dev"
+},
+{
+"from": "libatalk/cnid/cnid.c#cnid_row_holds",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_row_dev"
+},
+{
+"from": "libatalk/cnid/cnid.c#cnid_resolve_row",
+"kind": "doc",
+"to": "libatalk/cnid/cnid.c#cnid_row_holds"
 },
 {
 "from": "libatalk/cnid/cnid.c#cnid_scheme_registered",
@@ -18410,6 +18705,11 @@
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
 "kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_row_dev"
 },
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
@@ -18520,6 +18820,26 @@
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_by_uuid",
 "kind": "call",
 "to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_set_errno"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_changed"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_set_errno"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_ready"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_reset"
 },
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_sequence_row",
@@ -18799,7 +19119,17 @@
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_lookup",
 "kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_row_dev"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_lookup",
+"kind": "call",
 "to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_lookup",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_row"
 },
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_lookup",
@@ -18859,6 +19189,11 @@
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
 "kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_row"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
+"kind": "call",
 "to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_dirlist"
 },
 {
@@ -18895,6 +19230,11 @@
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
 "kind": "call",
 "to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update_row"
 },
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
@@ -19079,6 +19419,11 @@
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update",
 "kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_row_dev"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update",
+"kind": "call",
 "to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_begin"
 },
 {
@@ -19110,6 +19455,56 @@
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update",
 "kind": "call",
 "to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_reset"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_row_dev"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_commit"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_execute"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_changed"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rollback"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_ready"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_reset"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update_row_failed"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update_row_failed",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rollback"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update_row_failed",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_set_errno"
 },
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_wipe",
@@ -19153,6 +19548,11 @@
 },
 {
 "from": "libatalk/cnid/cnid.c#cnid_update",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#dirtab_off"
+},
+{
+"from": "libatalk/cnid/cnid.c#cnid_update_row",
 "kind": "call",
 "to": "libatalk/cnid/cnid.c#dirtab_off"
 },
@@ -23199,6 +23599,11 @@
 "to": "etc/afpd/directory.c#dirlookup"
 },
 {
+"from": "etc/afpd/directory.c#lookup_inconclusive",
+"kind": "doc",
+"to": "etc/afpd/directory.c#dirlookup"
+},
+{
 "from": "etc/afpd/directory.c#dirlookup_internal",
 "kind": "call",
 "to": "libatalk/util/afp_util.c#AfpErr2name"
@@ -23206,7 +23611,17 @@
 {
 "from": "etc/afpd/directory.c#dirlookup_internal",
 "kind": "call",
-"to": "libatalk/cnid/cnid.c#cnid_resolve"
+"to": "libatalk/cnid/cnid.c#cnid_resolve_row"
+},
+{
+"from": "etc/afpd/directory.c#dirlookup_internal",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_row_dev"
+},
+{
+"from": "etc/afpd/directory.c#dirlookup_internal",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_row_holds"
 },
 {
 "from": "etc/afpd/directory.c#dirlookup_internal",
@@ -23247,6 +23662,16 @@
 "from": "etc/afpd/directory.c#dirlookup_internal",
 "kind": "call",
 "to": "libatalk/util/unix.c#ostat"
+},
+{
+"from": "etc/afpd/directory.c#dirlookup_internal",
+"kind": "call",
+"to": "etc/afpd/directory.c#retire_row"
+},
+{
+"from": "etc/afpd/directory.c#dirlookup_internal",
+"kind": "call",
+"to": "etc/afpd/directory.c#stat_answer"
 },
 {
 "from": "etc/afpd/directory.c#dirlookup_internal",
@@ -23302,6 +23727,11 @@
 "from": "etc/afpd/directory.c#dirlookup_strict",
 "kind": "call",
 "to": "etc/afpd/directory.c#strict_refresh"
+},
+{
+"from": "etc/afpd/directory.c#lookup_inconclusive",
+"kind": "doc",
+"to": "etc/afpd/directory.c#dirlookup_strict"
 },
 {
 "from": "etc/afpd/ofork.c#of_held_path",
@@ -25926,6 +26356,11 @@
 "to": "etc/afpd/virtual_icon.c#virtual_icon_getfilparams"
 },
 {
+"from": "etc/afpd/fork.c#getforkparams",
+"kind": "use",
+"to": "etc/afpd/directory.c#curdir"
+},
+{
 "from": "etc/afpd/quota.c#getfreespace",
 "kind": "call",
 "to": "libatalk/util/unix.c#become_root"
@@ -27318,7 +27753,22 @@
 {
 "from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt",
 "kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_check_row"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_del_devino_other"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt",
+"kind": "call",
 "to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete_row"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt",
@@ -27349,6 +27799,11 @@
 "from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt",
 "kind": "call",
 "to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_resolve"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_update_row"
 },
 {
 "from": "libatalk/cnid/cnid_sqlite.c#init_prepared_stmt",
@@ -27406,6 +27861,71 @@
 "to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_add"
 },
 {
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_check_row",
+"kind": "call",
+"to": "libatalk/compat/misc.c#asprintf"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_check_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#check_row_param"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_check_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_dev"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_check_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_did"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_check_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_id"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_check_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_ino"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_check_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_check_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name_len"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_del_devino_other",
+"kind": "call",
+"to": "libatalk/compat/misc.c#asprintf"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_del_devino_other",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#del_devino_other_param"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_del_devino_other",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_id"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_del_devino_other",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_newdev"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_del_devino_other",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_newino"
+},
+{
 "from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete",
 "kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
@@ -27419,6 +27939,46 @@
 "from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete",
 "kind": "use",
 "to": "libatalk/cnid/cnid_mysql.c#stmt_param_id"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete_row",
+"kind": "call",
+"to": "libatalk/compat/misc.c#asprintf"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#delete_row_param"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_dev"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_did"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_id"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_ino"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name_len"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_dirlist",
@@ -27688,7 +28248,17 @@
 {
 "from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_resolve",
 "kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#resolve_result_dev"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_resolve",
+"kind": "use",
 "to": "libatalk/cnid/cnid_mysql.c#resolve_result_did"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_resolve",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#resolve_result_ino"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_resolve",
@@ -27704,6 +28274,56 @@
 "from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_resolve",
 "kind": "use",
 "to": "libatalk/cnid/cnid_mysql.c#stmt_param_id"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_update_row",
+"kind": "call",
+"to": "libatalk/compat/misc.c#asprintf"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_update_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_dev"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_update_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_did"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_update_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_id"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_update_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_ino"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_update_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_update_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name_len"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_update_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_newdev"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_update_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_newino"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_update_row",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#update_row_param"
 },
 {
 "from": "libatalk/util/gettok.c#initline",
@@ -31638,6 +32258,11 @@
 {
 "from": "etc/afpd/directory.c#movecwd",
 "kind": "call",
+"to": "libatalk/util/afp_util.c#AfpErr2name"
+},
+{
+"from": "etc/afpd/directory.c#movecwd",
+"kind": "call",
 "to": "etc/afpd/directory.c#cwd_back_to_root"
 },
 {
@@ -31654,6 +32279,11 @@
 "from": "etc/afpd/directory.c#movecwd",
 "kind": "call",
 "to": "libatalk/util/unix.c#getcwdpath"
+},
+{
+"from": "etc/afpd/directory.c#movecwd",
+"kind": "call",
+"to": "etc/afpd/directory.c#lookup_inconclusive"
 },
 {
 "from": "etc/afpd/directory.c#movecwd",
@@ -31676,12 +32306,22 @@
 "to": "etc/afpd/directory.c#rootParent"
 },
 {
+"from": "etc/afpd/directory.c#cname",
+"kind": "doc",
+"to": "etc/afpd/directory.c#movecwd"
+},
+{
 "from": "etc/afpd/directory.c#cwd_step",
 "kind": "doc",
 "to": "etc/afpd/directory.c#movecwd"
 },
 {
 "from": "etc/afpd/directory.c#dirlookup",
+"kind": "doc",
+"to": "etc/afpd/directory.c#movecwd"
+},
+{
+"from": "etc/afpd/directory.c#path_from_dir",
 "kind": "doc",
 "to": "etc/afpd/directory.c#movecwd"
 },
@@ -32671,6 +33311,16 @@
 "to": "bin/nad/nad_adouble.c#nad"
 },
 {
+"from": "etc/afpd/file.c#name_holds_file",
+"kind": "call",
+"to": "libatalk/util/unix.c#ostat"
+},
+{
+"from": "etc/afpd/file.c#name_holds_file",
+"kind": "call",
+"to": "etc/afpd/directory.c#stat_answer"
+},
+{
 "from": "libatalk/nbp/nbp_lkup.c#nbp_do_lookup_op",
 "kind": "call",
 "to": "libatalk/nbp/nbp_util.c#nbp_match"
@@ -32869,6 +33519,11 @@
 "from": "libatalk/vfs/vfs.c#netatalk_name",
 "kind": "call",
 "to": "libatalk/vfs/vfs.c#other_name"
+},
+{
+"from": "libatalk/vfs/vfs.c#netatalk_name",
+"kind": "call",
+"to": "libatalk/vfs/vfs.c#staged_link_name"
 },
 {
 "from": "libatalk/util/fault.c#netatalk_panic",
@@ -34467,6 +35122,11 @@
 {
 "from": "etc/afpd/directory.c#path_from_dir",
 "kind": "call",
+"to": "etc/afpd/directory.c#dir_remove"
+},
+{
+"from": "etc/afpd/directory.c#path_from_dir",
+"kind": "call",
 "to": "etc/afpd/directory.c#dir_remove_tree"
 },
 {
@@ -34478,6 +35138,16 @@
 "from": "etc/afpd/directory.c#path_from_dir",
 "kind": "call",
 "to": "etc/afpd/directory.c#movecwd"
+},
+{
+"from": "etc/afpd/directory.c#path_from_dir",
+"kind": "call",
+"to": "etc/afpd/ofork.c#of_stat"
+},
+{
+"from": "etc/afpd/directory.c#path_from_dir",
+"kind": "call",
+"to": "etc/afpd/directory.c#stat_answer"
 },
 {
 "from": "etc/afpd/directory.c#path_from_dir",
@@ -36083,6 +36753,26 @@
 "to": "bin/afppasswd/afppasswd_migrate.c#uid_filename"
 },
 {
+"from": "etc/afpd/file.c#rename_staged_link",
+"kind": "call",
+"to": "include/atalk/compat.h#atalk_stat_ctime_timespec"
+},
+{
+"from": "etc/afpd/file.c#rename_staged_link",
+"kind": "call",
+"to": "include/atalk/compat.h#atalk_timespec_eq"
+},
+{
+"from": "etc/afpd/file.c#rename_staged_link",
+"kind": "call",
+"to": "etc/afpd/file.c#name_holds_file"
+},
+{
+"from": "etc/afpd/file.c#rename_staged_link",
+"kind": "call",
+"to": "etc/afpd/file.c#replace_refused"
+},
+{
 "from": "etc/afpd/directory.c#renamedir",
 "kind": "call",
 "to": "libatalk/adouble/ad_flush.c#ad_close"
@@ -36220,9 +36910,14 @@
 "to": "etc/afpd/ofork.c#of_get_locks"
 },
 {
-"from": "etc/afpd/file.c#replace_with_symlink",
+"from": "etc/afpd/file.c#replace_refused",
 "kind": "call",
-"to": "libatalk/vfs/unix.c#netatalk_unlink"
+"to": "etc/afpd/file.c#check_delete_inhibit"
+},
+{
+"from": "etc/afpd/file.c#replace_refused",
+"kind": "call",
+"to": "etc/afpd/file.c#replace_blocked"
 },
 {
 "from": "libatalk/atp/atp_rsel.c#resend_request",
@@ -36343,6 +37038,41 @@
 "from": "libatalk/unicode/charcnv.c#restore_source_bom",
 "kind": "call",
 "to": "libatalk/unicode/charcnv.c#charset_name"
+},
+{
+"from": "etc/afpd/directory.c#retire_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_delete_row"
+},
+{
+"from": "etc/afpd/directory.c#retire_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_resolve_row"
+},
+{
+"from": "etc/afpd/directory.c#retire_row",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_row_holds"
+},
+{
+"from": "etc/afpd/directory.c#retire_row",
+"kind": "call",
+"to": "etc/afpd/directory.c#row_holds_link"
+},
+{
+"from": "etc/afpd/directory.c#retire_row",
+"kind": "call",
+"to": "etc/afpd/directory.c#stat_answer"
+},
+{
+"from": "etc/afpd/directory.c#retire_row",
+"kind": "call",
+"to": "libatalk/compat/misc.c#strnlen"
+},
+{
+"from": "etc/afpd/directory.c#dirlookup_internal",
+"kind": "doc",
+"to": "etc/afpd/directory.c#retire_row"
 },
 {
 "from": "libatalk/util/netatalk_conf.c#rewrite_vol_uuid_conf",
@@ -36613,6 +37343,11 @@
 "from": "etc/atalkd/rtmp.c#looproute",
 "kind": "doc",
 "to": "etc/atalkd/route.c#route"
+},
+{
+"from": "etc/afpd/directory.c#row_holds_link",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_row_holds"
 },
 {
 "from": "etc/papd/main.c#rprintcap",
@@ -37965,11 +38700,6 @@
 {
 "from": "etc/afpd/file.c#setfilparams",
 "kind": "call",
-"to": "etc/afpd/file.c#check_delete_inhibit"
-},
-{
-"from": "etc/afpd/file.c#setfilparams",
-"kind": "call",
 "to": "libatalk/cnid/cnid.c#cnid_get"
 },
 {
@@ -38025,22 +38755,12 @@
 {
 "from": "etc/afpd/file.c#setfilparams",
 "kind": "call",
-"to": "etc/afpd/ofork.c#of_stat"
-},
-{
-"from": "etc/afpd/file.c#setfilparams",
-"kind": "call",
 "to": "libatalk/util/unix.c#ostat"
 },
 {
 "from": "etc/afpd/file.c#setfilparams",
 "kind": "call",
-"to": "etc/afpd/file.c#replace_blocked"
-},
-{
-"from": "etc/afpd/file.c#setfilparams",
-"kind": "call",
-"to": "etc/afpd/file.c#replace_with_symlink"
+"to": "etc/afpd/file.c#replace_refused"
 },
 {
 "from": "etc/afpd/file.c#setfilparams",
@@ -38066,6 +38786,11 @@
 "from": "etc/afpd/file.c#setfilparams",
 "kind": "call",
 "to": "libatalk/compat/misc.c#strnlen"
+},
+{
+"from": "etc/afpd/file.c#setfilparams",
+"kind": "call",
+"to": "etc/afpd/file.c#symlink_keeps_cnid"
 },
 {
 "from": "etc/afpd/file.c#setfilparams",
@@ -40515,6 +41240,21 @@
 "to": "libatalk/compat/explicit_bzero.c#explicit_bzero"
 },
 {
+"from": "etc/afpd/file.c#stage_symlink",
+"kind": "call",
+"to": "libatalk/vfs/unix.c#netatalk_unlink"
+},
+{
+"from": "etc/afpd/file.c#stage_symlink",
+"kind": "use",
+"to": "etc/afpd/directory.c#curdir"
+},
+{
+"from": "libatalk/vfs/vfs.c#staged_link_name",
+"kind": "call",
+"to": "libatalk/util/unix.c#ascii_tolower"
+},
+{
 "from": "etc/afpd/volume.c#stat_vol",
 "kind": "call",
 "to": "etc/afpd/volume.c#getvolparams"
@@ -40763,6 +41503,71 @@
 "from": "libatalk/unicode/util_unistr.c#strupper_w",
 "kind": "call",
 "to": "libatalk/unicode/utf16_case.c#toupper_w"
+},
+{
+"from": "etc/afpd/file.c#symlink_keeps_cnid",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_get"
+},
+{
+"from": "etc/afpd/file.c#symlink_keeps_cnid",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_resolve_row"
+},
+{
+"from": "etc/afpd/file.c#symlink_keeps_cnid",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_row_holds"
+},
+{
+"from": "etc/afpd/file.c#symlink_keeps_cnid",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_update_row"
+},
+{
+"from": "etc/afpd/file.c#symlink_keeps_cnid",
+"kind": "call",
+"to": "etc/afpd/directory.c#dir_remove"
+},
+{
+"from": "etc/afpd/file.c#symlink_keeps_cnid",
+"kind": "call",
+"to": "etc/afpd/dircache.c#dircache_search_by_name"
+},
+{
+"from": "etc/afpd/file.c#symlink_keeps_cnid",
+"kind": "call",
+"to": "libatalk/vfs/unix.c#netatalk_unlink"
+},
+{
+"from": "etc/afpd/file.c#symlink_keeps_cnid",
+"kind": "call",
+"to": "etc/afpd/ofork.c#of_stat"
+},
+{
+"from": "etc/afpd/file.c#symlink_keeps_cnid",
+"kind": "call",
+"to": "etc/afpd/file.c#rename_staged_link"
+},
+{
+"from": "etc/afpd/file.c#symlink_keeps_cnid",
+"kind": "call",
+"to": "etc/afpd/file.c#stage_symlink"
+},
+{
+"from": "etc/afpd/file.c#symlink_keeps_cnid",
+"kind": "call",
+"to": "libatalk/compat/strlcpy.c#strlcpy"
+},
+{
+"from": "etc/afpd/file.c#symlink_keeps_cnid",
+"kind": "call",
+"to": "libatalk/compat/misc.c#strnlen"
+},
+{
+"from": "etc/afpd/file.c#symlink_keeps_cnid",
+"kind": "use",
+"to": "etc/afpd/directory.c#curdir"
 },
 {
 "from": "etc/afpd/file.c#symlink_target_safe",
@@ -46668,7 +47473,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_chown_adouble",
 "kind": "function",
-"line": 200,
+"line": 245,
 "static": true
 },
 {
@@ -46676,7 +47481,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_chown_ea",
 "kind": "function",
-"line": 832,
+"line": 878,
 "static": true
 },
 {
@@ -46684,7 +47489,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_copyfile_adouble",
 "kind": "function",
-"line": 583,
+"line": 628,
 "static": true
 },
 {
@@ -46692,7 +47497,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_copyfile_ea",
 "kind": "function",
-"line": 1059,
+"line": 1105,
 "static": true
 },
 {
@@ -46700,7 +47505,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_deletecurdir_adouble",
 "kind": "function",
-"line": 281,
+"line": 326,
 "static": true
 },
 {
@@ -46708,7 +47513,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_deletecurdir_ea",
 "kind": "function",
-"line": 924,
+"line": 970,
 "static": true
 },
 {
@@ -46716,7 +47521,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_deletefile_adouble",
 "kind": "function",
-"line": 495,
+"line": 540,
 "static": true
 },
 {
@@ -46724,7 +47529,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_deletefile_ea",
 "kind": "function",
-"line": 1034,
+"line": 1080,
 "static": true
 },
 {
@@ -46732,7 +47537,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_posix_acl",
 "kind": "function",
-"line": 728,
+"line": 773,
 "static": true
 },
 {
@@ -46740,7 +47545,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_posix_remove_acl",
 "kind": "function",
-"line": 765,
+"line": 810,
 "static": true
 },
 {
@@ -46748,7 +47553,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_renamedir_adouble",
 "kind": "function",
-"line": 227,
+"line": 272,
 "static": true
 },
 {
@@ -46756,7 +47561,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_renamedir_ea",
 "kind": "function",
-"line": 856,
+"line": 902,
 "static": true
 },
 {
@@ -46764,7 +47569,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_renamefile_adouble",
 "kind": "function",
-"line": 517,
+"line": 562,
 "static": true
 },
 {
@@ -46772,7 +47577,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_renamefile_ea",
 "kind": "function",
-"line": 1137,
+"line": 1183,
 "static": true
 },
 {
@@ -46780,7 +47585,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_setdirmode_adouble",
 "kind": "function",
-"line": 424,
+"line": 469,
 "static": true
 },
 {
@@ -46788,7 +47593,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_setdirmode_ea",
 "kind": "function",
-"line": 995,
+"line": 1041,
 "static": true
 },
 {
@@ -46796,7 +47601,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_setdirowner_adouble",
 "kind": "function",
-"line": 471,
+"line": 516,
 "static": true
 },
 {
@@ -46804,7 +47609,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_setdirowner_ea",
 "kind": "function",
-"line": 1013,
+"line": 1059,
 "static": true
 },
 {
@@ -46812,7 +47617,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_setdirunixmode_adouble",
 "kind": "function",
-"line": 342,
+"line": 387,
 "static": true
 },
 {
@@ -46820,7 +47625,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_setdirunixmode_ea",
 "kind": "function",
-"line": 950,
+"line": 996,
 "static": true
 },
 {
@@ -46828,7 +47633,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_setfilmode_adouble",
 "kind": "function",
-"line": 322,
+"line": 367,
 "static": true
 },
 {
@@ -46836,7 +47641,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_setfilmode_ea",
 "kind": "function",
-"line": 971,
+"line": 1017,
 "static": true
 },
 {
@@ -46844,7 +47649,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_solaris_acl",
 "kind": "function",
-"line": 651,
+"line": 696,
 "static": true
 },
 {
@@ -46852,7 +47657,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_solaris_remove_acl",
 "kind": "function",
-"line": 688,
+"line": 733,
 "static": true
 },
 {
@@ -48220,7 +49025,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#adouble_setfilmode",
 "kind": "function",
-"line": 304,
+"line": 349,
 "static": true
 },
 {
@@ -48340,7 +49145,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_bytelock",
 "kind": "function",
-"line": 1904,
+"line": 1907,
 "static": false
 },
 {
@@ -48348,7 +49153,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_bytelock_ext",
 "kind": "function",
-"line": 1922,
+"line": 1925,
 "static": false
 },
 {
@@ -48356,7 +49161,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#afp_catsearch",
 "kind": "function",
-"line": 1750,
+"line": 1767,
 "static": false
 },
 {
@@ -48364,7 +49169,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#afp_catsearch_ext",
 "kind": "function",
-"line": 1767,
+"line": 1784,
 "static": false
 },
 {
@@ -48380,7 +49185,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#afp_closedir",
 "kind": "function",
-"line": 4526,
+"line": 4707,
 "static": false
 },
 {
@@ -48396,7 +49201,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_closefork",
 "kind": "function",
-"line": 2635,
+"line": 2638,
 "static": false
 },
 {
@@ -48428,7 +49233,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_copyfile",
 "kind": "function",
-"line": 2601,
+"line": 2818,
 "static": false
 },
 {
@@ -48436,7 +49241,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#afp_createdir",
 "kind": "function",
-"line": 3907,
+"line": 4088,
 "static": false
 },
 {
@@ -48444,7 +49249,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_createfile",
 "kind": "function",
-"line": 1483,
+"line": 1730,
 "static": false
 },
 {
@@ -48452,7 +49257,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_createid",
 "kind": "function",
-"line": 3162,
+"line": 3379,
 "static": false
 },
 {
@@ -48468,7 +49273,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_deleteid",
 "kind": "function",
-"line": 3538,
+"line": 3759,
 "static": false
 },
 {
@@ -48612,7 +49417,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_exchangefiles",
 "kind": "function",
-"line": 3829,
+"line": 4053,
 "static": false
 },
 {
@@ -48628,7 +49433,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_flush",
 "kind": "function",
-"line": 2454,
+"line": 2457,
 "static": false
 },
 {
@@ -48636,7 +49441,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_flushfork",
 "kind": "function",
-"line": 2483,
+"line": 2486,
 "static": false
 },
 {
@@ -48684,7 +49489,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_getforkparams",
 "kind": "function",
-"line": 3050,
+"line": 3053,
 "static": false
 },
 {
@@ -48804,7 +49609,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#afp_mapid",
 "kind": "function",
-"line": 4244,
+"line": 4425,
 "static": false
 },
 {
@@ -48812,7 +49617,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#afp_mapname",
 "kind": "function",
-"line": 4404,
+"line": 4585,
 "static": false
 },
 {
@@ -48844,7 +49649,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#afp_opendir",
 "kind": "function",
-"line": 4559,
+"line": 4740,
 "static": false
 },
 {
@@ -48860,7 +49665,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_openfork",
 "kind": "function",
-"line": 1024,
+"line": 1027,
 "static": false
 },
 {
@@ -48916,7 +49721,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_read",
 "kind": "function",
-"line": 2419,
+"line": 2422,
 "static": false
 },
 {
@@ -48924,7 +49729,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_read_ext",
 "kind": "function",
-"line": 2436,
+"line": 2439,
 "static": false
 },
 {
@@ -48948,7 +49753,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_resolveid",
 "kind": "function",
-"line": 3374,
+"line": 3592,
 "static": false
 },
 {
@@ -48980,7 +49785,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#afp_setdirparams",
 "kind": "function",
-"line": 3248,
+"line": 3429,
 "static": false
 },
 {
@@ -49004,7 +49809,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_setfilparams",
 "kind": "function",
-"line": 1754,
+"line": 2001,
 "static": false
 },
 {
@@ -49012,7 +49817,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_setforkparams",
 "kind": "function",
-"line": 1585,
+"line": 1588,
 "static": false
 },
 {
@@ -49036,7 +49841,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#afp_syncdir",
 "kind": "function",
-"line": 3787,
+"line": 3968,
 "static": false
 },
 {
@@ -49044,7 +49849,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_syncfork",
 "kind": "function",
-"line": 2526,
+"line": 2529,
 "static": false
 },
 {
@@ -49052,7 +49857,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_write",
 "kind": "function",
-"line": 3007,
+"line": 3010,
 "static": false
 },
 {
@@ -49068,7 +49873,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_write_ext",
 "kind": "function",
-"line": 3027,
+"line": 3030,
 "static": false
 },
 {
@@ -50268,7 +51073,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#byte_lock",
 "kind": "function",
-"line": 1784,
+"line": 1787,
 "static": true
 },
 {
@@ -50332,7 +51137,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#catsearch_afp",
 "kind": "function",
-"line": 1454,
+"line": 1471,
 "static": true
 },
 {
@@ -50340,7 +51145,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#catsearch_db",
 "kind": "function",
-"line": 1233,
+"line": 1248,
 "static": true
 },
 {
@@ -50348,7 +51153,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#catsearch_db_drop",
 "kind": "function",
-"line": 1141,
+"line": 1156,
 "static": true
 },
 {
@@ -50356,7 +51161,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#catsearch_db_keep",
 "kind": "function",
-"line": 1178,
+"line": 1193,
 "static": true
 },
 {
@@ -50364,7 +51169,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#catsearch_db_start",
 "kind": "function",
-"line": 1152,
+"line": 1167,
 "static": true
 },
 {
@@ -50668,7 +51473,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#check_access",
 "kind": "function",
-"line": 2720,
+"line": 2901,
 "static": false
 },
 {
@@ -50972,7 +51777,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#close_prepared_stmt",
 "kind": "function",
-"line": 580,
+"line": 802,
 "static": true
 },
 {
@@ -50980,7 +51785,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#close_prepared_stmt",
 "kind": "function",
-"line": 551,
+"line": 567,
 "static": true
 },
 {
@@ -51052,7 +51857,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#cname",
 "kind": "function",
-"line": 2218,
+"line": 2382,
 "static": false
 },
 {
@@ -51068,7 +51873,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_add",
 "kind": "function",
-"line": 544,
+"line": 558,
 "static": false
 },
 {
@@ -51116,7 +51921,15 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_delete",
 "kind": "function",
-"line": 586,
+"line": 599,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid.c",
+"id": "libatalk/cnid/cnid.c#cnid_delete_row",
+"kind": "function",
+"line": 623,
 "static": false
 },
 {
@@ -51148,7 +51961,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_find",
 "kind": "function",
-"line": 829,
+"line": 864,
 "static": false
 },
 {
@@ -51156,7 +51969,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_find_exact",
 "kind": "function",
-"line": 856,
+"line": 891,
 "static": false
 },
 {
@@ -51164,7 +51977,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_find_narrows",
 "kind": "function",
-"line": 684,
+"line": 719,
 "static": true
 },
 {
@@ -51172,7 +51985,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_find_scoped",
 "kind": "function",
-"line": 718,
+"line": 753,
 "static": false
 },
 {
@@ -51180,7 +51993,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_find_string",
 "kind": "function",
-"line": 767,
+"line": 802,
 "static": true
 },
 {
@@ -51204,7 +52017,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_get",
 "kind": "function",
-"line": 605,
+"line": 640,
 "static": false
 },
 {
@@ -51212,7 +52025,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_getstamp",
 "kind": "function",
-"line": 626,
+"line": 661,
 "static": false
 },
 {
@@ -51228,7 +52041,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_lookup",
 "kind": "function",
-"line": 660,
+"line": 695,
 "static": false
 },
 {
@@ -51244,7 +52057,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "function",
-"line": 1216,
+"line": 1808,
 "static": false
 },
 {
@@ -51252,7 +52065,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_close",
 "kind": "function",
-"line": 846,
+"line": 1428,
 "static": false
 },
 {
@@ -51260,7 +52073,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_cut_short",
 "kind": "function",
-"line": 1862,
+"line": 2453,
 "static": true
 },
 {
@@ -51268,15 +52081,23 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_delete",
 "kind": "function",
-"line": 821,
+"line": 1045,
 "static": false
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_delete_row",
+"kind": "function",
+"line": 1078,
+"static": true
 },
 {
 "documented": true,
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_dirlist",
 "kind": "function",
-"line": 2393,
+"line": 2987,
 "static": true
 },
 {
@@ -51284,7 +52105,15 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_drain_results",
 "kind": "function",
-"line": 636,
+"line": 860,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_drop_stmts",
+"kind": "function",
+"line": 1199,
 "static": true
 },
 {
@@ -51292,7 +52121,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_empty",
 "kind": "function",
-"line": 670,
+"line": 894,
 "static": true
 },
 {
@@ -51300,7 +52129,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_escape",
 "kind": "function",
-"line": 788,
+"line": 1012,
 "static": true
 },
 {
@@ -51308,7 +52137,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_execute",
 "kind": "function",
-"line": 767,
+"line": 991,
 "static": true
 },
 {
@@ -51316,7 +52145,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find",
 "kind": "function",
-"line": 2133,
+"line": 2727,
 "static": false
 },
 {
@@ -51324,7 +52153,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_bind",
 "kind": "function",
-"line": 1908,
+"line": 2499,
 "static": true
 },
 {
@@ -51332,7 +52161,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_cond",
 "kind": "function",
-"line": 1732,
+"line": 2323,
 "static": true
 },
 {
@@ -51340,7 +52169,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_folded",
 "kind": "function",
-"line": 1678,
+"line": 2269,
 "static": true
 },
 {
@@ -51348,7 +52177,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_narrows",
 "kind": "function",
-"line": 1693,
+"line": 2284,
 "static": true
 },
 {
@@ -51356,7 +52185,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_prepare",
 "kind": "function",
-"line": 1773,
+"line": 2364,
 "static": true
 },
 {
@@ -51364,7 +52193,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_fold_param",
 "kind": "function",
-"line": 221,
+"line": 229,
 "static": true
 },
 {
@@ -51372,7 +52201,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_folded_narrows",
 "kind": "function",
-"line": 1712,
+"line": 2303,
 "static": true
 },
 {
@@ -51380,7 +52209,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_folded_param",
 "kind": "function",
-"line": 203,
+"line": 211,
 "static": true
 },
 {
@@ -51388,7 +52217,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_get",
 "kind": "function",
-"line": 1423,
+"line": 2010,
 "static": false
 },
 {
@@ -51396,7 +52225,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_getstamp",
 "kind": "function",
-"line": 1581,
+"line": 2172,
 "static": false
 },
 {
@@ -51404,7 +52233,15 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_hint_usable",
 "kind": "function",
-"line": 132,
+"line": 140,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_hold",
+"kind": "function",
+"line": 1120,
 "static": true
 },
 {
@@ -51412,7 +52249,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_id_ok",
 "kind": "function",
-"line": 1959,
+"line": 2550,
 "static": true
 },
 {
@@ -51420,7 +52257,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_id_order",
 "kind": "function",
-"line": 2026,
+"line": 2617,
 "static": true
 },
 {
@@ -51428,7 +52265,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_like",
 "kind": "function",
-"line": 1660,
+"line": 2251,
 "static": true
 },
 {
@@ -51436,7 +52273,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "function",
-"line": 996,
+"line": 1574,
 "static": false
 },
 {
@@ -51444,7 +52281,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lowest",
 "kind": "function",
-"line": 1980,
+"line": 2571,
 "static": true
 },
 {
@@ -51452,7 +52289,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new",
 "kind": "function",
-"line": 2432,
+"line": 3026,
 "static": true
 },
 {
@@ -51460,15 +52297,23 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_open",
 "kind": "function",
-"line": 2470,
+"line": 3066,
 "static": false
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_release",
+"kind": "function",
+"line": 1165,
+"static": true
 },
 {
 "documented": true,
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_resolve",
 "kind": "function",
-"line": 1505,
+"line": 2094,
 "static": false
 },
 {
@@ -51476,7 +52321,15 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_errno",
 "kind": "function",
-"line": 607,
+"line": 831,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_name_is",
+"kind": "function",
+"line": 736,
 "static": true
 },
 {
@@ -51484,7 +52337,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_stmt_execute",
 "kind": "function",
-"line": 706,
+"line": 930,
 "static": true
 },
 {
@@ -51492,7 +52345,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_under",
 "kind": "function",
-"line": 2064,
+"line": 2655,
 "static": true
 },
 {
@@ -51500,15 +52353,55 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update",
 "kind": "function",
-"line": 890,
+"line": 1472,
 "static": false
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row",
+"kind": "function",
+"line": 1307,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_end",
+"kind": "function",
+"line": 1211,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_failed",
+"kind": "function",
+"line": 1224,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_lost",
+"kind": "function",
+"line": 1244,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update_row_params",
+"kind": "function",
+"line": 1267,
+"static": true
 },
 {
 "documented": true,
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_wipe",
 "kind": "function",
-"line": 2354,
+"line": 2948,
 "static": false
 },
 {
@@ -51532,7 +52425,31 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_resolve",
 "kind": "function",
-"line": 877,
+"line": 944,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid.c",
+"id": "libatalk/cnid/cnid.c#cnid_resolve_row",
+"kind": "function",
+"line": 914,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid.c",
+"id": "libatalk/cnid/cnid.c#cnid_row_dev",
+"kind": "function",
+"line": 535,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid.c",
+"id": "libatalk/cnid/cnid.c#cnid_row_holds",
+"kind": "function",
+"line": 960,
 "static": false
 },
 {
@@ -51548,7 +52465,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
 "kind": "function",
-"line": 1992,
+"line": 2244,
 "static": false
 },
 {
@@ -51556,7 +52473,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_begin",
 "kind": "function",
-"line": 836,
+"line": 860,
 "static": true
 },
 {
@@ -51564,7 +52481,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_candidates",
 "kind": "function",
-"line": 1348,
+"line": 1372,
 "static": true
 },
 {
@@ -51572,7 +52489,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_close",
 "kind": "function",
-"line": 1487,
+"line": 1707,
 "static": false
 },
 {
@@ -51580,7 +52497,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_commit",
 "kind": "function",
-"line": 856,
+"line": 880,
 "static": true
 },
 {
@@ -51588,7 +52505,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_count",
 "kind": "function",
-"line": 939,
+"line": 963,
 "static": true
 },
 {
@@ -51596,7 +52513,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete",
 "kind": "function",
-"line": 1434,
+"line": 1458,
 "static": false
 },
 {
@@ -51604,7 +52521,15 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_by_uuid",
 "kind": "function",
-"line": 729,
+"line": 753,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_row",
+"kind": "function",
+"line": 1514,
 "static": true
 },
 {
@@ -51612,7 +52537,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_sequence_row",
 "kind": "function",
-"line": 779,
+"line": 803,
 "static": true
 },
 {
@@ -51620,7 +52545,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_volumes_row",
 "kind": "function",
-"line": 766,
+"line": 790,
 "static": true
 },
 {
@@ -51628,7 +52553,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_dirlist",
 "kind": "function",
-"line": 2918,
+"line": 3171,
 "static": true
 },
 {
@@ -51636,7 +52561,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_empty_table",
 "kind": "function",
-"line": 1406,
+"line": 1430,
 "static": true
 },
 {
@@ -51644,7 +52569,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_execute",
 "kind": "function",
-"line": 701,
+"line": 725,
 "static": true
 },
 {
@@ -51668,7 +52593,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find",
 "kind": "function",
-"line": 2641,
+"line": 2894,
 "static": false
 },
 {
@@ -51676,7 +52601,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find_bind",
 "kind": "function",
-"line": 2585,
+"line": 2838,
 "static": true
 },
 {
@@ -51684,7 +52609,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find_narrows",
 "kind": "function",
-"line": 1387,
+"line": 1411,
 "static": true
 },
 {
@@ -51700,7 +52625,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_get",
 "kind": "function",
-"line": 2274,
+"line": 2523,
 "static": false
 },
 {
@@ -51708,7 +52633,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_getstamp",
 "kind": "function",
-"line": 2487,
+"line": 2740,
 "static": false
 },
 {
@@ -51716,7 +52641,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_hint_usable",
 "kind": "function",
-"line": 593,
+"line": 617,
 "static": true
 },
 {
@@ -51724,7 +52649,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_abandon",
 "kind": "function",
-"line": 1162,
+"line": 1186,
 "static": true
 },
 {
@@ -51732,7 +52657,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_broken",
 "kind": "function",
-"line": 1143,
+"line": 1167,
 "static": true
 },
 {
@@ -51740,7 +52665,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_changed",
 "kind": "function",
-"line": 1254,
+"line": 1278,
 "static": true
 },
 {
@@ -51748,7 +52673,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_create",
 "kind": "function",
-"line": 1061,
+"line": 1085,
 "static": true
 },
 {
@@ -51756,7 +52681,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_drop",
 "kind": "function",
-"line": 973,
+"line": 997,
 "static": true
 },
 {
@@ -51764,7 +52689,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_prepare",
 "kind": "function",
-"line": 1180,
+"line": 1204,
 "static": true
 },
 {
@@ -51772,7 +52697,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_retire",
 "kind": "function",
-"line": 480,
+"line": 496,
 "static": true
 },
 {
@@ -51780,7 +52705,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_stmt",
 "kind": "function",
-"line": 506,
+"line": 522,
 "static": true
 },
 {
@@ -51788,7 +52713,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_indexable",
 "kind": "function",
-"line": 1312,
+"line": 1336,
 "static": true
 },
 {
@@ -51796,7 +52721,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_lookup",
 "kind": "function",
-"line": 1722,
+"line": 1942,
 "static": false
 },
 {
@@ -51812,7 +52737,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_names_left",
 "kind": "function",
-"line": 1024,
+"line": 1048,
 "static": true
 },
 {
@@ -51820,7 +52745,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
 "kind": "function",
-"line": 2958,
+"line": 3211,
 "static": true
 },
 {
@@ -51828,7 +52753,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "function",
-"line": 3097,
+"line": 3352,
 "static": false
 },
 {
@@ -51844,7 +52769,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_refused",
 "kind": "function",
-"line": 2993,
+"line": 3248,
 "static": true
 },
 {
@@ -51852,7 +52777,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_report_orphan",
 "kind": "function",
-"line": 3041,
+"line": 3296,
 "static": true
 },
 {
@@ -51860,7 +52785,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_resolve",
 "kind": "function",
-"line": 2376,
+"line": 2627,
 "static": false
 },
 {
@@ -51868,7 +52793,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rollback",
 "kind": "function",
-"line": 879,
+"line": 903,
 "static": true
 },
 {
@@ -51876,7 +52801,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rowid_ok",
 "kind": "function",
-"line": 609,
+"line": 633,
 "static": true
 },
 {
@@ -51884,7 +52809,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_seed_sequence",
 "kind": "function",
-"line": 905,
+"line": 929,
 "static": true
 },
 {
@@ -51892,7 +52817,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_set_errno",
 "kind": "function",
-"line": 658,
+"line": 682,
 "static": true
 },
 {
@@ -51900,7 +52825,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_ready",
 "kind": "function",
-"line": 812,
+"line": 836,
 "static": true
 },
 {
@@ -51908,7 +52833,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_reset",
 "kind": "function",
-"line": 794,
+"line": 818,
 "static": true
 },
 {
@@ -51916,15 +52841,31 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update",
 "kind": "function",
-"line": 1540,
+"line": 1760,
 "static": false
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update_row",
+"kind": "function",
+"line": 1599,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update_row_failed",
+"kind": "function",
+"line": 1569,
+"static": true
 },
 {
 "documented": true,
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_uuid_usable",
 "kind": "function",
-"line": 626,
+"line": 650,
 "static": true
 },
 {
@@ -51932,7 +52873,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_wipe",
 "kind": "function",
-"line": 2839,
+"line": 3092,
 "static": false
 },
 {
@@ -51940,7 +52881,15 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_update",
 "kind": "function",
-"line": 907,
+"line": 977,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid.c",
+"id": "libatalk/cnid/cnid.c#cnid_update_row",
+"kind": "function",
+"line": 1016,
 "static": false
 },
 {
@@ -51964,7 +52913,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_wipe",
 "kind": "function",
-"line": 926,
+"line": 1035,
 "static": false
 },
 {
@@ -52284,7 +53233,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#copy_path_name",
 "kind": "function",
-"line": 2518,
+"line": 2735,
 "static": false
 },
 {
@@ -52324,7 +53273,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#copyfile",
 "kind": "function",
-"line": 2813,
+"line": 3030,
 "static": false
 },
 {
@@ -52548,7 +53497,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#createfile_meta",
 "kind": "function",
-"line": 1366,
+"line": 1613,
 "static": true
 },
 {
@@ -52556,7 +53505,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#createfile_truncate",
 "kind": "function",
-"line": 1419,
+"line": 1666,
 "static": true
 },
 {
@@ -52676,7 +53625,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#cwd_back_to_root",
 "kind": "function",
-"line": 2085,
+"line": 2249,
 "static": true
 },
 {
@@ -52684,7 +53633,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#cwd_on_volume",
 "kind": "function",
-"line": 2063,
+"line": 2227,
 "static": true
 },
 {
@@ -52692,7 +53641,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#cwd_step",
 "kind": "function",
-"line": 2120,
+"line": 2284,
 "static": true
 },
 {
@@ -52884,7 +53833,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#default_type",
 "kind": "function",
-"line": 362,
+"line": 609,
 "static": true
 },
 {
@@ -52996,7 +53945,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#deletecurdir",
 "kind": "function",
-"line": 4150,
+"line": 4331,
 "static": false
 },
 {
@@ -53004,7 +53953,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#deletecurdir_adouble_loop",
 "kind": "function",
-"line": 250,
+"line": 295,
 "static": true
 },
 {
@@ -53012,7 +53961,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#deletecurdir_ea_osx_chkifempty_loop",
 "kind": "function",
-"line": 872,
+"line": 918,
 "static": true
 },
 {
@@ -53020,7 +53969,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#deletecurdir_ea_osx_loop",
 "kind": "function",
-"line": 893,
+"line": 939,
 "static": true
 },
 {
@@ -53036,7 +53985,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#deletefile",
 "kind": "function",
-"line": 3039,
+"line": 3256,
 "static": false
 },
 {
@@ -53196,7 +54145,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_add",
 "kind": "function",
-"line": 1853,
+"line": 2017,
 "static": false
 },
 {
@@ -53204,7 +54153,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_add_fill",
 "kind": "function",
-"line": 1717,
+"line": 1881,
 "static": false
 },
 {
@@ -53212,7 +54161,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_event_path",
 "kind": "function",
-"line": 4114,
+"line": 4295,
 "static": false
 },
 {
@@ -53220,7 +54169,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_free",
 "kind": "function",
-"line": 1134,
+"line": 1298,
 "static": false
 },
 {
@@ -53228,7 +54177,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_free_invalid_q",
 "kind": "function",
-"line": 1864,
+"line": 2028,
 "static": false
 },
 {
@@ -53244,7 +54193,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_modify",
 "kind": "function",
-"line": 1322,
+"line": 1486,
 "static": false
 },
 {
@@ -53252,7 +54201,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_new",
 "kind": "function",
-"line": 1031,
+"line": 1195,
 "static": false
 },
 {
@@ -53268,7 +54217,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_path_follows",
 "kind": "function",
-"line": 1173,
+"line": 1337,
 "static": false
 },
 {
@@ -53276,7 +54225,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_remove",
 "kind": "function",
-"line": 1928,
+"line": 2092,
 "static": false
 },
 {
@@ -53284,7 +54233,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_remove_and_free",
 "kind": "function",
-"line": 1888,
+"line": 2052,
 "static": false
 },
 {
@@ -53292,7 +54241,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_remove_tree",
 "kind": "function",
-"line": 2044,
+"line": 2208,
 "static": false
 },
 {
@@ -53316,7 +54265,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_stat_refresh",
 "kind": "function",
-"line": 2807,
+"line": 2988,
 "static": false
 },
 {
@@ -53324,7 +54273,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_stat_usable",
 "kind": "function",
-"line": 1200,
+"line": 1364,
 "static": true
 },
 {
@@ -53332,7 +54281,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_takes_stat",
 "kind": "function",
-"line": 595,
+"line": 648,
 "static": false
 },
 {
@@ -53548,7 +54497,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dirlookup",
 "kind": "function",
-"line": 940,
+"line": 1104,
 "static": false
 },
 {
@@ -53564,7 +54513,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dirlookup_internal",
 "kind": "function",
-"line": 724,
+"line": 880,
 "static": true
 },
 {
@@ -53572,7 +54521,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dirlookup_internal_retry",
 "kind": "function",
-"line": 663,
+"line": 817,
 "static": true
 },
 {
@@ -53580,7 +54529,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dirlookup_strict",
 "kind": "function",
-"line": 962,
+"line": 1126,
 "static": false
 },
 {
@@ -53596,7 +54545,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dirreenumerate",
 "kind": "function",
-"line": 2892,
+"line": 3073,
 "static": false
 },
 {
@@ -54444,7 +55393,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#exchange_meta_open",
 "kind": "function",
-"line": 3677,
+"line": 3901,
 "static": true
 },
 {
@@ -54596,7 +55545,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#file_access",
 "kind": "function",
-"line": 2750,
+"line": 2931,
 "static": false
 },
 {
@@ -54628,7 +55577,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#find_adouble",
 "kind": "function",
-"line": 3754,
+"line": 3978,
 "static": true
 },
 {
@@ -54660,7 +55609,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#flushfork",
 "kind": "function",
-"line": 2568,
+"line": 2571,
 "static": false
 },
 {
@@ -54692,7 +55641,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#fork_cache_rlen",
 "kind": "function",
-"line": 765,
+"line": 768,
 "static": true
 },
 {
@@ -54700,7 +55649,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#fork_cached",
 "kind": "function",
-"line": 796,
+"line": 799,
 "static": true
 },
 {
@@ -54708,7 +55657,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#fork_error",
 "kind": "function",
-"line": 1534,
+"line": 1537,
 "static": true
 },
 {
@@ -54716,7 +55665,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#fork_modified",
 "kind": "function",
-"line": 1508,
+"line": 1511,
 "static": true
 },
 {
@@ -54724,7 +55673,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#fork_open_rsrc",
 "kind": "function",
-"line": 911,
+"line": 914,
 "static": true
 },
 {
@@ -54740,7 +55689,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#fork_setmode",
 "kind": "function",
-"line": 595,
+"line": 598,
 "static": true
 },
 {
@@ -54748,7 +55697,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#fork_setmode_deny",
 "kind": "function",
-"line": 573,
+"line": 576,
 "static": false
 },
 {
@@ -54756,7 +55705,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#fork_sidecar_measure",
 "kind": "function",
-"line": 868,
+"line": 871,
 "static": true
 },
 {
@@ -54884,7 +55833,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#fullpath_join",
 "kind": "function",
-"line": 1124,
+"line": 1288,
 "static": false
 },
 {
@@ -54892,7 +55841,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#fullpath_join_blk",
 "kind": "function",
-"line": 1100,
+"line": 1264,
 "static": false
 },
 {
@@ -54948,7 +55897,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#get_afp_errno",
 "kind": "function",
-"line": 573,
+"line": 612,
 "static": false
 },
 {
@@ -55012,7 +55961,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#get_finderinfo",
 "kind": "function",
-"line": 388,
+"line": 635,
 "static": false
 },
 {
@@ -55020,7 +55969,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#get_id",
 "kind": "function",
-"line": 548,
+"line": 795,
 "static": false
 },
 {
@@ -55044,7 +55993,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#get_off_t",
 "kind": "function",
-"line": 473,
+"line": 476,
 "static": true
 },
 {
@@ -55132,7 +56081,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#getdirparams",
 "kind": "function",
-"line": 2922,
+"line": 3103,
 "static": false
 },
 {
@@ -55148,7 +56097,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#getfilparams",
 "kind": "function",
-"line": 1207,
+"line": 1454,
 "static": false
 },
 {
@@ -55212,7 +56161,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#getmetadata",
 "kind": "function",
-"line": 667,
+"line": 914,
 "static": false
 },
 {
@@ -56148,7 +57097,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt",
 "kind": "function",
-"line": 550,
+"line": 767,
 "static": true
 },
 {
@@ -56164,7 +57113,23 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_add",
 "kind": "function",
-"line": 246,
+"line": 254,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_check_row",
+"kind": "function",
+"line": 555,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_del_devino_other",
+"kind": "function",
+"line": 519,
 "static": true
 },
 {
@@ -56172,7 +57137,15 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete",
 "kind": "function",
-"line": 392,
+"line": 400,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete_row",
+"kind": "function",
+"line": 427,
 "static": true
 },
 {
@@ -56180,7 +57153,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_dirlist",
 "kind": "function",
-"line": 498,
+"line": 683,
 "static": true
 },
 {
@@ -56188,7 +57161,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_get",
 "kind": "function",
-"line": 358,
+"line": 366,
 "static": true
 },
 {
@@ -56196,7 +57169,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_lookup",
 "kind": "function",
-"line": 147,
+"line": 155,
 "static": true
 },
 {
@@ -56212,7 +57185,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_purge",
 "kind": "function",
-"line": 456,
+"line": 641,
 "static": true
 },
 {
@@ -56220,7 +57193,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_put",
 "kind": "function",
-"line": 307,
+"line": 315,
 "static": true
 },
 {
@@ -56228,7 +57201,15 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_resolve",
 "kind": "function",
-"line": 419,
+"line": 598,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_update_row",
+"kind": "function",
+"line": 470,
 "static": true
 },
 {
@@ -56252,7 +57233,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#initvol_vfs",
 "kind": "function",
-"line": 2008,
+"line": 2054,
 "static": false
 },
 {
@@ -56388,7 +57369,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#is_neg",
 "kind": "function",
-"line": 533,
+"line": 536,
 "static": true
 },
 {
@@ -56628,7 +57609,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#link_target_in",
 "kind": "function",
-"line": 1283,
+"line": 1530,
 "static": true
 },
 {
@@ -56902,6 +57883,14 @@
 "kind": "function",
 "line": 689,
 "static": true
+},
+{
+"documented": true,
+"file": "etc/afpd/directory.c",
+"id": "etc/afpd/directory.c#lookup_inconclusive",
+"kind": "function",
+"line": 630,
+"static": false
 },
 {
 "documented": true,
@@ -57852,7 +58841,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#movecwd",
 "kind": "function",
-"line": 2580,
+"line": 2748,
 "static": false
 },
 {
@@ -57868,7 +58857,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#mtoUTF8",
 "kind": "function",
-"line": 2493,
+"line": 2710,
 "static": false
 },
 {
@@ -58129,6 +59118,14 @@
 },
 {
 "documented": true,
+"file": "etc/afpd/file.c",
+"id": "etc/afpd/file.c#name_holds_file",
+"kind": "function",
+"line": 397,
+"static": true
+},
+{
+"documented": true,
 "file": "etc/atalkd/nbp.c",
 "id": "etc/atalkd/nbp.c#nbp_ack",
 "kind": "function",
@@ -58236,7 +59233,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#netatalk_name",
 "kind": "function",
-"line": 155,
+"line": 199,
 "static": true
 },
 {
@@ -58396,7 +59393,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#object_cnid",
 "kind": "function",
-"line": 1235,
+"line": 1399,
 "static": true
 },
 {
@@ -58428,7 +59425,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#ochdir_vol",
 "kind": "function",
-"line": 2557,
+"line": 2721,
 "static": true
 },
 {
@@ -58780,7 +59777,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#offcnt_log_stats",
 "kind": "function",
-"line": 2779,
+"line": 2960,
 "static": false
 },
 {
@@ -58788,7 +59785,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#offcnt_serve",
 "kind": "function",
-"line": 2847,
+"line": 3028,
 "static": true
 },
 {
@@ -58796,7 +59793,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#offcnt_stats_get",
 "kind": "function",
-"line": 2769,
+"line": 2950,
 "static": false
 },
 {
@@ -58860,7 +59857,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#openacc_rights",
 "kind": "function",
-"line": 2700,
+"line": 2881,
 "static": true
 },
 {
@@ -59260,7 +60257,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#path_error",
 "kind": "function",
-"line": 3214,
+"line": 3395,
 "static": false
 },
 {
@@ -59268,7 +60265,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#path_from_dir",
 "kind": "function",
-"line": 504,
+"line": 529,
 "static": true
 },
 {
@@ -60100,7 +61097,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#read_file",
 "kind": "function",
-"line": 1943,
+"line": 1946,
 "static": true
 },
 {
@@ -60108,7 +61105,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#read_fork",
 "kind": "function",
-"line": 2056,
+"line": 2059,
 "static": true
 },
 {
@@ -60228,7 +61225,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#reenumerate_id",
 "kind": "function",
-"line": 3316,
+"line": 3533,
 "static": true
 },
 {
@@ -60236,7 +61233,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#reenumerate_loop",
 "kind": "function",
-"line": 3269,
+"line": 3486,
 "static": true
 },
 {
@@ -60337,10 +61334,18 @@
 },
 {
 "documented": true,
+"file": "etc/afpd/file.c",
+"id": "etc/afpd/file.c#rename_staged_link",
+"kind": "function",
+"line": 420,
+"static": true
+},
+{
+"documented": true,
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#renamedir",
 "kind": "function",
-"line": 4040,
+"line": 4221,
 "static": false
 },
 {
@@ -60348,7 +61353,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#renamefile",
 "kind": "function",
-"line": 2398,
+"line": 2615,
 "static": false
 },
 {
@@ -60362,9 +61367,9 @@
 {
 "documented": true,
 "file": "etc/afpd/file.c",
-"id": "etc/afpd/file.c#replace_with_symlink",
+"id": "etc/afpd/file.c#replace_refused",
 "kind": "function",
-"line": 317,
+"line": 312,
 "static": true
 },
 {
@@ -60425,6 +61430,14 @@
 },
 {
 "documented": true,
+"file": "etc/afpd/directory.c",
+"id": "etc/afpd/directory.c#retire_row",
+"kind": "function",
+"line": 748,
+"static": true
+},
+{
+"documented": true,
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#rewrite_vol_uuid_conf",
 "kind": "function",
@@ -60444,7 +61457,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#rfork_buf_holds",
 "kind": "function",
-"line": 810,
+"line": 813,
 "static": true
 },
 {
@@ -60452,7 +61465,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#rfork_cache_drop",
 "kind": "function",
-"line": 825,
+"line": 828,
 "static": true
 },
 {
@@ -60476,7 +61489,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#rfork_cache_serve_from_buf",
 "kind": "function",
-"line": 1987,
+"line": 1990,
 "static": true
 },
 {
@@ -60484,7 +61497,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#rfork_cache_serves",
 "kind": "function",
-"line": 737,
+"line": 740,
 "static": true
 },
 {
@@ -60500,7 +61513,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#rfork_size",
 "kind": "function",
-"line": 841,
+"line": 844,
 "static": true
 },
 {
@@ -60558,6 +61571,14 @@
 "kind": "function",
 "line": 547,
 "static": false
+},
+{
+"documented": true,
+"file": "etc/afpd/directory.c",
+"id": "etc/afpd/directory.c#row_holds_link",
+"kind": "function",
+"line": 711,
+"static": true
 },
 {
 "documented": false,
@@ -61092,7 +62113,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#set_name",
 "kind": "function",
-"line": 469,
+"line": 716,
 "static": false
 },
 {
@@ -61108,7 +62129,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#set_off_t",
 "kind": "function",
-"line": 502,
+"line": 505,
 "static": true
 },
 {
@@ -61212,7 +62233,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#setdirmode_adouble_loop",
 "kind": "function",
-"line": 388,
+"line": 433,
 "static": true
 },
 {
@@ -61220,7 +62241,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#setdiroffcnt",
 "kind": "function",
-"line": 2831,
+"line": 3012,
 "static": false
 },
 {
@@ -61236,7 +62257,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#setdirparams",
 "kind": "function",
-"line": 3320,
+"line": 3501,
 "static": false
 },
 {
@@ -61284,7 +62305,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#setfilparams",
 "kind": "function",
-"line": 1872,
+"line": 2119,
 "static": false
 },
 {
@@ -61492,7 +62513,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#sidecar_locked",
 "kind": "function",
-"line": 1324,
+"line": 1571,
 "static": true
 },
 {
@@ -63193,6 +64214,30 @@
 },
 {
 "documented": true,
+"file": "etc/afpd/file.c",
+"id": "etc/afpd/file.c#stage_symlink",
+"kind": "function",
+"line": 334,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/vfs/vfs.c",
+"id": "libatalk/vfs/vfs.c#staged_link_name",
+"kind": "function",
+"line": 158,
+"static": true
+},
+{
+"documented": true,
+"file": "etc/afpd/directory.c",
+"id": "etc/afpd/directory.c#stat_answer",
+"kind": "function",
+"line": 495,
+"static": false
+},
+{
+"documented": true,
 "file": "etc/afpd/volume.c",
 "id": "etc/afpd/volume.c#stat_vol",
 "kind": "function",
@@ -63372,7 +64417,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#strict_refresh",
 "kind": "function",
-"line": 628,
+"line": 681,
 "static": true
 },
 {
@@ -63524,7 +64569,15 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#sum_neg",
 "kind": "function",
-"line": 554,
+"line": 557,
+"static": true
+},
+{
+"documented": true,
+"file": "etc/afpd/file.c",
+"id": "etc/afpd/file.c#symlink_keeps_cnid",
+"kind": "function",
+"line": 482,
 "static": true
 },
 {
@@ -64820,7 +65873,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#validupath_adouble",
 "kind": "function",
-"line": 178,
+"line": 223,
 "static": true
 },
 {
@@ -64828,7 +65881,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#validupath_ea",
 "kind": "function",
-"line": 802,
+"line": 848,
 "static": true
 },
 {
@@ -64876,7 +65929,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_chown",
 "kind": "function",
-"line": 1199,
+"line": 1245,
 "static": true
 },
 {
@@ -64884,7 +65937,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_copyfile",
 "kind": "function",
-"line": 1458,
+"line": 1504,
 "static": true
 },
 {
@@ -64892,7 +65945,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_deletecurdir",
 "kind": "function",
-"line": 1255,
+"line": 1301,
 "static": true
 },
 {
@@ -64900,7 +65953,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_deletefile",
 "kind": "function",
-"line": 1399,
+"line": 1445,
 "static": true
 },
 {
@@ -64908,7 +65961,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_ea_attrname_invalid",
 "kind": "function",
-"line": 1577,
+"line": 1623,
 "static": true
 },
 {
@@ -64916,7 +65969,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_ea_getcontent",
 "kind": "function",
-"line": 1644,
+"line": 1690,
 "static": true
 },
 {
@@ -64924,7 +65977,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_ea_getsize",
 "kind": "function",
-"line": 1603,
+"line": 1649,
 "static": true
 },
 {
@@ -64932,7 +65985,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_ea_list",
 "kind": "function",
-"line": 1683,
+"line": 1729,
 "static": true
 },
 {
@@ -64940,7 +65993,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_ea_remove",
 "kind": "function",
-"line": 1758,
+"line": 1804,
 "static": true
 },
 {
@@ -64948,7 +66001,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_ea_set",
 "kind": "function",
-"line": 1720,
+"line": 1766,
 "static": true
 },
 {
@@ -64956,7 +66009,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_posix_acl",
 "kind": "function",
-"line": 1522,
+"line": 1568,
 "static": true
 },
 {
@@ -64964,7 +66017,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_remove_acl",
 "kind": "function",
-"line": 1551,
+"line": 1597,
 "static": true
 },
 {
@@ -64972,7 +66025,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_renamedir",
 "kind": "function",
-"line": 1229,
+"line": 1275,
 "static": true
 },
 {
@@ -64980,7 +66033,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_renamefile",
 "kind": "function",
-"line": 1428,
+"line": 1474,
 "static": true
 },
 {
@@ -64988,7 +66041,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_setdirmode",
 "kind": "function",
-"line": 1312,
+"line": 1358,
 "static": true
 },
 {
@@ -64996,7 +66049,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_setdirowner",
 "kind": "function",
-"line": 1370,
+"line": 1416,
 "static": true
 },
 {
@@ -65004,7 +66057,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_setdirunixmode",
 "kind": "function",
-"line": 1341,
+"line": 1387,
 "static": true
 },
 {
@@ -65012,7 +66065,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_setfilmode",
 "kind": "function",
-"line": 1283,
+"line": 1329,
 "static": true
 },
 {
@@ -65020,7 +66073,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_solaris_acl",
 "kind": "function",
-"line": 1490,
+"line": 1536,
 "static": true
 },
 {
@@ -65028,7 +66081,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_validupath",
 "kind": "function",
-"line": 1792,
+"line": 1838,
 "static": true
 },
 {
@@ -65180,7 +66233,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#write_file",
 "kind": "function",
-"line": 2682,
+"line": 2685,
 "static": true
 },
 {
@@ -65188,7 +66241,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#write_fits_count",
 "kind": "function",
-"line": 2718,
+"line": 2721,
 "static": true
 },
 {
@@ -65196,7 +66249,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#write_fork",
 "kind": "function",
-"line": 2755,
+"line": 2758,
 "static": true
 },
 {

@@ -5,7 +5,7 @@ description: "Netatalk utility functions: unix."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/unix.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -465,7 +465,7 @@ Parameters:
 
 Returns: the result of lstat or stat
 
-Called by: [accessmode](../../etc/afpd/unix.c.md#accessmode), [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_metadata_cached](../../etc/afpd/ad_cache.c.md#ad_metadata_cached), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_deleteid](../../etc/afpd/file.c.md#afp_deleteid), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_setacl](../../etc/afpd/acls.c.md#afp_setacl), [check_access](../../etc/afpd/directory.c.md#check_access), [check_acl_access](../../etc/afpd/acls.c.md#check_acl_access), [dir_stat_usable](../../etc/afpd/directory.c.md#dir_stat_usable), [dirlookup_internal](../../etc/afpd/directory.c.md#dirlookup_internal), [dirlookup_strict](../../etc/afpd/directory.c.md#dirlookup_strict), [ea_written](../../etc/afpd/extattrs.c.md#ea_written), [enumerate_in](../../etc/afpd/enumerate.c.md#enumerate_in), [fork_sidecar_measure](../../etc/afpd/fork.c.md#fork_sidecar_measure), [getmetadata](../../etc/afpd/file.c.md#getmetadata), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [of_path_holds](../../etc/afpd/ofork.c.md#of_path_holds), [of_stat](../../etc/afpd/ofork.c.md#of_stat), [of_statdir](../../etc/afpd/ofork.c.md#of_statdir), [pfd_get](../../etc/afpd/pfd_cache.c.md#pfd_get), [pfd_ostat](../../etc/afpd/pfd_cache.c.md#pfd_ostat), [process_cache_hints](../../etc/afpd/dircache.c.md#process_cache_hints), [reenumerate_id](../../etc/afpd/file.c.md#reenumerate_id), [reenumerate_loop](../../etc/afpd/file.c.md#reenumerate_loop), [setdirmode_adouble_loop](../vfs/vfs.c.md#setdirmode_adouble_loop), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams)
+Called by: [accessmode](../../etc/afpd/unix.c.md#accessmode), [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_metadata_cached](../../etc/afpd/ad_cache.c.md#ad_metadata_cached), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_deleteid](../../etc/afpd/file.c.md#afp_deleteid), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_setacl](../../etc/afpd/acls.c.md#afp_setacl), [check_access](../../etc/afpd/directory.c.md#check_access), [check_acl_access](../../etc/afpd/acls.c.md#check_acl_access), [dir_stat_usable](../../etc/afpd/directory.c.md#dir_stat_usable), [dirlookup_internal](../../etc/afpd/directory.c.md#dirlookup_internal), [dirlookup_strict](../../etc/afpd/directory.c.md#dirlookup_strict), [ea_written](../../etc/afpd/extattrs.c.md#ea_written), [enumerate_in](../../etc/afpd/enumerate.c.md#enumerate_in), [fork_sidecar_measure](../../etc/afpd/fork.c.md#fork_sidecar_measure), [getmetadata](../../etc/afpd/file.c.md#getmetadata), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [name_holds_file](../../etc/afpd/file.c.md#name_holds_file), [of_path_holds](../../etc/afpd/ofork.c.md#of_path_holds), [of_stat](../../etc/afpd/ofork.c.md#of_stat), [of_statdir](../../etc/afpd/ofork.c.md#of_statdir), [pfd_get](../../etc/afpd/pfd_cache.c.md#pfd_get), [pfd_ostat](../../etc/afpd/pfd_cache.c.md#pfd_ostat), [process_cache_hints](../../etc/afpd/dircache.c.md#process_cache_hints), [reenumerate_id](../../etc/afpd/file.c.md#reenumerate_id), [reenumerate_loop](../../etc/afpd/file.c.md#reenumerate_loop), [setdirmode_adouble_loop](../vfs/vfs.c.md#setdirmode_adouble_loop), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams)
 
 ### ochown
 
@@ -629,7 +629,7 @@ Parameters:
 
 Returns: c, with A to Z taken to a to z
 
-Called by: [other_name](../vfs/vfs.c.md#other_name), [veto_entry_matches](../../etc/afpd/filedir.c.md#veto_entry_matches)
+Called by: [other_name](../vfs/vfs.c.md#other_name), [staged_link_name](../vfs/vfs.c.md#staged_link_name), [veto_entry_matches](../../etc/afpd/filedir.c.md#veto_entry_matches)
 
 Mentioned in the documentation of: [veto_entry_matches](../../etc/afpd/filedir.c.md#veto_entry_matches)
 

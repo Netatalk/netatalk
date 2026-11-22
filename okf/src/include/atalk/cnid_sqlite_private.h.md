@@ -5,7 +5,7 @@ description: "Private SQLite CNID backend state and status flags."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/cnid_sqlite_private.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -42,6 +42,10 @@ Defined at line 16.
 * `sqlite3_stmt * cnid_del_didname_stmt`
 * `sqlite3_stmt * cnid_del_devino_stmt`
 * `sqlite3_stmt * cnid_dirlist_stmt`
+* `sqlite3_stmt * cnid_delete_row_stmt`
+* `sqlite3_stmt * cnid_update_row_stmt`
+* `sqlite3_stmt * cnid_del_devino_other_stmt`
+* `sqlite3_stmt * cnid_check_row_stmt`
 * `sqlite3_stmt * cnid_find_index_stmt`: Name index searches by seed count: [0] NULL without an index.
 * `sqlite3_stmt * cnid_find_scoped_index_stmt`: The same for folder searches.
 * `sqlite3_stmt * cnid_find_candidates_stmt`

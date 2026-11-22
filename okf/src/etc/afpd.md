@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "etc/afpd"
-description: "66 files, 702 functions."
+description: "66 files, 710 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/afpd"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 ---
 
 # Files
@@ -89,14 +89,14 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 
 # Calls into
 
-* [libatalk/util](../libatalk/util.md): 284 calls
+* [libatalk/util](../libatalk/util.md): 286 calls
 * [libatalk/adouble](../libatalk/adouble.md): 223 calls
-* [include/atalk](../include/atalk.md): 68 calls
-* [libatalk/compat](../libatalk/compat.md): 56 calls
-* [libatalk/cnid](../libatalk/cnid.md): 48 calls
+* [include/atalk](../include/atalk.md): 70 calls
+* [libatalk/compat](../libatalk/compat.md): 59 calls
+* [libatalk/cnid](../libatalk/cnid.md): 58 calls
 * [libatalk/dsi](../libatalk/dsi.md): 34 calls
 * [libatalk/unicode](../libatalk/unicode.md): 34 calls
-* [libatalk/vfs](../libatalk/vfs.md): 21 calls
+* [libatalk/vfs](../libatalk/vfs.md): 22 calls
 * [libatalk/acl](../libatalk/acl.md): 17 calls
 * [libatalk/asp](../libatalk/asp.md): 17 calls
 * [libatalk/dalloc](../libatalk/dalloc.md): 14 calls
@@ -117,8 +117,8 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 * [get_afp_errno](afpd/directory.c.md#get_afp_errno): 21 callers
 * [of_findname](afpd/ofork.c.md#of_findname): 18 callers
 * [dir_remove_tree](afpd/directory.c.md#dir_remove_tree): 16 callers
+* [dircache_search_by_name](afpd/dircache.c.md#dircache_search_by_name): 16 callers
 * [dirlookup_strict](afpd/directory.c.md#dirlookup_strict): 16 callers
-* [dircache_search_by_name](afpd/dircache.c.md#dircache_search_by_name): 15 callers
 * [movecwd](afpd/directory.c.md#movecwd): 15 callers
 * [dir_modify](afpd/directory.c.md#dir_modify): 13 callers
 

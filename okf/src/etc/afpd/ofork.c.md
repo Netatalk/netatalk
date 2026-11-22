@@ -5,7 +5,7 @@ description: "Open fork table of a session."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/ofork.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-21T17:04:55+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -469,7 +469,7 @@ Returns: 0, or -1 when the stat failed
 
 Calls: [ostat](../../libatalk/util/unix.c.md#ostat)
 
-Called by: [afp_createdir](directory.c.md#afp_createdir), [afp_createid](file.c.md#afp_createid), [afp_opendir](directory.c.md#afp_opendir), [afp_resolveid](file.c.md#afp_resolveid), [catsearch](catsearch.c.md#catsearch), [catsearch_db](catsearch.c.md#catsearch_db), [cname](directory.c.md#cname), [enumerate_in](enumerate.c.md#enumerate_in), [of_statdir](ofork.c.md#of_statdir), [sd_stat](enumerate.c.md#sd_stat), [setfilparams](file.c.md#setfilparams), [setfilunixmode](unix.c.md#setfilunixmode)
+Called by: [afp_createdir](directory.c.md#afp_createdir), [afp_createid](file.c.md#afp_createid), [afp_opendir](directory.c.md#afp_opendir), [afp_resolveid](file.c.md#afp_resolveid), [catsearch](catsearch.c.md#catsearch), [catsearch_db](catsearch.c.md#catsearch_db), [cname](directory.c.md#cname), [enumerate_in](enumerate.c.md#enumerate_in), [of_statdir](ofork.c.md#of_statdir), [path_from_dir](directory.c.md#path_from_dir), [sd_stat](enumerate.c.md#sd_stat), [setfilunixmode](unix.c.md#setfilunixmode), [symlink_keeps_cnid](file.c.md#symlink_keeps_cnid)
 
 Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 

@@ -4,7 +4,7 @@
 * [adouble](adouble.md) - 10 files, 116 functions. Files in [adouble/](adouble/).
 * [asp](asp.md) - 10 files, 14 functions. Files in [asp/](asp/).
 * [atp](atp.md) - 10 files, 20 functions. Files in [atp/](atp/).
-* [cnid](cnid.md) - 4 files, 126 functions. Files in [cnid/](cnid/).
+* [cnid](cnid.md) - 4 files, 148 functions. Files in [cnid/](cnid/).
 * [compat](compat.md) - 4 files, 6 functions. Files in [compat/](compat/).
 * [dalloc](dalloc.md) - 1 file, 5 functions. Files in [dalloc/](dalloc/).
 * [dsi](dsi.md) - 12 files, 52 functions. Files in [dsi/](dsi/).
@@ -12,4 +12,4 @@
 * [netddp](netddp.md) - 1 file, 1 function. Files in [netddp/](netddp/).
 * [unicode](unicode.md) - 31 files, 115 functions. Files in [unicode/](unicode/).
 * [util](util.md) - 21 files, 264 functions. Files in [util/](util/).
-* [vfs](vfs.md) - 6 files, 118 functions. Files in [vfs/](vfs/).
+* [vfs](vfs.md) - 6 files, 119 functions. Files in [vfs/](vfs/).

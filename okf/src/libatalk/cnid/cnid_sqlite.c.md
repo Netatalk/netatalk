@@ -5,7 +5,7 @@ description: "SQLite CNID backend."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/cnid/cnid_sqlite.c"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 ---
 
 Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -168,11 +168,11 @@ Called by: [init_prepared_stmt](cnid_sqlite.c.md#init_prepared_stmt)
 static int init_prepared_stmt(CNID_sqlite_private *db)
 ```
 
-Defined at lines 417 to 473.
+Defined at lines 417 to 489.
 
-Prepare all 13 statements of the volume, at open and after a wipe.
+Prepare the volume's statements, at open and after a wipe.
 
-The searches through the name index prepare last, where the table has one, and a failure of theirs leaves name searches to the scans. A failure of the 13 leaves the later statements NULL, which cnid_sqlite_stmt_ready then refuses. The scoped find walks the subtree with a recursive CTE, which needs SQLite 3.8.3 or later.
+The searches through the name index prepare last, where the table has one, and a failure of theirs leaves name searches to the scans. A failure of the 17 leaves the later statements NULL, which cnid_sqlite_stmt_ready then refuses. The scoped find walks the subtree with a recursive CTE, which needs SQLite 3.8.3 or later.
 
 Parameters:
 * `db`: SQLite backend state
@@ -189,7 +189,7 @@ Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open), [cnid_sqlite_w
 static void cnid_sqlite_index_retire(CNID_sqlite_private *db)
 ```
 
-Defined at lines 480 to 491.
+Defined at lines 496 to 507.
 
 Finalize the name index's searches and clear their pointers.
 
@@ -204,7 +204,7 @@ Called by: [close_prepared_stmt](cnid_sqlite.c.md#close_prepared_stmt), [cnid_sq
 static int cnid_sqlite_index_stmt(const CNID_sqlite_private *db, int nseeds, bool scoped, sqlite3_stmt **stmt)
 ```
 
-Defined at lines 506 to 544.
+Defined at lines 522 to 560.
 
 Prepare the search through the name index for a number of seeds.
 
@@ -228,7 +228,7 @@ Called by: [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find), [cnid_sqlite_i
 static void close_prepared_stmt(CNID_sqlite_private *db)
 ```
 
-Defined at lines 551 to 580.
+Defined at lines 567 to 604.
 
 Finalize every prepared statement and clear the pointers.
 
@@ -245,7 +245,7 @@ Called by: [cnid_sqlite_close](cnid_sqlite.c.md#cnid_sqlite_close), [cnid_sqlite
 static bool cnid_sqlite_hint_usable(cnid_t hint)
 ```
 
-Defined at lines 593 to 597.
+Defined at lines 617 to 621.
 
 Tell whether a CNID hint from AppleDouble or EA metadata is safe to bind.
 
@@ -264,7 +264,7 @@ Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add)
 static bool cnid_sqlite_rowid_ok(uint64_t rowid)
 ```
 
-Defined at lines 609 to 612.
+Defined at lines 633 to 636.
 
 Tell whether a rowid from the database still fits a CNID.
 
@@ -283,7 +283,7 @@ Called by: [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find), [cnid_sqlite_g
 static bool cnid_sqlite_uuid_usable(const char *uuid)
 ```
 
-Defined at lines 626 to 641.
+Defined at lines 650 to 665.
 
 Tell whether a volume UUID is safe to place in SQL text as a table name.
 
@@ -302,7 +302,7 @@ Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 static void cnid_sqlite_set_errno(int sqlite_return)
 ```
 
-Defined at lines 658 to 692.
+Defined at lines 682 to 716.
 
 Map a SQLite result code onto the CNID_ERR_* contract in errno.
 
@@ -313,7 +313,7 @@ Every other code fails the single operation as CNID_ERR_CORRUPT. CNID_ERR_DB, wh
 Parameters:
 * `sqlite_return`: extended SQLite result code
 
-Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_delete](cnid_sqlite.c.md#cnid_sqlite_delete), [cnid_sqlite_delete_by_uuid](cnid_sqlite.c.md#cnid_sqlite_delete_by_uuid), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute), [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find), [cnid_sqlite_get](cnid_sqlite.c.md#cnid_sqlite_get), [cnid_sqlite_getstamp](cnid_sqlite.c.md#cnid_sqlite_getstamp), [cnid_sqlite_index_create](cnid_sqlite.c.md#cnid_sqlite_index_create), [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_resolve](cnid_sqlite.c.md#cnid_sqlite_resolve), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update), [init_prepared_stmt_one](cnid_sqlite.c.md#init_prepared_stmt_one)
+Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_delete](cnid_sqlite.c.md#cnid_sqlite_delete), [cnid_sqlite_delete_by_uuid](cnid_sqlite.c.md#cnid_sqlite_delete_by_uuid), [cnid_sqlite_delete_row](cnid_sqlite.c.md#cnid_sqlite_delete_row), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute), [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find), [cnid_sqlite_get](cnid_sqlite.c.md#cnid_sqlite_get), [cnid_sqlite_getstamp](cnid_sqlite.c.md#cnid_sqlite_getstamp), [cnid_sqlite_index_create](cnid_sqlite.c.md#cnid_sqlite_index_create), [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_resolve](cnid_sqlite.c.md#cnid_sqlite_resolve), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update), [cnid_sqlite_update_row_failed](cnid_sqlite.c.md#cnid_sqlite_update_row_failed), [init_prepared_stmt_one](cnid_sqlite.c.md#init_prepared_stmt_one)
 
 ### cnid_sqlite_execute
 
@@ -321,7 +321,7 @@ Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_del
 static int cnid_sqlite_execute(sqlite3 *con, const char *sql)
 ```
 
-Defined at lines 701 to 715.
+Defined at lines 725 to 739.
 
 Run one SQL statement and classify a failure into errno.
 
@@ -333,7 +333,7 @@ Returns: 0, or -1 with errno set by cnid_sqlite_set_errno
 
 Calls: [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno)
 
-Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_begin](cnid_sqlite.c.md#cnid_sqlite_begin), [cnid_sqlite_commit](cnid_sqlite.c.md#cnid_sqlite_commit), [cnid_sqlite_empty_table](cnid_sqlite.c.md#cnid_sqlite_empty_table), [cnid_sqlite_index_drop](cnid_sqlite.c.md#cnid_sqlite_index_drop), [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open), [cnid_sqlite_seed_sequence](cnid_sqlite.c.md#cnid_sqlite_seed_sequence), [cnid_sqlite_wipe](cnid_sqlite.c.md#cnid_sqlite_wipe)
+Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_begin](cnid_sqlite.c.md#cnid_sqlite_begin), [cnid_sqlite_commit](cnid_sqlite.c.md#cnid_sqlite_commit), [cnid_sqlite_empty_table](cnid_sqlite.c.md#cnid_sqlite_empty_table), [cnid_sqlite_index_drop](cnid_sqlite.c.md#cnid_sqlite_index_drop), [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open), [cnid_sqlite_seed_sequence](cnid_sqlite.c.md#cnid_sqlite_seed_sequence), [cnid_sqlite_update_row](cnid_sqlite.c.md#cnid_sqlite_update_row), [cnid_sqlite_wipe](cnid_sqlite.c.md#cnid_sqlite_wipe)
 
 ### cnid_sqlite_delete_by_uuid
 
@@ -341,7 +341,7 @@ Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_beg
 static int cnid_sqlite_delete_by_uuid(sqlite3 *con, const char *sql, const char *uuid)
 ```
 
-Defined at lines 729 to 757.
+Defined at lines 753 to 781.
 
 Remove a row by UUID through a bound parameter.
 
@@ -364,7 +364,7 @@ Called by: [cnid_sqlite_delete_sequence_row](cnid_sqlite.c.md#cnid_sqlite_delete
 static int cnid_sqlite_delete_volumes_row(sqlite3 *con, const char *uuid)
 ```
 
-Defined at lines 766 to 770.
+Defined at lines 790 to 794.
 
 Remove the row of a stale volume from the volumes table.
 
@@ -384,7 +384,7 @@ Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 static int cnid_sqlite_delete_sequence_row(sqlite3 *con, const char *uuid)
 ```
 
-Defined at lines 779 to 783.
+Defined at lines 803 to 807.
 
 Remove the AUTOINCREMENT high-water mark of a stale volume.
 
@@ -404,7 +404,7 @@ Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 static void cnid_sqlite_stmt_reset(sqlite3_stmt *stmt)
 ```
 
-Defined at lines 794 to 799.
+Defined at lines 818 to 823.
 
 Reset a prepared statement and keep errno.
 
@@ -413,7 +413,7 @@ The sqlite3_reset call enters the VFS and can leave errno from a speculative sys
 Parameters:
 * `stmt`: prepared statement
 
-Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_delete](cnid_sqlite.c.md#cnid_sqlite_delete), [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find), [cnid_sqlite_get](cnid_sqlite.c.md#cnid_sqlite_get), [cnid_sqlite_getstamp](cnid_sqlite.c.md#cnid_sqlite_getstamp), [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_resolve](cnid_sqlite.c.md#cnid_sqlite_resolve), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update)
+Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_delete](cnid_sqlite.c.md#cnid_sqlite_delete), [cnid_sqlite_delete_row](cnid_sqlite.c.md#cnid_sqlite_delete_row), [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find), [cnid_sqlite_get](cnid_sqlite.c.md#cnid_sqlite_get), [cnid_sqlite_getstamp](cnid_sqlite.c.md#cnid_sqlite_getstamp), [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_resolve](cnid_sqlite.c.md#cnid_sqlite_resolve), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update), [cnid_sqlite_update_row](cnid_sqlite.c.md#cnid_sqlite_update_row)
 
 ### cnid_sqlite_stmt_ready
 
@@ -421,7 +421,7 @@ Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_del
 static bool cnid_sqlite_stmt_ready(sqlite3_stmt *stmt, const char *caller)
 ```
 
-Defined at lines 812 to 823.
+Defined at lines 836 to 847.
 
 Tell whether a prepared statement is available to bind and step.
 
@@ -433,7 +433,7 @@ Parameters:
 
 Returns: true, or false with errno CNID_ERR_CLOSE
 
-Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_delete](cnid_sqlite.c.md#cnid_sqlite_delete), [cnid_sqlite_dirlist](cnid_sqlite.c.md#cnid_sqlite_dirlist), [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find), [cnid_sqlite_get](cnid_sqlite.c.md#cnid_sqlite_get), [cnid_sqlite_getstamp](cnid_sqlite.c.md#cnid_sqlite_getstamp), [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_resolve](cnid_sqlite.c.md#cnid_sqlite_resolve), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update)
+Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_delete](cnid_sqlite.c.md#cnid_sqlite_delete), [cnid_sqlite_delete_row](cnid_sqlite.c.md#cnid_sqlite_delete_row), [cnid_sqlite_dirlist](cnid_sqlite.c.md#cnid_sqlite_dirlist), [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find), [cnid_sqlite_get](cnid_sqlite.c.md#cnid_sqlite_get), [cnid_sqlite_getstamp](cnid_sqlite.c.md#cnid_sqlite_getstamp), [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_resolve](cnid_sqlite.c.md#cnid_sqlite_resolve), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update), [cnid_sqlite_update_row](cnid_sqlite.c.md#cnid_sqlite_update_row)
 
 ### cnid_sqlite_begin
 
@@ -441,7 +441,7 @@ Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_del
 static int cnid_sqlite_begin(sqlite3 *con, int *owned)
 ```
 
-Defined at lines 836 to 844.
+Defined at lines 860 to 868.
 
 Open a transaction and mark it as owned by the calling function.
 
@@ -463,7 +463,7 @@ Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_fin
 static int cnid_sqlite_commit(sqlite3 *con, int *owned)
 ```
 
-Defined at lines 856 to 868.
+Defined at lines 880 to 892.
 
 Commit the owned transaction and release ownership on success only.
 
@@ -477,7 +477,7 @@ Returns: 0, or -1 with errno classified
 
 Calls: [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute)
 
-Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_index_changed](cnid_sqlite.c.md#cnid_sqlite_index_changed), [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update), [cnid_sqlite_wipe](cnid_sqlite.c.md#cnid_sqlite_wipe)
+Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_index_changed](cnid_sqlite.c.md#cnid_sqlite_index_changed), [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update), [cnid_sqlite_update_row](cnid_sqlite.c.md#cnid_sqlite_update_row), [cnid_sqlite_wipe](cnid_sqlite.c.md#cnid_sqlite_wipe)
 
 ### cnid_sqlite_rollback
 
@@ -485,7 +485,7 @@ Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_ind
 static void cnid_sqlite_rollback(sqlite3 *con, int *owned)
 ```
 
-Defined at lines 879 to 892.
+Defined at lines 903 to 916.
 
 Roll back an owned transaction and keep errno.
 
@@ -495,7 +495,7 @@ Parameters:
 * `con`: SQLite connection, or NULL
 * `owned`: owner flag, cleared by the call
 
-Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find), [cnid_sqlite_index_changed](cnid_sqlite.c.md#cnid_sqlite_index_changed), [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update), [cnid_sqlite_wipe](cnid_sqlite.c.md#cnid_sqlite_wipe)
+Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find), [cnid_sqlite_index_changed](cnid_sqlite.c.md#cnid_sqlite_index_changed), [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update), [cnid_sqlite_update_row](cnid_sqlite.c.md#cnid_sqlite_update_row), [cnid_sqlite_update_row_failed](cnid_sqlite.c.md#cnid_sqlite_update_row_failed), [cnid_sqlite_wipe](cnid_sqlite.c.md#cnid_sqlite_wipe)
 
 ### cnid_sqlite_seed_sequence
 
@@ -503,7 +503,7 @@ Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_fin
 static int cnid_sqlite_seed_sequence(CNID_sqlite_private *db)
 ```
 
-Defined at lines 905 to 929.
+Defined at lines 929 to 953.
 
 Reset the AUTOINCREMENT sequence of the volume to CNID_START - 1.
 
@@ -524,7 +524,7 @@ Called by: [cnid_sqlite_empty_table](cnid_sqlite.c.md#cnid_sqlite_empty_table), 
 static int cnid_sqlite_count(const CNID_sqlite_private *db, const char *fmt)
 ```
 
-Defined at lines 939 to 957.
+Defined at lines 963 to 981.
 
 Read the count that a SQL template of the volume selects.
 
@@ -544,7 +544,7 @@ Called by: [cnid_sqlite_candidates](cnid_sqlite.c.md#cnid_sqlite_candidates), [c
 static int cnid_sqlite_index_drop(sqlite3 *con, const char *uuid)
 ```
 
-Defined at lines 973 to 1015.
+Defined at lines 997 to 1039.
 
 Remove the name index of a table in one savepoint.
 
@@ -566,7 +566,7 @@ Called by: [cnid_sqlite_empty_table](cnid_sqlite.c.md#cnid_sqlite_empty_table), 
 static bool cnid_sqlite_names_left(sqlite3 *con, const char *uuid)
 ```
 
-Defined at lines 1024 to 1045.
+Defined at lines 1048 to 1069.
 
 Tell whether the full-text table of a stale volume remains.
 
@@ -586,7 +586,7 @@ Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 static int cnid_sqlite_index_create(const CNID_sqlite_private *db)
 ```
 
-Defined at lines 1061 to 1132.
+Defined at lines 1085 to 1156.
 
 Give an empty table its name index, in the caller's write transaction.
 
@@ -607,7 +607,7 @@ Called by: [cnid_sqlite_empty_table](cnid_sqlite.c.md#cnid_sqlite_empty_table), 
 static bool cnid_sqlite_index_broken(int rc)
 ```
 
-Defined at lines 1143 to 1146.
+Defined at lines 1167 to 1170.
 
 Tell whether a failure on the name index says the index is unusable.
 
@@ -626,7 +626,7 @@ Called by: [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find), [cnid_sqlite_i
 static void cnid_sqlite_index_abandon(CNID_sqlite_private *db, const char *reason, const char *remedy)
 ```
 
-Defined at lines 1162 to 1170.
+Defined at lines 1186 to 1194.
 
 Stop using the name index on this connection, and log why.
 
@@ -647,7 +647,7 @@ Called by: [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find), [cnid_sqlite_i
 static void cnid_sqlite_index_prepare(CNID_sqlite_private *db)
 ```
 
-Defined at lines 1180 to 1241.
+Defined at lines 1204 to 1265.
 
 Prepare the name index's searches when this library reads a whole one.
 
@@ -666,7 +666,7 @@ Called by: [init_prepared_stmt](cnid_sqlite.c.md#init_prepared_stmt)
 static void cnid_sqlite_index_changed(CNID_sqlite_private *db)
 ```
 
-Defined at lines 1254 to 1297.
+Defined at lines 1278 to 1321.
 
 Count a write; at a batch, move the lowest logged Ids into the index.
 
@@ -677,7 +677,7 @@ Parameters:
 
 Calls: [asprintf](../compat/misc.c.md#asprintf), [cnid_sqlite_begin](cnid_sqlite.c.md#cnid_sqlite_begin), [cnid_sqlite_commit](cnid_sqlite.c.md#cnid_sqlite_commit), [cnid_sqlite_count](cnid_sqlite.c.md#cnid_sqlite_count), [cnid_sqlite_index_abandon](cnid_sqlite.c.md#cnid_sqlite_index_abandon), [cnid_sqlite_index_broken](cnid_sqlite.c.md#cnid_sqlite_index_broken), [cnid_sqlite_rollback](cnid_sqlite.c.md#cnid_sqlite_rollback)
 
-Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_delete](cnid_sqlite.c.md#cnid_sqlite_delete), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update)
+Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_delete](cnid_sqlite.c.md#cnid_sqlite_delete), [cnid_sqlite_delete_row](cnid_sqlite.c.md#cnid_sqlite_delete_row), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update), [cnid_sqlite_update_row](cnid_sqlite.c.md#cnid_sqlite_update_row)
 
 ### cnid_sqlite_indexable
 
@@ -685,7 +685,7 @@ Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_del
 static bool cnid_sqlite_indexable(const CNID_sqlite_private *db, const struct sl_name_pattern *seed)
 ```
 
-Defined at lines 1312 to 1334.
+Defined at lines 1336 to 1358.
 
 Tell whether the name index narrows a search for a seed.
 
@@ -709,7 +709,7 @@ Mentioned in the documentation of: [cnid_sqlite_find_narrows](cnid_sqlite.c.md#c
 static unsigned int cnid_sqlite_candidates(const CNID_sqlite_private *db, const struct sl_name_pattern *const *seeds, int nseeds, unsigned int limit)
 ```
 
-Defined at lines 1348 to 1374.
+Defined at lines 1372 to 1398.
 
 Count the seeds' index candidates and the logged Ids, up to a limit.
 
@@ -733,7 +733,7 @@ Called by: [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find)
 static bool cnid_sqlite_find_narrows(struct _cnid_db *cdb, const struct sl_name_pattern *seed, cnid_t scope_did)
 ```
 
-Defined at lines 1387 to 1394.
+Defined at lines 1411 to 1418.
 
 cnid_find_narrows: whether the name index narrows a search by a seed
 
@@ -756,7 +756,7 @@ Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 static int cnid_sqlite_empty_table(CNID_sqlite_private *db)
 ```
 
-Defined at lines 1406 to 1425.
+Defined at lines 1430 to 1449.
 
 Empty the volume's table and restart its CNIDs at CNID_START.
 
@@ -777,7 +777,7 @@ Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_wip
 int cnid_sqlite_delete(struct _cnid_db *cdb, const cnid_t id)
 ```
 
-Defined at lines 1434 to 1476.
+Defined at lines 1458 to 1500.
 
 Remove a CNID from the SQLite table.
 
@@ -791,13 +791,89 @@ Calls: [cnid_sqlite_index_changed](cnid_sqlite.c.md#cnid_sqlite_index_changed), 
 
 Called by: [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 
+### cnid_sqlite_delete_row
+
+```c
+static int cnid_sqlite_delete_row(struct _cnid_db *cdb, const cnid_t id, const cnid_t did, const char *name, size_t len, uint64_t dev, uint64_t ino)
+```
+
+Defined at lines 1514 to 1559.
+
+Remove a CNID's row if it records did, name, dev, ino.
+
+Parameters:
+* `cdb`: CNID database
+* `id`: CNID in network order, not 0
+* `did`: parent the row must record, in network order
+* `name`: name the row must record
+* `len`: length of name
+* `dev`: device the row must record
+* `ino`: inode the row must record
+
+Returns: 1 when deleted, 0 when no row matched, or -1 with errno classified
+
+Calls: [cnid_sqlite_index_changed](cnid_sqlite.c.md#cnid_sqlite_index_changed), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset)
+
+Called by: [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
+
+### cnid_sqlite_update_row_failed
+
+```c
+static int cnid_sqlite_update_row_failed(CNID_sqlite_private *db, int sqlite_return, int *owned)
+```
+
+Defined at lines 1569 to 1577.
+
+Report a failed statement of a conditional update and roll it back.
+
+Parameters:
+* `db`: SQLite backend state
+* `sqlite_return`: the statement's result code
+* `owned`: owner flag of the update's transaction
+
+Returns: -1 with errno classified
+
+Calls: [cnid_sqlite_rollback](cnid_sqlite.c.md#cnid_sqlite_rollback), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno)
+
+Called by: [cnid_sqlite_update_row](cnid_sqlite.c.md#cnid_sqlite_update_row)
+
+### cnid_sqlite_update_row
+
+```c
+static int cnid_sqlite_update_row(struct _cnid_db *cdb, const cnid_t id, const cnid_t did, const char *name, size_t len, uint64_t dev, uint64_t ino, const struct stat *st, cnid_replace_fn replace, void *arg)
+```
+
+Defined at lines 1599 to 1696.
+
+Give a CNID's row st's dev and ino if it records did, name, dev, ino.
+
+The write lock spans the check, replace and the update, so other sessions' writes wait; another row that records the stat's device and inode is stale, as the object holds them now, and goes in the same transaction.
+
+Parameters:
+* `cdb`: CNID database
+* `id`: CNID in network order, not 0
+* `did`: parent the row must record, in network order
+* `name`: name the row must record
+* `len`: length of name
+* `dev`: device the row must record
+* `ino`: inode the row must record
+* `st`: stat whose device and inode the row takes
+* `replace`: runs under the write lock once the row matched, or NULL
+* `arg`: replace's argument
+
+Returns: 1 when the row changed, 0 when no row matched, or -1 with errno classified, or with replace's errno when replace failed
+
+Calls: [cnid_row_dev](cnid.c.md#cnid_row_dev), [cnid_sqlite_commit](cnid_sqlite.c.md#cnid_sqlite_commit), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute), [cnid_sqlite_index_changed](cnid_sqlite.c.md#cnid_sqlite_index_changed), [cnid_sqlite_rollback](cnid_sqlite.c.md#cnid_sqlite_rollback), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset), [cnid_sqlite_update_row_failed](cnid_sqlite.c.md#cnid_sqlite_update_row_failed)
+
+Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
+
 ### cnid_sqlite_close
 
 ```c
 void cnid_sqlite_close(struct _cnid_db *cdb)
 ```
 
-Defined at lines 1487 to 1523.
+Defined at lines 1707 to 1743.
 
 Close the SQLite connection of a CNID database and free the database.
 
@@ -816,7 +892,7 @@ Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 int cnid_sqlite_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st, cnid_t did, const char *name, size_t len)
 ```
 
-Defined at lines 1540 to 1700.
+Defined at lines 1760 to 1917.
 
 Rewrite the entry of a CNID with a new name, parent, and stat.
 
@@ -832,7 +908,7 @@ Parameters:
 
 Returns: 0, or -1 with errno classified
 
-Calls: [cnid_sqlite_begin](cnid_sqlite.c.md#cnid_sqlite_begin), [cnid_sqlite_commit](cnid_sqlite.c.md#cnid_sqlite_commit), [cnid_sqlite_index_changed](cnid_sqlite.c.md#cnid_sqlite_index_changed), [cnid_sqlite_rollback](cnid_sqlite.c.md#cnid_sqlite_rollback), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset)
+Calls: [cnid_row_dev](cnid.c.md#cnid_row_dev), [cnid_sqlite_begin](cnid_sqlite.c.md#cnid_sqlite_begin), [cnid_sqlite_commit](cnid_sqlite.c.md#cnid_sqlite_commit), [cnid_sqlite_index_changed](cnid_sqlite.c.md#cnid_sqlite_index_changed), [cnid_sqlite_rollback](cnid_sqlite.c.md#cnid_sqlite_rollback), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset)
 
 Called by: [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 
@@ -842,13 +918,13 @@ Called by: [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqli
 cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did, const char *name, size_t len)
 ```
 
-Defined at lines 1722 to 1969.
+Defined at lines 1942 to 2221.
 
 Find the CNID of an object by name and parent or by device and inode.
 
-Extra matching rows are stale, and the call removes them and reports CNID_ERR_NOTFOUND. A row with an ID or parent outside the CNID range means a corrupted database.
+Extra matching rows are stale: each goes while it still records what the call read, or by its ID alone where its parent is outside the CNID range, and the call reports CNID_ERR_NOTFOUND. One whose ID is outside the range stays, and the call reports CNID_ERR_CORRUPT, as for a found row with an ID or parent outside the range.
 
-A row with another name or parent means a server-side move or a reused inode. When its CNID equals the hint of the current add, the row takes the new name and parent. Otherwise, and for a row with another device or inode, the call removes the row and reports CNID_ERR_NOTFOUND, so cnid_sqlite_add inserts a new entry.
+A row with another name or parent means a server-side move or a reused inode. When its CNID equals the hint of the current add, the row takes the new name and parent. Otherwise, and for a row with another device or inode, the row goes while it still records what the call read, and the call reports CNID_ERR_NOTFOUND: cnid_sqlite_add inserts a new entry, or meets a row another session changed meanwhile and repeats the lookup.
 
 Parameters:
 * `cdb`: CNID database
@@ -859,7 +935,7 @@ Parameters:
 
 Returns: the CNID, or CNID_INVALID with errno classified
 
-Calls: [cnid_sqlite_delete](cnid_sqlite.c.md#cnid_sqlite_delete), [cnid_sqlite_rowid_ok](cnid_sqlite.c.md#cnid_sqlite_rowid_ok), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update), [strlcpy](../compat/strlcpy.c.md#strlcpy)
+Calls: [cnid_row_dev](cnid.c.md#cnid_row_dev), [cnid_sqlite_delete](cnid_sqlite.c.md#cnid_sqlite_delete), [cnid_sqlite_delete_row](cnid_sqlite.c.md#cnid_sqlite_delete_row), [cnid_sqlite_rowid_ok](cnid_sqlite.c.md#cnid_sqlite_rowid_ok), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update), [strlcpy](../compat/strlcpy.c.md#strlcpy)
 
 Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 
@@ -869,7 +945,7 @@ Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_new
 cnid_t cnid_sqlite_add(struct _cnid_db *cdb, const struct stat *st, cnid_t did, const char *name, size_t len, cnid_t hint)
 ```
 
-Defined at lines 1992 to 2260.
+Defined at lines 2244 to 2509.
 
 Find the CNID of an object or add a new entry for it.
 
@@ -887,7 +963,7 @@ Parameters:
 
 Returns: the CNID, or CNID_INVALID with errno classified
 
-Calls: [asprintf](../compat/misc.c.md#asprintf), [cnid_sqlite_begin](cnid_sqlite.c.md#cnid_sqlite_begin), [cnid_sqlite_commit](cnid_sqlite.c.md#cnid_sqlite_commit), [cnid_sqlite_empty_table](cnid_sqlite.c.md#cnid_sqlite_empty_table), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute), [cnid_sqlite_hint_usable](cnid_sqlite.c.md#cnid_sqlite_hint_usable), [cnid_sqlite_index_changed](cnid_sqlite.c.md#cnid_sqlite_index_changed), [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_rollback](cnid_sqlite.c.md#cnid_sqlite_rollback), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset)
+Calls: [asprintf](../compat/misc.c.md#asprintf), [cnid_row_dev](cnid.c.md#cnid_row_dev), [cnid_sqlite_begin](cnid_sqlite.c.md#cnid_sqlite_begin), [cnid_sqlite_commit](cnid_sqlite.c.md#cnid_sqlite_commit), [cnid_sqlite_empty_table](cnid_sqlite.c.md#cnid_sqlite_empty_table), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute), [cnid_sqlite_hint_usable](cnid_sqlite.c.md#cnid_sqlite_hint_usable), [cnid_sqlite_index_changed](cnid_sqlite.c.md#cnid_sqlite_index_changed), [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_rollback](cnid_sqlite.c.md#cnid_sqlite_rollback), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset)
 
 Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 
@@ -897,7 +973,7 @@ Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 cnid_t cnid_sqlite_get(struct _cnid_db *cdb, cnid_t did, const char *name, size_t len)
 ```
 
-Defined at lines 2274 to 2360.
+Defined at lines 2523 to 2609.
 
 Look up the CNID that a directory holds under a name.
 
@@ -918,12 +994,12 @@ Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 ### cnid_sqlite_resolve
 
 ```c
-char * cnid_sqlite_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
+char * cnid_sqlite_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len, uint64_t *dev, uint64_t *ino)
 ```
 
-Defined at lines 2376 to 2474.
+Defined at lines 2627 to 2727.
 
-Resolve a CNID to its parent and name in the SQLite table.
+Resolve a CNID to the parent, name, device and inode of its row.
 
 Only a missing row reports CNID_ERR_NOTFOUND, which afp_resolveid answers with the permanent AFPERR_NOID. A parent outside the CNID range or a NULL name means a corrupted database.
 
@@ -932,6 +1008,8 @@ Parameters:
 * `id`: CNID to resolve, receives the parent CNID or CNID_INVALID
 * `buffer`: receives the name, always NUL-terminated
 * `len`: size of buffer, not 0
+* `dev`: receives the row's device
+* `ino`: receives the row's inode
 
 Returns: buffer, or NULL with errno classified
 
@@ -945,7 +1023,7 @@ Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 int cnid_sqlite_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 ```
 
-Defined at lines 2487 to 2571.
+Defined at lines 2740 to 2824.
 
 Read the stamp of a volume from the volumes table.
 
@@ -968,7 +1046,7 @@ Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 static int cnid_sqlite_find_bind(sqlite3_stmt *stmt, bool indexed, const struct sl_name_query *query, const struct sl_name_pattern *const *seeds, int nseeds, cnid_t scope_did, sqlite3_int64 limit)
 ```
 
-Defined at lines 2585 to 2613.
+Defined at lines 2838 to 2866.
 
 Bind a name search's parameters.
 
@@ -993,7 +1071,7 @@ Called by: [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find)
 int cnid_sqlite_find(struct _cnid_db *cdb, const struct sl_name_query *query, const struct sl_name_pattern *const *seeds, int nseeds, cnid_t scope_did, void *buffer, size_t buflen, bool *more_available)
 ```
 
-Defined at lines 2641 to 2824.
+Defined at lines 2894 to 3077.
 
 Find the CNIDs whose names match a query, for cnid_find.
 
@@ -1021,7 +1099,7 @@ Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 int cnid_sqlite_wipe(struct _cnid_db *cdb)
 ```
 
-Defined at lines 2839 to 2906.
+Defined at lines 3092 to 3159.
 
 Empty the SQLite table of a volume and restart its CNIDs at CNID_START.
 
@@ -1042,7 +1120,7 @@ Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 static int cnid_sqlite_dirlist(struct _cnid_db *cdb, cnid_t did, size_t max, cnid_dirlist_fn fn, void *ctx)
 ```
 
-Defined at lines 2918 to 2950.
+Defined at lines 3171 to 3203.
 
 Hand at most max rows of one folder to fn.
 
@@ -1065,7 +1143,7 @@ Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 static struct _cnid_db * cnid_sqlite_new(struct vol *vol)
 ```
 
-Defined at lines 2958 to 2981.
+Defined at lines 3211 to 3236.
 
 Allocate a CNID database object with the SQLite function table.
 
@@ -1074,7 +1152,7 @@ Parameters:
 
 Returns: the object, or NULL when calloc fails
 
-Calls: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_close](cnid_sqlite.c.md#cnid_sqlite_close), [cnid_sqlite_delete](cnid_sqlite.c.md#cnid_sqlite_delete), [cnid_sqlite_dirlist](cnid_sqlite.c.md#cnid_sqlite_dirlist), [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find), [cnid_sqlite_find_narrows](cnid_sqlite.c.md#cnid_sqlite_find_narrows), [cnid_sqlite_get](cnid_sqlite.c.md#cnid_sqlite_get), [cnid_sqlite_getstamp](cnid_sqlite.c.md#cnid_sqlite_getstamp), [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_resolve](cnid_sqlite.c.md#cnid_sqlite_resolve), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update), [cnid_sqlite_wipe](cnid_sqlite.c.md#cnid_sqlite_wipe)
+Calls: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_close](cnid_sqlite.c.md#cnid_sqlite_close), [cnid_sqlite_delete](cnid_sqlite.c.md#cnid_sqlite_delete), [cnid_sqlite_delete_row](cnid_sqlite.c.md#cnid_sqlite_delete_row), [cnid_sqlite_dirlist](cnid_sqlite.c.md#cnid_sqlite_dirlist), [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find), [cnid_sqlite_find_narrows](cnid_sqlite.c.md#cnid_sqlite_find_narrows), [cnid_sqlite_get](cnid_sqlite.c.md#cnid_sqlite_get), [cnid_sqlite_getstamp](cnid_sqlite.c.md#cnid_sqlite_getstamp), [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_resolve](cnid_sqlite.c.md#cnid_sqlite_resolve), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update), [cnid_sqlite_update_row](cnid_sqlite.c.md#cnid_sqlite_update_row), [cnid_sqlite_wipe](cnid_sqlite.c.md#cnid_sqlite_wipe)
 
 Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 
@@ -1084,7 +1162,7 @@ Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 static bool cnid_sqlite_refused(const struct vol *vol, const char *dir, const struct stat *st)
 ```
 
-Defined at lines 2993 to 3028.
+Defined at lines 3248 to 3283.
 
 Tell whether a private volume refuses a CNID directory it found, and log why.
 
@@ -1105,7 +1183,7 @@ Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 static void cnid_sqlite_report_orphan(const struct vol *vol, const char *dbdir)
 ```
 
-Defined at lines 3041 to 3075.
+Defined at lines 3296 to 3330.
 
 Log an unused CNID database named after the volume in its share root.
 
@@ -1123,7 +1201,7 @@ Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 struct _cnid_db * cnid_sqlite_open(struct cnid_open_args *args)
 ```
 
-Defined at lines 3097 to 3785.
+Defined at lines 3352 to 4040.
 
 Open the SQLite CNID backend for a volume.
 

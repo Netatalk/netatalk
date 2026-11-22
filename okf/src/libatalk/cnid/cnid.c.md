@@ -5,7 +5,7 @@ description: "The CNID database front end and backend registry."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/cnid/cnid.c"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 ---
 
 Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -259,7 +259,7 @@ Turn the loaded tables off: a CNID write may have moved a row.
 Parameters:
 * `cdb`: CNID database
 
-Called by: [cnid_delete](cnid.c.md#cnid_delete), [cnid_update](cnid.c.md#cnid_update), [cnid_wipe](cnid.c.md#cnid_wipe)
+Called by: [cnid_delete](cnid.c.md#cnid_delete), [cnid_delete_row](cnid.c.md#cnid_delete_row), [cnid_update](cnid.c.md#cnid_update), [cnid_update_row](cnid.c.md#cnid_update_row), [cnid_wipe](cnid.c.md#cnid_wipe)
 
 ### cnid_dir_arm
 
@@ -336,13 +336,35 @@ Called by: [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [close_metadat
 
 Calls through [`_cnid_db::cnid_close`](../../include/atalk/cnid.h.md#struct-_cnid_db): no table assigns this field
 
+### cnid_row_dev
+
+```c
+uint64_t cnid_row_dev(const struct _cnid_db *cdb, const struct stat *st)
+```
+
+Defined at lines 535 to 538.
+
+The device a CNID row records for st: 0 under CNID_FLAG_NODEV.
+
+Every write, lookup and check of a row's device goes through it.
+
+Parameters:
+* `cdb`: CNID database
+* `st`: stat of the object
+
+Returns: the device
+
+Called by: [cnid_add](cnid.c.md#cnid_add), [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add), [cnid_mysql_lookup](cnid_mysql.c.md#cnid_mysql_lookup), [cnid_mysql_update](cnid_mysql.c.md#cnid_mysql_update), [cnid_mysql_update_row_params](cnid_mysql.c.md#cnid_mysql_update_row_params), [cnid_row_holds](cnid.c.md#cnid_row_holds), [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update), [cnid_sqlite_update_row](cnid_sqlite.c.md#cnid_sqlite_update_row), [dirlookup_internal](../../etc/afpd/directory.c.md#dirlookup_internal)
+
+Mentioned in the documentation of: [cnid_row_holds](cnid.c.md#cnid_row_holds)
+
 ### cnid_add
 
 ```c
 cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did, const char *name, const size_t len, cnid_t hint)
 ```
 
-Defined at lines 544 to 577.
+Defined at lines 558 to 590.
 
 Add an object to the CNID database or find its existing CNID.
 
@@ -358,7 +380,7 @@ Parameters:
 
 Returns: the CNID, or CNID_INVALID with errno set to a CNID_ERR_* value or 0
 
-Calls: [dirtab_load](cnid.c.md#dirtab_load), [dirtab_lookup](cnid.c.md#dirtab_lookup), [dirtab_of](cnid.c.md#dirtab_of), [valide](cnid.c.md#valide)
+Calls: [cnid_row_dev](cnid.c.md#cnid_row_dev), [dirtab_load](cnid.c.md#dirtab_load), [dirtab_lookup](cnid.c.md#dirtab_lookup), [dirtab_of](cnid.c.md#dirtab_of), [valide](cnid.c.md#valide)
 
 Called by: [check_cnid](../../bin/dbd/cmd_dbd_scanvol.c.md#check_cnid), [cnid_for_path](../util/cnid.c.md#cnid_for_path), [cnid_for_paths_parent](../../bin/nad/nad_util.c.md#cnid_for_paths_parent), [get_id](../../etc/afpd/file.c.md#get_id), [object_cnid](../../etc/afpd/directory.c.md#object_cnid), [reenumerate_loop](../../etc/afpd/file.c.md#reenumerate_loop)
 
@@ -372,7 +394,7 @@ Mentioned in the documentation of: [cnid_dir_serve](cnid.c.md#cnid_dir_serve), [
 int cnid_delete(struct _cnid_db *cdb, cnid_t id)
 ```
 
-Defined at lines 586 to 593.
+Defined at lines 599 to 606.
 
 Remove a CNID from the database.
 
@@ -388,13 +410,40 @@ Called by: [afp_delete](../../etc/afpd/filedir.c.md#afp_delete), [afp_deleteid](
 
 Calls through [`_cnid_db::cnid_delete`](../../include/atalk/cnid.h.md#struct-_cnid_db): no table assigns this field
 
+### cnid_delete_row
+
+```c
+int cnid_delete_row(struct _cnid_db *cdb, cnid_t id, cnid_t did, const char *name, size_t len, uint64_t dev, uint64_t ino)
+```
+
+Defined at lines 623 to 629.
+
+Remove a CNID's row if it records did, name, dev, ino.
+
+Parameters:
+* `cdb`: CNID database
+* `id`: CNID to remove
+* `did`: the parent the row must record
+* `name`: the name the row must record, as [cnid_resolve_row()](cnid.c.md#cnid_resolve_row) hands it back
+* `len`: length of name, up to MAXPATHLEN
+* `dev`: the device the row must record, as [cnid_resolve_row()](cnid.c.md#cnid_resolve_row) hands it back
+* `ino`: the inode the row must record
+
+Returns: 1 when the row went, 0 when no row of the CNID records them, or -1 with errno classified
+
+Calls: [dirtab_off](cnid.c.md#dirtab_off)
+
+Called by: [retire_row](../../etc/afpd/directory.c.md#retire_row)
+
+Calls through [`_cnid_db::cnid_delete_row`](../../include/atalk/cnid.h.md#struct-_cnid_db): no table assigns this field
+
 ### cnid_get
 
 ```c
 cnid_t cnid_get(struct _cnid_db *cdb, const cnid_t did, char *name, const size_t len)
 ```
 
-Defined at lines 605 to 612.
+Defined at lines 640 to 647.
 
 Look up the CNID of a name in a directory.
 
@@ -408,7 +457,7 @@ Returns: the CNID after valide, or CNID_INVALID
 
 Calls: [valide](cnid.c.md#valide)
 
-Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_delete](../../etc/afpd/filedir.c.md#afp_delete), [afp_setacl](../../etc/afpd/acls.c.md#afp_setacl), [deletefile](../../etc/afpd/file.c.md#deletefile), [dir_modify](../../etc/afpd/directory.c.md#dir_modify), [ea_written](../../etc/afpd/extattrs.c.md#ea_written), [getmetadata](../../etc/afpd/file.c.md#getmetadata), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_hint_siblings](../../etc/afpd/ofork.c.md#of_hint_siblings), [setfilparams](../../etc/afpd/file.c.md#setfilparams)
+Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_delete](../../etc/afpd/filedir.c.md#afp_delete), [afp_setacl](../../etc/afpd/acls.c.md#afp_setacl), [deletefile](../../etc/afpd/file.c.md#deletefile), [dir_modify](../../etc/afpd/directory.c.md#dir_modify), [ea_written](../../etc/afpd/extattrs.c.md#ea_written), [getmetadata](../../etc/afpd/file.c.md#getmetadata), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_hint_siblings](../../etc/afpd/ofork.c.md#of_hint_siblings), [setfilparams](../../etc/afpd/file.c.md#setfilparams), [symlink_keeps_cnid](../../etc/afpd/file.c.md#symlink_keeps_cnid)
 
 Calls through [`_cnid_db::cnid_get`](../../include/atalk/cnid.h.md#struct-_cnid_db): no table assigns this field
 
@@ -418,7 +467,7 @@ Calls through [`_cnid_db::cnid_get`](../../include/atalk/cnid.h.md#struct-_cnid_
 int cnid_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 ```
 
-Defined at lines 626 to 647.
+Defined at lines 661 to 682.
 
 Read the stamp of a CNID database.
 
@@ -441,7 +490,7 @@ Calls through [`_cnid_db::cnid_getstamp`](../../include/atalk/cnid.h.md#struct-_
 cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t did, char *name, const size_t len)
 ```
 
-Defined at lines 660 to 668.
+Defined at lines 695 to 703.
 
 Look up the CNID of an object by name and parent or by device and inode.
 
@@ -466,7 +515,7 @@ Calls through [`_cnid_db::cnid_lookup`](../../include/atalk/cnid.h.md#struct-_cn
 static bool cnid_find_narrows(const struct sl_name_pattern *seed, void *ctx)
 ```
 
-Defined at lines 684 to 690.
+Defined at lines 719 to 725.
 
 [sl_name_query_seeds()](../util/sl_names.c.md#sl_name_query_seeds) test: whether the backend narrows by a seed
 
@@ -486,7 +535,7 @@ Calls through [`_cnid_db::cnid_find_narrows`](../../include/atalk/cnid.h.md#stru
 int cnid_find_scoped(struct _cnid_db *cdb, const struct sl_name_query *query, cnid_t scope_did, void *buffer, size_t buflen, bool *more_available)
 ```
 
-Defined at lines 718 to 750.
+Defined at lines 753 to 785.
 
 Find the CNIDs whose names match a query, in a directory's subtree.
 
@@ -518,7 +567,7 @@ Mentioned in the documentation of: [cnid_find_string](cnid.c.md#cnid_find_string
 static int cnid_find_string(struct _cnid_db *cdb, const char *name, size_t namelen, bool exact, unsigned int flags, void *buffer, size_t buflen, bool *more_available)
 ```
 
-Defined at lines 767 to 800.
+Defined at lines 802 to 835.
 
 Find the CNIDs for a name string, within names or as whole names.
 
@@ -544,7 +593,7 @@ Called by: [cnid_find](cnid.c.md#cnid_find), [cnid_find_exact](cnid.c.md#cnid_fi
 int cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen, void *buffer, size_t buflen, bool *more_available)
 ```
 
-Defined at lines 829 to 834.
+Defined at lines 864 to 869.
 
 Search the CNID database for entries whose name contains a term.
 
@@ -574,7 +623,7 @@ Mentioned in the documentation of: [cnid_find_exact](cnid.c.md#cnid_find_exact)
 int cnid_find_exact(struct _cnid_db *cdb, const char *name, size_t namelen, void *buffer, size_t buflen, bool *more_available)
 ```
 
-Defined at lines 856 to 862.
+Defined at lines 891 to 897.
 
 [cnid_find()](cnid.c.md#cnid_find) for whole names, every character of the name literal
 
@@ -596,15 +645,15 @@ Called by: [catsearch_db](../../etc/afpd/catsearch.c.md#catsearch_db)
 
 Mentioned in the documentation of: [catsearch_db](../../etc/afpd/catsearch.c.md#catsearch_db)
 
-### cnid_resolve
+### cnid_resolve_row
 
 ```c
-char * cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
+char * cnid_resolve_row(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len, uint64_t *dev, uint64_t *ino)
 ```
 
-Defined at lines 877 to 894.
+Defined at lines 914 to 932.
 
-Resolve a CNID to its name and parent directory.
+Resolve a CNID to the name, parent, device and inode its row records.
 
 A stored name of "." or ".." means a corrupted database, and the call then fails with CNID_ERR_CORRUPT.
 
@@ -613,14 +662,64 @@ Parameters:
 * `id`: CNID to resolve, receives the parent CNID or CNID_INVALID
 * `buffer`: work buffer for the name
 * `len`: size of buffer
+* `dev`: receives the row's device, for [cnid_row_holds()](cnid.c.md#cnid_row_holds)
+* `ino`: receives the row's inode
 
 Returns: the name inside buffer, or NULL
 
-Called by: [afp_deleteid](../../etc/afpd/file.c.md#afp_deleteid), [afp_resolveid](../../etc/afpd/file.c.md#afp_resolveid), [catsearch_db](../../etc/afpd/catsearch.c.md#catsearch_db), [dirlookup_internal](../../etc/afpd/directory.c.md#dirlookup_internal), [nad_find](../../bin/nad/nad_find.c.md#nad_find), [object_cnid](../../etc/afpd/directory.c.md#object_cnid), [private_demangle](../../etc/afpd/mangle.c.md#private_demangle), [sl_cnid_to_path](../../etc/spotlight/cnid/sl_cnid.c.md#sl_cnid_to_path), [sl_rpc_fetchAttributesForOIDArray](../../etc/afpd/spotlight.c.md#sl_rpc_fetchattributesforoidarray), [sl_rpc_storeAttributesForOIDArray](../../etc/afpd/spotlight.c.md#sl_rpc_storeattributesforoidarray)
+Called by: [cnid_resolve](cnid.c.md#cnid_resolve), [dirlookup_internal](../../etc/afpd/directory.c.md#dirlookup_internal), [retire_row](../../etc/afpd/directory.c.md#retire_row), [symlink_keeps_cnid](../../etc/afpd/file.c.md#symlink_keeps_cnid)
 
 Calls through [`_cnid_db::cnid_resolve`](../../include/atalk/cnid.h.md#struct-_cnid_db): no table assigns this field
 
+Mentioned in the documentation of: [cnid_delete_row](cnid.c.md#cnid_delete_row), [cnid_resolve](cnid.c.md#cnid_resolve), [cnid_row_holds](cnid.c.md#cnid_row_holds), [cnid_update_row](cnid.c.md#cnid_update_row)
+
+### cnid_resolve
+
+```c
+char * cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
+```
+
+Defined at lines 944 to 949.
+
+Resolve a CNID to its name and parent directory.
+
+Parameters:
+* `cdb`: CNID database
+* `id`: CNID to resolve, receives the parent CNID or CNID_INVALID
+* `buffer`: work buffer for the name
+* `len`: size of buffer
+
+Returns: the name inside buffer, or NULL, as [cnid_resolve_row()](cnid.c.md#cnid_resolve_row) answers
+
+Calls: [cnid_resolve_row](cnid.c.md#cnid_resolve_row)
+
+Called by: [afp_deleteid](../../etc/afpd/file.c.md#afp_deleteid), [afp_resolveid](../../etc/afpd/file.c.md#afp_resolveid), [catsearch_db](../../etc/afpd/catsearch.c.md#catsearch_db), [nad_find](../../bin/nad/nad_find.c.md#nad_find), [object_cnid](../../etc/afpd/directory.c.md#object_cnid), [private_demangle](../../etc/afpd/mangle.c.md#private_demangle), [sl_cnid_to_path](../../etc/spotlight/cnid/sl_cnid.c.md#sl_cnid_to_path), [sl_rpc_fetchAttributesForOIDArray](../../etc/afpd/spotlight.c.md#sl_rpc_fetchattributesforoidarray), [sl_rpc_storeAttributesForOIDArray](../../etc/afpd/spotlight.c.md#sl_rpc_storeattributesforoidarray)
+
 Mentioned in the documentation of: [sl_cnid_to_path](../../etc/spotlight/cnid/sl_cnid.c.md#sl_cnid_to_path)
+
+### cnid_row_holds
+
+```c
+bool cnid_row_holds(const struct _cnid_db *cdb, uint64_t dev, uint64_t ino, const struct stat *st)
+```
+
+Defined at lines 960 to 964.
+
+Tell whether st shows the device and inode a CNID row records.
+
+Parameters:
+* `cdb`: CNID database
+* `dev`: the row's device, as [cnid_resolve_row()](cnid.c.md#cnid_resolve_row) hands it back
+* `ino`: the row's inode
+* `st`: the stat
+
+Returns: true when [cnid_row_dev()](cnid.c.md#cnid_row_dev) of st and st's inode are the row's
+
+Calls: [cnid_row_dev](cnid.c.md#cnid_row_dev)
+
+Called by: [dirlookup_internal](../../etc/afpd/directory.c.md#dirlookup_internal), [retire_row](../../etc/afpd/directory.c.md#retire_row), [row_holds_link](../../etc/afpd/directory.c.md#row_holds_link), [symlink_keeps_cnid](../../etc/afpd/file.c.md#symlink_keeps_cnid)
+
+Mentioned in the documentation of: [cnid_resolve_row](cnid.c.md#cnid_resolve_row)
 
 ### cnid_update
 
@@ -628,7 +727,7 @@ Mentioned in the documentation of: [sl_cnid_to_path](../../etc/spotlight/cnid/sl
 int cnid_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st, const cnid_t did, char *name, const size_t len)
 ```
 
-Defined at lines 907 to 915.
+Defined at lines 977 to 985.
 
 Update the name, parent, and stat of a CNID entry.
 
@@ -648,13 +747,45 @@ Called by: [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [do_
 
 Calls through [`_cnid_db::cnid_update`](../../include/atalk/cnid.h.md#struct-_cnid_db): no table assigns this field
 
+### cnid_update_row
+
+```c
+int cnid_update_row(struct _cnid_db *cdb, cnid_t id, cnid_t did, const char *name, size_t len, uint64_t dev, uint64_t ino, const struct stat *st, cnid_replace_fn replace, void *arg)
+```
+
+Defined at lines 1016 to 1024.
+
+Give a CNID's row st's dev and ino if it records did, name, dev, ino.
+
+The backend holds the row from the check to the update, except on a MySQL table that the open did not read as InnoDB and that its user may not lock, where only the update's own condition guards the row. Under a hold, another session's conditional delete or update of the row waits and then finds it as the update left it, and that session's queries that only read wait only under MySQL's table lock. The update drops as stale another row that records the stat's device and inode.
+
+Parameters:
+* `cdb`: CNID database
+* `id`: CNID whose row changes
+* `did`: the parent the row must record
+* `name`: the name the row must record, as [cnid_resolve_row()](cnid.c.md#cnid_resolve_row) hands it back
+* `len`: length of name, up to MAXPATHLEN
+* `dev`: the device the row must record, as [cnid_resolve_row()](cnid.c.md#cnid_resolve_row) hands it back
+* `ino`: the inode the row must record
+* `st`: stat of the object whose device and inode the row takes
+* `replace`: replaces the object at the name once the row matched, inside the hold if any, or NULL
+* `arg`: replace's argument
+
+Returns: 1 when the row changed, 0 when no row of the CNID records them or, on MySQL after replace ran, when the row already records the stat's device and inode or changed after a check without a hold, or -1 with errno classified, or replace's errno when replace failed
+
+Calls: [dirtab_off](cnid.c.md#dirtab_off)
+
+Called by: [symlink_keeps_cnid](../../etc/afpd/file.c.md#symlink_keeps_cnid)
+
+Calls through [`_cnid_db::cnid_update_row`](../../include/atalk/cnid.h.md#struct-_cnid_db): no table assigns this field
+
 ### cnid_wipe
 
 ```c
 int cnid_wipe(struct _cnid_db *cdb)
 ```
 
-Defined at lines 926 to 937.
+Defined at lines 1035 to 1046.
 
 Empty a CNID database.
 
@@ -701,7 +832,7 @@ Defined at line 233.
 
 ### struct cnid_find_search
 
-Defined at line 672.
+Defined at line 707.
 * `struct _cnid_db * cdb`
 * `cnid_t scope_did`
 

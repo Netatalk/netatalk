@@ -5,7 +5,7 @@ description: "CNID database types, backend operations and catalog lookup interfa
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/cnid.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -59,16 +59,18 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 This is instance of CNID database object.
 
-Defined at line 90.
+Defined at line 96.
 * `uint32_t cnid_db_flags`
 * `struct vol * cnid_db_vol`
 * `void * cnid_db_private`
 * `cnid_t(* cnid_add`: Called through by [cnid_add](../../libatalk/cnid/cnid.c.md#cnid_add).
 * `int(* cnid_delete`: Called through by [cnid_delete](../../libatalk/cnid/cnid.c.md#cnid_delete).
+* `int(* cnid_delete_row`: Called through by [cnid_delete_row](../../libatalk/cnid/cnid.c.md#cnid_delete_row).
 * `cnid_t(* cnid_get`: Called through by [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get).
 * `cnid_t(* cnid_lookup`: Called through by [cnid_lookup](../../libatalk/cnid/cnid.c.md#cnid_lookup).
-* `char *(* cnid_resolve`: Called through by [cnid_resolve](../../libatalk/cnid/cnid.c.md#cnid_resolve).
+* `char *(* cnid_resolve`: Called through by [cnid_resolve_row](../../libatalk/cnid/cnid.c.md#cnid_resolve_row).
 * `int(* cnid_update`: Called through by [cnid_update](../../libatalk/cnid/cnid.c.md#cnid_update).
+* `int(* cnid_update_row`: Called through by [cnid_update_row](../../libatalk/cnid/cnid.c.md#cnid_update_row).
 * `void(* cnid_close`: Called through by [cnid_close](../../libatalk/cnid/cnid.c.md#cnid_close).
 * `int(* cnid_getstamp`: Called through by [cnid_getstamp](../../libatalk/cnid/cnid.c.md#cnid_getstamp).
 * `int(* cnid_find`: Called through by [cnid_find_scoped](../../libatalk/cnid/cnid.c.md#cnid_find_scoped).
@@ -80,14 +82,14 @@ Defined at line 90.
 
 ### struct _cnid_module
 
-Defined at line 136.
+Defined at line 149.
 * `char * name`
 * `struct _cnid_module * next`: Permanent registry link, owned by cnid.c.
 * `struct _cnid_db *(* cnid_open`: Assigned in [cnid_mysql_module](../../libatalk/cnid/cnid_mysql.c.md#cnid_mysql_module), [cnid_sqlite_module](../../libatalk/cnid/cnid_sqlite.c.md#cnid_sqlite_module); called through by [cnid_open](../../libatalk/cnid/cnid.c.md#cnid_open).
 
 ### struct cnid_open_args
 
-Defined at line 128.
+Defined at line 141.
 * `uint32_t cnid_args_flags`
 * `struct vol * cnid_args_vol`
 
@@ -96,6 +98,7 @@ Defined at line 128.
 * `typedef struct _cnid_db cnid_db`
 * `typedef int(* cnid_dirlist_fn`
 * `typedef struct _cnid_module cnid_module`
+* `typedef int(* cnid_replace_fn`
 
 # Macros
 

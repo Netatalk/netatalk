@@ -5,7 +5,7 @@ description: "Unix file operations of the VFS layer: modes, duplication, deletio
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/vfs/unix.c"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 ---
 
 Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -126,7 +126,7 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_VLOCK on a read-only file system, AFPERR_ACCESS, or AFPERR_PARAM
 
-Called by: [afp_createfile](../../etc/afpd/file.c.md#afp_createfile), [deletecurdir_adouble_loop](vfs.c.md#deletecurdir_adouble_loop), [deletecurdir_ea_osx_loop](vfs.c.md#deletecurdir_ea_osx_loop), [replace_with_symlink](../../etc/afpd/file.c.md#replace_with_symlink)
+Called by: [afp_createfile](../../etc/afpd/file.c.md#afp_createfile), [deletecurdir_adouble_loop](vfs.c.md#deletecurdir_adouble_loop), [deletecurdir_ea_osx_loop](vfs.c.md#deletecurdir_ea_osx_loop), [stage_symlink](../../etc/afpd/file.c.md#stage_symlink), [symlink_keeps_cnid](../../etc/afpd/file.c.md#symlink_keeps_cnid)
 
 ### copy_file_fd
 

@@ -5,7 +5,7 @@ description: "VFS operation tables for the AppleDouble layouts and the EA and AC
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/vfs/vfs.c"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 ---
 
 Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -31,7 +31,7 @@ Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded 
 
 ### netatalk_adouble_ea
 
-Initialized at line 1860 as `struct vfs_ops`. Assigns:
+Initialized at line 1906 as `struct vfs_ops`. Assigns:
 
 * `vfs_chown`: [RF_chown_ea](vfs.c.md#rf_chown_ea)
 * `vfs_copyfile`: [RF_copyfile_ea](vfs.c.md#rf_copyfile_ea)
@@ -47,7 +47,7 @@ Initialized at line 1860 as `struct vfs_ops`. Assigns:
 
 ### netatalk_adouble_v2
 
-Initialized at line 1832 as `struct vfs_ops`. Assigns:
+Initialized at line 1878 as `struct vfs_ops`. Assigns:
 
 * `vfs_chown`: [RF_chown_adouble](vfs.c.md#rf_chown_adouble)
 * `vfs_copyfile`: [RF_copyfile_adouble](vfs.c.md#rf_copyfile_adouble)
@@ -63,7 +63,7 @@ Initialized at line 1832 as `struct vfs_ops`. Assigns:
 
 ### netatalk_ea_adouble
 
-Initialized at line 1892 as `struct vfs_ops`. Assigns:
+Initialized at line 1938 as `struct vfs_ops`. Assigns:
 
 * `vfs_chown`: [ea_chown](ea_ad.c.md#ea_chown)
 * `vfs_copyfile`: [ea_copyfile](ea_ad.c.md#ea_copyfile)
@@ -79,7 +79,7 @@ Initialized at line 1892 as `struct vfs_ops`. Assigns:
 
 ### netatalk_ea_sys
 
-Initialized at line 1920 as `struct vfs_ops`. Assigns:
+Initialized at line 1966 as `struct vfs_ops`. Assigns:
 
 * `vfs_copyfile`: [sys_ea_copyfile](ea_sys.c.md#sys_ea_copyfile)
 * `vfs_ea_getcontent`: [sys_get_eacontent](ea_sys.c.md#sys_get_eacontent)
@@ -90,14 +90,14 @@ Initialized at line 1920 as `struct vfs_ops`. Assigns:
 
 ### netatalk_posix_acl_adouble
 
-Initialized at line 1976 as `struct vfs_ops`. Assigns:
+Initialized at line 2022 as `struct vfs_ops`. Assigns:
 
 * `vfs_posix_acl`: [RF_posix_acl](vfs.c.md#rf_posix_acl)
 * `vfs_remove_acl`: [RF_posix_remove_acl](vfs.c.md#rf_posix_remove_acl)
 
 ### netatalk_solaris_acl_adouble
 
-Initialized at line 1953 as `struct vfs_ops`. Assigns:
+Initialized at line 1999 as `struct vfs_ops`. Assigns:
 
 * `vfs_remove_acl`: [RF_solaris_remove_acl](vfs.c.md#rf_solaris_remove_acl)
 * `vfs_solaris_acl`: [RF_solaris_acl](vfs.c.md#rf_solaris_acl)
@@ -106,7 +106,7 @@ Initialized at line 1953 as `struct vfs_ops`. Assigns:
 
 These function pointers get called from the lib users via vol->vfs->func.
 
-Initialized at line 1800 as `struct vfs_ops`. Assigns:
+Initialized at line 1846 as `struct vfs_ops`. Assigns:
 
 * `vfs_chown`: [vfs_chown](vfs.c.md#vfs_chown)
 * `vfs_copyfile`: [vfs_copyfile](vfs.c.md#vfs_copyfile)
@@ -179,23 +179,47 @@ Calls: [ascii_tolower](../util/unix.c.md#ascii_tolower)
 
 Called by: [netatalk_name](vfs.c.md#netatalk_name), [validupath_adouble](vfs.c.md#validupath_adouble)
 
+### staged_link_name
+
+```c
+static int staged_link_name(const struct vol *vol, const char *name)
+```
+
+Defined at lines 158 to 186.
+
+Whether name has the form of a symlink conversion's staged link.
+
+The form is VFS_SYMLINK_STAGE, in either case where the volume's filesystem ignores case, then the staging process's ID, a dash and a serial, each in decimal without a leading zero.
+
+Parameters:
+* `vol`: volume
+* `name`: directory entry name
+
+Returns: 1 for a staged link's name, else 0
+
+Calls: [ascii_tolower](../util/unix.c.md#ascii_tolower)
+
+Called by: [netatalk_name](vfs.c.md#netatalk_name)
+
 ### netatalk_name
 
 ```c
 static int netatalk_name(const struct vol *vol, const char *name)
 ```
 
-Defined at lines 155 to 159.
+Defined at lines 199 to 204.
 
-Whether name differs from the netatalk database directory names.
+Whether name is not a netatalk database directory or a staged link.
+
+A staged link listed or named under its own name would get a CNID of its own while the conversion waits to give it the file's.
 
 Parameters:
 * `vol`: volume
 * `name`: directory entry name
 
-Returns: 0 for .AppleDB and .AppleDesktop, in either case where the volume's filesystem ignores case, else 1
+Returns: 0 for .AppleDB, .AppleDesktop and a staged link's name, in either case where the volume's filesystem ignores case, else 1
 
-Calls: [other_name](vfs.c.md#other_name)
+Calls: [other_name](vfs.c.md#other_name), [staged_link_name](vfs.c.md#staged_link_name)
 
 Called by: [validupath_adouble](vfs.c.md#validupath_adouble), [validupath_ea](vfs.c.md#validupath_ea)
 
@@ -205,11 +229,11 @@ Called by: [validupath_adouble](vfs.c.md#validupath_adouble), [validupath_ea](vf
 static int validupath_adouble(const struct vol *vol, const char *name, int fd)
 ```
 
-Defined at lines 178 to 187.
+Defined at lines 223 to 232.
 
 Whether clients may see name on a version 2 AppleDouble volume.
 
-Names without a leading dot always pass. The netatalk directories .AppleDB, .AppleDesktop, and .AppleDouble stay hidden, in either case where the volume's filesystem ignores case, and so does .Parent in any letter case.
+Names without a leading dot always pass. The netatalk directories .AppleDB, .AppleDesktop, and .AppleDouble, and a symlink conversion's staged link, stay hidden, in either case where the volume's filesystem ignores case, and so does .Parent in any letter case.
 
 Parameters:
 * `vol`: volume
@@ -230,7 +254,7 @@ Dispatched via: [netatalk_adouble_v2](vfs.c.md#netatalk_adouble_v2)
 static int RF_chown_adouble(const struct vol *vol, const char *path, uid_t uid, gid_t gid)
 ```
 
-Defined at lines 200 to 215.
+Defined at lines 245 to 260.
 
 Give the version 2 metadata file of path a new owner.
 
@@ -256,7 +280,7 @@ Dispatched via: [netatalk_adouble_v2](vfs.c.md#netatalk_adouble_v2)
 static int RF_renamedir_adouble(const struct vol *vol, int dirfd, const char *oldpath, const char *newpath)
 ```
 
-Defined at lines 227 to 232.
+Defined at lines 272 to 277.
 
 Rename nothing, because the .AppleDouble directory moves with the directory.
 
@@ -278,7 +302,7 @@ Dispatched via: [netatalk_adouble_v2](vfs.c.md#netatalk_adouble_v2)
 static int deletecurdir_adouble_loop(const struct vol *vol, struct dirent *de, char *name, void *data, int flag)
 ```
 
-Defined at lines 250 to 268.
+Defined at lines 295 to 313.
 
 Delete one .AppleDouble entry whose file no longer exists in the working directory.
 
@@ -303,7 +327,7 @@ Called by: [RF_deletecurdir_adouble](vfs.c.md#rf_deletecurdir_adouble)
 static int RF_deletecurdir_adouble(const struct vol *vol)
 ```
 
-Defined at lines 281 to 293.
+Defined at lines 326 to 338.
 
 Delete the .AppleDouble directory of the working directory.
 
@@ -326,7 +350,7 @@ Dispatched via: [netatalk_adouble_v2](vfs.c.md#netatalk_adouble_v2)
 static int adouble_setfilmode(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
 ```
 
-Defined at lines 304 to 308.
+Defined at lines 349 to 353.
 
 Derive a metadata file mode with ad_hf_mode and apply it to name.
 
@@ -348,7 +372,7 @@ Called by: [RF_setdirunixmode_adouble](vfs.c.md#rf_setdirunixmode_adouble), [RF_
 static int RF_setfilmode_adouble(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
 ```
 
-Defined at lines 322 to 326.
+Defined at lines 367 to 371.
 
 Apply the mode of a data file to its version 2 metadata file.
 
@@ -376,7 +400,7 @@ Dispatched via: [netatalk_adouble_v2](vfs.c.md#netatalk_adouble_v2)
 static int RF_setdirunixmode_adouble(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
 ```
 
-Defined at lines 342 to 372.
+Defined at lines 387 to 417.
 
 Apply a directory mode to its .AppleDouble directory and .Parent file.
 
@@ -404,7 +428,7 @@ Dispatched via: [netatalk_adouble_v2](vfs.c.md#netatalk_adouble_v2)
 static int setdirmode_adouble_loop(const struct vol *vol, struct dirent *de, char *name, void *data, int flag)
 ```
 
-Defined at lines 388 to 407.
+Defined at lines 433 to 452.
 
 Apply the metadata mode in data to one .AppleDouble entry.
 
@@ -429,7 +453,7 @@ Called by: [RF_setdirmode_adouble](vfs.c.md#rf_setdirmode_adouble)
 static int RF_setdirmode_adouble(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
 ```
 
-Defined at lines 424 to 457.
+Defined at lines 469 to 502.
 
 Apply a directory mode to its .AppleDouble directory and the metadata files there.
 
@@ -457,7 +481,7 @@ Dispatched via: [netatalk_adouble_v2](vfs.c.md#netatalk_adouble_v2)
 static int RF_setdirowner_adouble(const struct vol *vol, const char *name, uid_t uid, gid_t gid)
 ```
 
-Defined at lines 471 to 481.
+Defined at lines 516 to 526.
 
 Give the .AppleDouble directory of the working directory a new owner.
 
@@ -483,7 +507,7 @@ Dispatched via: [netatalk_adouble_v2](vfs.c.md#netatalk_adouble_v2)
 static int RF_deletefile_adouble(const struct vol *vol, int dirfd, const char *file)
 ```
 
-Defined at lines 495 to 499.
+Defined at lines 540 to 544.
 
 Delete the version 2 metadata file of file.
 
@@ -510,7 +534,7 @@ Dispatched via: [netatalk_adouble_v2](vfs.c.md#netatalk_adouble_v2)
 static int RF_renamefile_adouble(const struct vol *vol, int dirfd, const char *src, const char *dst)
 ```
 
-Defined at lines 517 to 566.
+Defined at lines 562 to 611.
 
 Rename the version 2 metadata file of src to match dst.
 
@@ -538,7 +562,7 @@ Dispatched via: [netatalk_adouble_v2](vfs.c.md#netatalk_adouble_v2)
 static int RF_copyfile_adouble(const struct vol *vol, int sfd, const char *src, const char *dst)
 ```
 
-Defined at lines 583 to 635.
+Defined at lines 628 to 680.
 
 Clone the version 2 metadata file of src for dst.
 
@@ -564,7 +588,7 @@ Dispatched via: [netatalk_adouble_v2](vfs.c.md#netatalk_adouble_v2)
 static int RF_solaris_acl(const struct vol *vol, const char *path, int cmd, int count, void *aces)
 ```
 
-Defined at lines 651 to 674.
+Defined at lines 696 to 719.
 
 Apply an NFSv4 ACL change to the AppleDouble file of path.
 
@@ -591,7 +615,7 @@ Dispatched via: [netatalk_solaris_acl_adouble](vfs.c.md#netatalk_solaris_acl_ado
 static int RF_solaris_remove_acl(const struct vol *vol, const char *path, int dir)
 ```
 
-Defined at lines 688 to 709.
+Defined at lines 733 to 754.
 
 Keep only the owner@, group@, and everyone@ entries in the NFSv4 ACL of an AppleDouble file.
 
@@ -618,7 +642,7 @@ Dispatched via: [netatalk_solaris_acl_adouble](vfs.c.md#netatalk_solaris_acl_ado
 static int RF_posix_acl(const struct vol *vol, const char *path, acl_type_t type, int count, acl_t acl)
 ```
 
-Defined at lines 728 to 751.
+Defined at lines 773 to 796.
 
 Apply a POSIX ACL to the AppleDouble file of path.
 
@@ -645,7 +669,7 @@ Dispatched via: [netatalk_posix_acl_adouble](vfs.c.md#netatalk_posix_acl_adouble
 static int RF_posix_remove_acl(const struct vol *vol, const char *path, int dir)
 ```
 
-Defined at lines 765 to 782.
+Defined at lines 810 to 827.
 
 Drop the ACL_USER, ACL_GROUP, ACL_MASK, and default entries from an AppleDouble file.
 
@@ -672,11 +696,11 @@ Dispatched via: [netatalk_posix_acl_adouble](vfs.c.md#netatalk_posix_acl_adouble
 static int validupath_ea(const struct vol *vol, const char *name, int fd)
 ```
 
-Defined at lines 802 to 818.
+Defined at lines 848 to 864.
 
 Whether clients may see name on an ea AppleDouble volume.
 
-Names without a leading dot always pass. Of the dot names, .AppleDB and .AppleDesktop stay hidden, in either case where the volume's filesystem ignores case. Without HAVE_EAFD a ._ file stays hidden when it carries a netatalk AppleDouble header, because it is a resource fork sidecar.
+Names without a leading dot always pass. Of the dot names, .AppleDB and .AppleDesktop stay hidden, in either case where the volume's filesystem ignores case, and so does a symlink conversion's staged link. Without HAVE_EAFD a ._ file stays hidden when it carries a netatalk AppleDouble header, because it is a resource fork sidecar.
 
 Parameters:
 * `vol`: volume
@@ -697,7 +721,7 @@ Dispatched via: [netatalk_adouble_ea](vfs.c.md#netatalk_adouble_ea)
 static int RF_chown_ea(const struct vol *vol, const char *path, uid_t uid, gid_t gid)
 ```
 
-Defined at lines 832 to 844.
+Defined at lines 878 to 890.
 
 Give the ._ resource fork sidecar of path a new owner.
 
@@ -723,7 +747,7 @@ Dispatched via: [netatalk_adouble_ea](vfs.c.md#netatalk_adouble_ea)
 static int RF_renamedir_ea(const struct vol *vol, int dirfd, const char *oldpath, const char *newpath)
 ```
 
-Defined at lines 856 to 860.
+Defined at lines 902 to 906.
 
 Rename nothing, because the ._ sidecars inside the directory move with it.
 
@@ -745,7 +769,7 @@ Dispatched via: [netatalk_adouble_ea](vfs.c.md#netatalk_adouble_ea)
 static int deletecurdir_ea_osx_chkifempty_loop(const struct vol *vol, struct dirent *de, char *name, void *data, int flag)
 ```
 
-Defined at lines 872 to 880.
+Defined at lines 918 to 926.
 
 Report a directory entry whose name has no leading dot.
 
@@ -764,7 +788,7 @@ Returns: 1 when the name lacks a leading dot, 0 for every dot name
 static int deletecurdir_ea_osx_loop(const struct vol *vol, struct dirent *de, char *name, void *data, int flag)
 ```
 
-Defined at lines 893 to 911.
+Defined at lines 939 to 957.
 
 Delete name when the path starts with ._ and names a regular file.
 
@@ -787,7 +811,7 @@ Called by: [RF_deletecurdir_ea](vfs.c.md#rf_deletecurdir_ea)
 static int RF_deletecurdir_ea(const struct vol *vol)
 ```
 
-Defined at lines 924 to 938.
+Defined at lines 970 to 984.
 
 Run deletecurdir_ea_osx_loop over the working directory before afpd deletes it.
 
@@ -810,7 +834,7 @@ Dispatched via: [netatalk_adouble_ea](vfs.c.md#netatalk_adouble_ea)
 static int RF_setdirunixmode_ea(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
 ```
 
-Defined at lines 950 to 957.
+Defined at lines 996 to 1003.
 
 Change nothing, because the ea layout keeps directory metadata in an EA of the directory.
 
@@ -832,7 +856,7 @@ Dispatched via: [netatalk_adouble_ea](vfs.c.md#netatalk_adouble_ea)
 static int RF_setfilmode_ea(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
 ```
 
-Defined at lines 971 to 983.
+Defined at lines 1017 to 1029.
 
 Apply the mode of a data file to its ._ resource fork sidecar.
 
@@ -860,7 +884,7 @@ Dispatched via: [netatalk_adouble_ea](vfs.c.md#netatalk_adouble_ea)
 static int RF_setdirmode_ea(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
 ```
 
-Defined at lines 995 to 1001.
+Defined at lines 1041 to 1047.
 
 Change nothing, because the ea layout keeps directory metadata in an EA of the directory.
 
@@ -882,7 +906,7 @@ Dispatched via: [netatalk_adouble_ea](vfs.c.md#netatalk_adouble_ea)
 static int RF_setdirowner_ea(const struct vol *vol, const char *name, uid_t uid, gid_t gid)
 ```
 
-Defined at lines 1013 to 1019.
+Defined at lines 1059 to 1065.
 
 Change nothing, because the ea layout keeps directory metadata in an EA of the directory.
 
@@ -904,7 +928,7 @@ Dispatched via: [netatalk_adouble_ea](vfs.c.md#netatalk_adouble_ea)
 static int RF_deletefile_ea(const struct vol *vol, int dirfd, const char *file)
 ```
 
-Defined at lines 1034 to 1044.
+Defined at lines 1080 to 1090.
 
 Delete the ._ resource fork sidecar of file.
 
@@ -931,7 +955,7 @@ Dispatched via: [netatalk_adouble_ea](vfs.c.md#netatalk_adouble_ea)
 static int RF_copyfile_ea(const struct vol *vol, int sfd, const char *src, const char *dst)
 ```
 
-Defined at lines 1059 to 1121.
+Defined at lines 1105 to 1167.
 
 Clone the resource fork sidecar of src for dst.
 
@@ -957,7 +981,7 @@ Dispatched via: [netatalk_adouble_ea](vfs.c.md#netatalk_adouble_ea)
 static int RF_renamefile_ea(const struct vol *vol, int dirfd, const char *src, const char *dst)
 ```
 
-Defined at lines 1137 to 1166.
+Defined at lines 1183 to 1212.
 
 Rename the ._ resource fork sidecar of src to match dst.
 
@@ -985,7 +1009,7 @@ Dispatched via: [netatalk_adouble_ea](vfs.c.md#netatalk_adouble_ea)
 static int vfs_chown(const struct vol *vol, const char *path, uid_t uid, gid_t gid)
 ```
 
-Defined at lines 1199 to 1215.
+Defined at lines 1245 to 1261.
 
 Run the vfs_chown hook of every VFS module of vol.
 
@@ -1011,7 +1035,7 @@ Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 static int vfs_renamedir(const struct vol *vol, int dirfd, const char *oldpath, const char *newpath)
 ```
 
-Defined at lines 1229 to 1245.
+Defined at lines 1275 to 1291.
 
 Run the vfs_renamedir hook of every VFS module of vol.
 
@@ -1037,7 +1061,7 @@ Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 static int vfs_deletecurdir(const struct vol *vol)
 ```
 
-Defined at lines 1255 to 1270.
+Defined at lines 1301 to 1316.
 
 Run the vfs_deletecurdir hook of every VFS module of vol.
 
@@ -1060,7 +1084,7 @@ Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 static int vfs_setfilmode(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
 ```
 
-Defined at lines 1283 to 1299.
+Defined at lines 1329 to 1345.
 
 Run the vfs_setfilmode hook of every VFS module of vol.
 
@@ -1086,7 +1110,7 @@ Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 static int vfs_setdirmode(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
 ```
 
-Defined at lines 1312 to 1328.
+Defined at lines 1358 to 1374.
 
 Run the vfs_setdirmode hook of every VFS module of vol.
 
@@ -1110,7 +1134,7 @@ Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 static int vfs_setdirunixmode(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
 ```
 
-Defined at lines 1341 to 1357.
+Defined at lines 1387 to 1403.
 
 Run the vfs_setdirunixmode hook of every VFS module of vol.
 
@@ -1136,7 +1160,7 @@ Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 static int vfs_setdirowner(const struct vol *vol, const char *name, uid_t uid, gid_t gid)
 ```
 
-Defined at lines 1370 to 1386.
+Defined at lines 1416 to 1432.
 
 Run the vfs_setdirowner hook of every VFS module of vol.
 
@@ -1162,7 +1186,7 @@ Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 static int vfs_deletefile(const struct vol *vol, int dirfd, const char *file)
 ```
 
-Defined at lines 1399 to 1414.
+Defined at lines 1445 to 1460.
 
 Run the vfs_deletefile hook of every VFS module of vol.
 
@@ -1187,7 +1211,7 @@ Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 static int vfs_renamefile(const struct vol *vol, int dirfd, const char *src, const char *dst)
 ```
 
-Defined at lines 1428 to 1444.
+Defined at lines 1474 to 1490.
 
 Run the vfs_renamefile hook of every VFS module of vol.
 
@@ -1213,7 +1237,7 @@ Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 static int vfs_copyfile(const struct vol *vol, int sfd, const char *src, const char *dst)
 ```
 
-Defined at lines 1458 to 1474.
+Defined at lines 1504 to 1520.
 
 Run the vfs_copyfile hook of every VFS module of vol.
 
@@ -1239,7 +1263,7 @@ Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 static int vfs_solaris_acl(const struct vol *vol, const char *path, int cmd, int count, void *aces)
 ```
 
-Defined at lines 1490 to 1507.
+Defined at lines 1536 to 1553.
 
 Run the vfs_solaris_acl hook of every VFS module of vol.
 
@@ -1266,7 +1290,7 @@ Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 static int vfs_posix_acl(const struct vol *vol, const char *path, acl_type_t type, int count, acl_t acl)
 ```
 
-Defined at lines 1522 to 1538.
+Defined at lines 1568 to 1584.
 
 Run the vfs_posix_acl hook of every VFS module of vol.
 
@@ -1291,7 +1315,7 @@ Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 static int vfs_remove_acl(const struct vol *vol, const char *path, int dir)
 ```
 
-Defined at lines 1551 to 1566.
+Defined at lines 1597 to 1612.
 
 Run the vfs_remove_acl hook of every VFS module of vol.
 
@@ -1316,7 +1340,7 @@ Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 static int vfs_ea_attrname_invalid(const char *func, const char *attruname)
 ```
 
-Defined at lines 1577 to 1585.
+Defined at lines 1623 to 1631.
 
 Reject a missing EA name with a log line that names the calling function.
 
@@ -1334,7 +1358,7 @@ Called by: [vfs_ea_getcontent](vfs.c.md#vfs_ea_getcontent), [vfs_ea_getsize](vfs
 static int vfs_ea_getsize(const struct vol *vol, char *rbuf, size_t *rbuflen, const char *uname, int oflag, const char *attruname, int fd)
 ```
 
-Defined at lines 1603 to 1625.
+Defined at lines 1649 to 1671.
 
 Run the vfs_ea_getsize hook of every VFS module of vol.
 
@@ -1365,7 +1389,7 @@ Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 static int vfs_ea_getcontent(const struct vol *vol, char *rbuf, size_t *rbuflen, const char *uname, int oflag, const char *attruname, int maxreply, int fd)
 ```
 
-Defined at lines 1644 to 1666.
+Defined at lines 1690 to 1712.
 
 Run the vfs_ea_getcontent hook of every VFS module of vol.
 
@@ -1397,7 +1421,7 @@ Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 static int vfs_ea_list(const struct vol *vol, char *attrnamebuf, size_t *buflen, const char *uname, int oflag, int fd)
 ```
 
-Defined at lines 1683 to 1701.
+Defined at lines 1729 to 1747.
 
 Run the vfs_ea_list hook of every VFS module of vol.
 
@@ -1425,7 +1449,7 @@ Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 static int vfs_ea_set(const struct vol *vol, const char *uname, const char *attruname, const char *ibuf, size_t attrsize, int oflag, int fd)
 ```
 
-Defined at lines 1720 to 1742.
+Defined at lines 1766 to 1788.
 
 Run the vfs_ea_set hook of every VFS module of vol.
 
@@ -1456,7 +1480,7 @@ Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 static int vfs_ea_remove(const struct vol *vol, const char *uname, const char *attruname, int oflag, int fd)
 ```
 
-Defined at lines 1758 to 1779.
+Defined at lines 1804 to 1825.
 
 Run the vfs_ea_remove hook of every VFS module of vol.
 
@@ -1485,7 +1509,7 @@ Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 static int vfs_validupath(const struct vol *vol, const char *name, int fd)
 ```
 
-Defined at lines 1792 to 1795.
+Defined at lines 1838 to 1841.
 
 Whether clients may see name, as the AppleDouble layout module decides.
 
@@ -1510,7 +1534,7 @@ Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 void initvol_vfs(struct vol *vol)
 ```
 
-Defined at lines 2008 to 2045.
+Defined at lines 2054 to 2091.
 
 Install the VFS dispatchers and modules of a volume.
 

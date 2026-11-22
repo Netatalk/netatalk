@@ -5,7 +5,7 @@ description: "FPCatSearch implementation."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/catsearch.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -322,7 +322,7 @@ Mentioned in the documentation of: [catsearch_db](catsearch.c.md#catsearch_db)
 static int catsearch(const AFPObj *obj, struct vol *vol, struct dir *dir, int rmatches, uint32_t *pos, char *rbuf, uint32_t *nrecs, int *rsize, int ext)
 ```
 
-Defined at lines 867 to 1112.
+Defined at lines 867 to 1127.
 
 Search the directory tree of a volume for FPCatSearch, resuming at a saved position.
 
@@ -347,7 +347,7 @@ Calls: [addstack](catsearch.c.md#addstack), [catsearch_time_up](catsearch.c.md#c
 
 Called by: [catsearch_afp](catsearch.c.md#catsearch_afp), [catsearch_db](catsearch.c.md#catsearch_db)
 
-Uses file-scope variables: `dstack`, `save_cidx`
+Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md), `dstack`, `save_cidx`
 
 Mentioned in the documentation of: [catsearch_db](catsearch.c.md#catsearch_db)
 
@@ -357,7 +357,7 @@ Mentioned in the documentation of: [catsearch_db](catsearch.c.md#catsearch_db)
 static void catsearch_db_drop(struct catsearch_db_search *s)
 ```
 
-Defined at lines 1141 to 1145.
+Defined at lines 1156 to 1160.
 
 Free a search of the database and its slot.
 
@@ -372,7 +372,7 @@ Called by: [catsearch_db](catsearch.c.md#catsearch_db)
 static struct catsearch_db_search * catsearch_db_start(void)
 ```
 
-Defined at lines 1152 to 1167.
+Defined at lines 1167 to 1182.
 
 Start a new search of the database.
 
@@ -388,7 +388,7 @@ Uses file-scope variables: `catsearch_db_gen`, `catsearch_db_new`
 static struct catsearch_db_search * catsearch_db_keep(struct catsearch_db_search *s)
 ```
 
-Defined at lines 1178 to 1203.
+Defined at lines 1193 to 1218.
 
 Keep a pausing search in a slot, the oldest giving way.
 
@@ -409,7 +409,7 @@ Uses file-scope variables: `catsearch_db_new`, `catsearch_db_searches`
 static int catsearch_db(const AFPObj *obj, struct vol *vol, const char *uname, int rmatches, uint32_t catpos[4], char *rbuf, uint32_t *nrecs, int *rsize, int ext)
 ```
 
-Defined at lines 1233 to 1433.
+Defined at lines 1248 to 1450.
 
 Search the CNID database by name for an FPCatSearch request.
 
@@ -432,7 +432,7 @@ Calls: [catsearch](catsearch.c.md#catsearch), [catsearch_db_drop](catsearch.c.md
 
 Called by: [catsearch_afp](catsearch.c.md#catsearch_afp)
 
-Uses file-scope variables: `catsearch_db_max_results`, `catsearch_db_searches`
+Uses file-scope variables: `catsearch_db_max_results`, `catsearch_db_searches`, `curdir` in [etc/afpd/directory.c](directory.c.md)
 
 ### catsearch_afp
 
@@ -440,7 +440,7 @@ Uses file-scope variables: `catsearch_db_max_results`, `catsearch_db_searches`
 static int catsearch_afp(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen, int ext)
 ```
 
-Defined at lines 1454 to 1737.
+Defined at lines 1471 to 1754.
 
 Parse an FPCatSearch or FPCatSearchExt request and run the search.
 
@@ -468,7 +468,7 @@ Uses file-scope variables: `c2`
 int afp_catsearch(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1750 to 1754.
+Defined at lines 1767 to 1771.
 
 FPCatSearch: search a volume for files and directories that match the criteria.
 
@@ -491,7 +491,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_catsearch_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1767 to 1771.
+Defined at lines 1784 to 1788.
 
 FPCatSearchExt: search a volume for matching files and directories, with the full result bitmaps.
 
@@ -512,7 +512,7 @@ Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 
 ### struct catsearch_db_search
 
-Defined at line 1120.
+Defined at line 1135.
 * `uint32_t gen`: its number in the position, 0 if free
 * `uint32_t pos`: CNIDs taken.
 * `uint32_t count`: CNIDs found.
