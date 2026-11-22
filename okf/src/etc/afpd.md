@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "etc/afpd"
-description: "66 files, 696 functions."
+description: "66 files, 702 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/afpd"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-21T17:04:55+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 ---
 
 # Files
@@ -89,10 +89,10 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-11-21T17:04:55+01:00 }
 
 # Calls into
 
-* [libatalk/util](../libatalk/util.md): 281 calls
+* [libatalk/util](../libatalk/util.md): 284 calls
 * [libatalk/adouble](../libatalk/adouble.md): 223 calls
 * [include/atalk](../include/atalk.md): 68 calls
-* [libatalk/compat](../libatalk/compat.md): 55 calls
+* [libatalk/compat](../libatalk/compat.md): 56 calls
 * [libatalk/cnid](../libatalk/cnid.md): 48 calls
 * [libatalk/dsi](../libatalk/dsi.md): 34 calls
 * [libatalk/unicode](../libatalk/unicode.md): 34 calls

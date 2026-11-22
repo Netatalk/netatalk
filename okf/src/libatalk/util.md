@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "libatalk/util"
-description: "20 files, 209 functions."
+description: "21 files, 264 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/util"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-14T13:31:45+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 ---
 
 # Files
@@ -27,38 +27,39 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-11-14T13:31:45+01:00 }
 * [libatalk/util/server_ipc.c](util/server_ipc.c.md): IPC over socketpair between parent and children.
 * [libatalk/util/server_lock.c](util/server_lock.c.md): Pid files and daemonizing of the netatalk servers.
 * [libatalk/util/sigpipe.c](util/sigpipe.c.md): Self-pipe that wakes a poll loop from signal handlers.
+* [libatalk/util/sl_names.c](util/sl_names.c.md): Spotlight name comparisons: reading a query and matching a name.
 * [libatalk/util/socket.c](util/socket.c.md): Netatalk utility functions: socket.
 * [libatalk/util/strdicasecmp.c](util/strdicasecmp.c.md): Case-insensitive string comparison through the Mac Roman uppercase map.
 * [libatalk/util/unix.c](util/unix.c.md): Netatalk utility functions: unix.
 
 # Includes headers from
 
-* [include/atalk](../include/atalk.md): 69 includes
+* [include/atalk](../include/atalk.md): 72 includes
 * [sys/netatalk](../sys/netatalk.md): 1 includes
 
 # Calls into
 
 * [libatalk/compat](compat.md): 19 calls
-* [libatalk/unicode](unicode.md): 7 calls
+* [libatalk/unicode](unicode.md): 15 calls
 * [libatalk/vfs](vfs.md): 3 calls
 * [libatalk/acl](acl.md): 2 calls
 * [libatalk/cnid](cnid.md): 1 calls
 
 # Called from
 
-* [etc/afpd](../etc/afpd.md): 281 calls
+* [etc/afpd](../etc/afpd.md): 284 calls
 * [libatalk/adouble](adouble.md): 29 calls
+* [libatalk/cnid](cnid.md): 26 calls
 * [libatalk/dsi](dsi.md): 23 calls
-* [bin/nad](../bin/nad.md): 18 calls
+* [bin/nad](../bin/nad.md): 22 calls
 * [etc/netatalk](../etc/netatalk.md): 17 calls
 * [libatalk/vfs](vfs.md): 13 calls
 * [etc/atalkd](../etc/atalkd.md): 12 calls
-* [libatalk/cnid](cnid.md): 11 calls
+* [etc/spotlight](../etc/spotlight.md): 9 calls
 * [etc/uams](../etc/uams.md): 9 calls
 * [bin/dbd](../bin/dbd.md): 8 calls
 * [etc/papd](../etc/papd.md): 6 calls
 * [libatalk/atp](atp.md): 6 calls
-* [etc/spotlight](../etc/spotlight.md): 5 calls
 * [libatalk/acl](acl.md): 5 calls
 * [bin/nbp](../bin/nbp.md): 3 calls
 * [bin/pap](../bin/pap.md): 2 calls
@@ -87,4 +88,4 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-11-14T13:31:45+01:00 }
 
 No call, table or documentation edge reaches these functions in the scanned sources. Entry points reached through dlopen, signals, callbacks passed as arguments, or code outside the scanned directories appear here too.
 
-[conf_testutil_expand_hook](util/netatalk_conf.c.md#conf_testutil_expand_hook), [conf_testutil_set_lastvid](util/netatalk_conf.c.md#conf_testutil_set_lastvid), [getvolbyname](util/netatalk_conf.c.md#getvolbyname), [ipc_get_hints_dropped](util/server_ipc.c.md#ipc_get_hints_dropped), [ipc_get_hints_sent](util/server_ipc.c.md#ipc_get_hints_sent), [lock_reg](util/locking.c.md#lock_reg), [make_log_entry](util/logger.c.md#make_log_entry), [netatalk_panic](util/fault.c.md#netatalk_panic), [prequeue](util/queue.c.md#prequeue), [volume_unlink](util/netatalk_conf.c.md#volume_unlink)
+[conf_testutil_expand_hook](util/netatalk_conf.c.md#conf_testutil_expand_hook), [conf_testutil_set_lastvid](util/netatalk_conf.c.md#conf_testutil_set_lastvid), [getvolbyname](util/netatalk_conf.c.md#getvolbyname), [ipc_get_hints_dropped](util/server_ipc.c.md#ipc_get_hints_dropped), [ipc_get_hints_sent](util/server_ipc.c.md#ipc_get_hints_sent), [lock_reg](util/locking.c.md#lock_reg), [make_log_entry](util/logger.c.md#make_log_entry), [netatalk_panic](util/fault.c.md#netatalk_panic), [prequeue](util/queue.c.md#prequeue), [sl_name_query_parse](util/sl_names.c.md#sl_name_query_parse), [sl_name_query_term](util/sl_names.c.md#sl_name_query_term), [volume_unlink](util/netatalk_conf.c.md#volume_unlink)

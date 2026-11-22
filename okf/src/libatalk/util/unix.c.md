@@ -5,7 +5,7 @@ description: "Netatalk utility functions: unix."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/unix.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-21T17:04:55+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -444,9 +444,9 @@ The coarse or fast realtime clock, where the platform names one, comes from memo
 
 Returns: seconds since the epoch
 
-Called by: [flushvoltime](../../etc/afpd/volume.c.md#flushvoltime), [get_tm_used](../../etc/afpd/volume.c.md#get_tm_used), [getvolquota](../../etc/afpd/volume.c.md#getvolquota), [markvol](../../etc/afpd/volume.c.md#markvol)
+Called by: [catsearch](../../etc/afpd/catsearch.c.md#catsearch), [catsearch_db](../../etc/afpd/catsearch.c.md#catsearch_db), [catsearch_time_up](../../etc/afpd/catsearch.c.md#catsearch_time_up), [flushvoltime](../../etc/afpd/volume.c.md#flushvoltime), [get_tm_used](../../etc/afpd/volume.c.md#get_tm_used), [getvolquota](../../etc/afpd/volume.c.md#getvolquota), [markvol](../../etc/afpd/volume.c.md#markvol)
 
-Mentioned in the documentation of: [markvol](../../etc/afpd/volume.c.md#markvol)
+Mentioned in the documentation of: [catsearch_time_up](../../etc/afpd/catsearch.c.md#catsearch_time_up), [markvol](../../etc/afpd/volume.c.md#markvol)
 
 ### ostat
 

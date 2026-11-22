@@ -5,7 +5,7 @@ description: "Spotlight CNID backend: file name searches in the CNID database."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/spotlight/cnid/sl_cnid.c"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 ---
 
 Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -17,6 +17,7 @@ Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit
 * [atalk/errchk.h](../../../include/atalk/errchk.h.md)
 * [atalk/globals.h](../../../include/atalk/globals.h.md)
 * [atalk/logger.h](../../../include/atalk/logger.h.md)
+* [atalk/sl_names.h](../../../include/atalk/sl_names.h.md)
 * [atalk/spotlight.h](../../../include/atalk/spotlight.h.md)
 * [atalk/util.h](../../../include/atalk/util.h.md)
 * [atalk/volume.h](../../../include/atalk/volume.h.md)
@@ -28,7 +29,7 @@ Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit
 
 ### sl_cnid_ops
 
-Initialized at line 1035 as `struct sl_backend_ops`. Assigns:
+Initialized at line 699 as `struct sl_backend_ops`. Assigns:
 
 * `sbo_close`: [sl_cnid_close](sl_cnid.c.md#sl_cnid_close)
 * `sbo_close_query`: [sl_cnid_close_query](sl_cnid.c.md#sl_cnid_close_query)
@@ -44,7 +45,7 @@ Initialized at line 1035 as `struct sl_backend_ops`. Assigns:
 static int cnid_comp_fn(const void *p1, const void *p2)
 ```
 
-Defined at lines 54 to 63.
+Defined at lines 56 to 65.
 
 Order two 64-bit host-order CNIDs, for bsearch over the client filter.
 
@@ -56,100 +57,22 @@ Returns: -1, 0, or 1
 
 Called by: [sl_cnid_fill_results](sl_cnid.c.md#sl_cnid_fill_results)
 
-### cnid32_comp_fn
+### sl_cnid_query_free
 
 ```c
-static int cnid32_comp_fn(const void *p1, const void *p2)
+static int sl_cnid_query_free(struct sl_cnid_query *csq)
 ```
 
-Defined at lines 77 to 86.
+Defined at lines 152 to 156.
 
-Order two 32-bit CNIDs in network byte order, for qsort over the result buffer.
-
-The order serves deduplication only, so the call compares the raw network-order values. The cnid_comp_fn call compares the 64-bit host-order values of the client filter.
+Free a query's name comparisons as talloc frees its state.
 
 Parameters:
-* `p1`: first CNID
-* `p2`: second CNID
+* `csq`: query state
 
-Returns: -1, 0, or 1
+Returns: 0, so talloc goes on to free the state
 
-Called by: [sl_cnid_collect](sl_cnid.c.md#sl_cnid_collect)
-
-### sl_cnid_quoted_value
-
-```c
-static char * sl_cnid_quoted_value(TALLOC_CTX *mem_ctx, const char *p, const char **endp)
-```
-
-Defined at lines 187 to 279.
-
-Extract the quoted value starting at or after `p`.
-
-Scans to the first unescaped closing quote, strips unescaped leading/trailing '*' wildcards, drops one wrapping escaped-quote pair (Finder's exact-phrase delimiters; the substring search preserves adjacency by construction) and removes the remaining backslash escapes.
-
-Parameters:
-* `mem_ctx`: talloc context for the returned term
-* `p`: query-string position the scan starts from
-* `endp`: set to just past the closing quote when a quoted span was found (even if the term is rejected), NULL when no quoted span follows — the caller must stop scanning then
-
-Returns: talloc'd term, or NULL when no quoted value follows or the result is shorter than SL_CNID_MIN_TERMLEN
-
-Calls: [strnlen](../../../libatalk/compat/misc.c.md#strnlen)
-
-Called by: [sl_cnid_extract_terms](sl_cnid.c.md#sl_cnid_extract_terms)
-
-### sl_cnid_add_term
-
-```c
-static bool sl_cnid_add_term(char **terms, int *count, char *term)
-```
-
-Defined at lines 291 to 301.
-
-Append a term to the term list unless the list holds it already.
-
-The caller keeps count below the size of the list.
-
-Parameters:
-* `terms`: term list
-* `count`: number of terms, incremented on an append
-* `term`: term to append
-
-Returns: true after an append, false for a term that the list holds
-
-Called by: [sl_cnid_extract_terms](sl_cnid.c.md#sl_cnid_extract_terms)
-
-### sl_cnid_extract_terms
-
-```c
-static int sl_cnid_extract_terms(TALLOC_CTX *mem_ctx, const char *qstring, char **terms, int max_terms)
-```
-
-Defined at lines 326 to 419.
-
-Extract the filename search terms from a Spotlight query string.
-
-The named attributes kMDItemFSName, kMDItemDisplayName, and _kMDItemFileName come first, each with "=" after the name. Only when none matches does the call read the any-attribute form *==. Finder splits a multi-word search into one predicate per word joined with ||, so every term adds to the results. A repeated term counts once.
-
-Patterns and their terms:
-
-```
-kMDItemFSName = "foo*"cd       -> "foo"
-kMDItemDisplayName = "*foo*"cd -> "foo"
-_kMDItemFileName = "foo*"cd    -> "foo"
-*=="foo*"cdw                   -> "foo"
-```
-
-Parameters:
-* `mem_ctx`: talloc context for the terms
-* `qstring`: query string, or NULL
-* `terms`: receives the terms
-* `max_terms`: size of terms
-
-Returns: the number of terms
-
-Calls: [sl_cnid_add_term](sl_cnid.c.md#sl_cnid_add_term), [sl_cnid_quoted_value](sl_cnid.c.md#sl_cnid_quoted_value), [strnlen](../../../libatalk/compat/misc.c.md#strnlen)
+Calls: [sl_name_query_free](../../../libatalk/util/sl_names.c.md#sl_name_query_free)
 
 Called by: [sl_cnid_open_query](sl_cnid.c.md#sl_cnid_open_query)
 
@@ -159,7 +82,7 @@ Called by: [sl_cnid_open_query](sl_cnid.c.md#sl_cnid_open_query)
 static const char * sl_dcache_get(struct sl_cnid_query *csq, cnid_t did)
 ```
 
-Defined at lines 432 to 441.
+Defined at lines 169 to 178.
 
 Return the memoized path of a directory in the query cache.
 
@@ -177,7 +100,7 @@ Called by: [sl_cnid_to_path](sl_cnid.c.md#sl_cnid_to_path)
 static void sl_dcache_put(struct sl_cnid_query *csq, cnid_t did, const char *path)
 ```
 
-Defined at lines 453 to 477.
+Defined at lines 190 to 214.
 
 Memoize a directory path for the rest of the query.
 
@@ -196,7 +119,7 @@ Called by: [sl_cnid_to_path](sl_cnid.c.md#sl_cnid_to_path)
 static char * sl_cnid_to_path(TALLOC_CTX *mem_ctx, const struct vol *vol, struct sl_cnid_query *csq, cnid_t cnid)
 ```
 
-Defined at lines 494 to 547.
+Defined at lines 231 to 284.
 
 Reconstruct the full filesystem path for a CNID.
 
@@ -220,7 +143,7 @@ Called by: [sl_cnid_fill_results](sl_cnid.c.md#sl_cnid_fill_results)
 static int sl_cnid_init(AFPObj *obj)
 ```
 
-Defined at lines 559 to 563.
+Defined at lines 296 to 300.
 
 Start the CNID backend, which keeps no global state.
 
@@ -239,7 +162,7 @@ Dispatched via: [sl_cnid_ops](sl_cnid.c.md#sl_cnid_ops)
 static void sl_cnid_close(AFPObj *obj)
 ```
 
-Defined at lines 570 to 573.
+Defined at lines 307 to 310.
 
 Stop the CNID backend, which has nothing to release.
 
@@ -254,63 +177,37 @@ Dispatched via: [sl_cnid_ops](sl_cnid.c.md#sl_cnid_ops)
 static int sl_cnid_fill_results(slq_t *slq)
 ```
 
-Defined at lines 589 to 697.
+Defined at lines 327 to 442.
 
 Add up to SL_CNID_PAGE_SIZE results from the CNID buffer to the result page.
 
-The call resolves each remaining CNID to a path. It skips a CNID outside the client filter and a path that does not resolve or lies out of scope. It also skips a file that fails stat or a read access check. A full page with CNIDs left sets SLQ_STATE_FULL, so the client polls for the next page. With no CNIDs left the call sets SLQ_STATE_DONE, and a failed add_filemeta sets SLQ_STATE_ERROR.
+The call resolves each remaining CNID to a path. It skips a CNID outside the client filter, a path that does not resolve or lies out of scope, and a name the query's comparisons do not match. It also skips a file that fails stat or a read access check. A full page with CNIDs left sets SLQ_STATE_FULL, so the client polls for the next page. With no CNIDs left the call sets SLQ_STATE_DONE, and a failed add_filemeta sets SLQ_STATE_ERROR.
 
 Parameters:
 * `slq`: query with the result page and the backend state
 
 Returns: 0, or -1 on error
 
-Calls: [add_filemeta](../../afpd/spotlight.c.md#add_filemeta), [cnid_comp_fn](sl_cnid.c.md#cnid_comp_fn), [sl_cnid_to_path](sl_cnid.c.md#sl_cnid_to_path), [sl_path_in_scope](../../afpd/spotlight.c.md#sl_path_in_scope)
+Calls: [add_filemeta](../../afpd/spotlight.c.md#add_filemeta), [cnid_comp_fn](sl_cnid.c.md#cnid_comp_fn), [sl_cnid_to_path](sl_cnid.c.md#sl_cnid_to_path), [sl_name_query_match](../../../libatalk/util/sl_names.c.md#sl_name_query_match), [sl_path_in_scope](../../afpd/spotlight.c.md#sl_path_in_scope)
 
 Called by: [sl_cnid_fetch_results](sl_cnid.c.md#sl_cnid_fetch_results), [sl_cnid_open_query](sl_cnid.c.md#sl_cnid_open_query)
 
 ### sl_cnid_cap_for
 
 ```c
-static int sl_cnid_cap_for(uint64_t want, int nterms)
+static int sl_cnid_cap_for(uint64_t want)
 ```
 
-Defined at lines 711 to 724.
+Defined at lines 454 to 465.
 
-Size the candidate buffer for the wanted results and the search terms.
+Size the candidate buffer for the wanted results.
 
-Every term needs CNID_FIND_MIN_RESULTS entries of room, or cnid_find refuses the call. So a small limit still gets room for all the terms, and the caller trims the surplus results afterwards. The capacity stops at SL_CNID_MAX_CAP.
+A limit under CNID_FIND_MIN_RESULTS still gets that much room, and the caller trims the surplus results afterwards. The capacity stops at SL_CNID_MAX_CAP.
 
 Parameters:
 * `want`: number of results wanted
-* `nterms`: number of search terms
 
 Returns: the capacity in entries
-
-Called by: [sl_cnid_open_query](sl_cnid.c.md#sl_cnid_open_query)
-
-### sl_cnid_collect
-
-```c
-static int sl_cnid_collect(slq_t *slq, struct sl_cnid_query *csq, char **terms, int nterms, cnid_t scope_did)
-```
-
-Defined at lines 744 to 811.
-
-Search every term into the candidate buffer, then drop the duplicates.
-
-Finder joins one predicate per typed word with ||, so the terms are alternatives. The call runs one cnid_find_scoped per term into the shared buffer, and it holds back CNID_FIND_MIN_RESULTS entries for each term still to come. A sort and a unique pass follow, since a name can match more than one term. The call resets the count and the truncation flag on entry, so the caller can run it again on a grown buffer.
-
-Parameters:
-* `slq`: query with the volume
-* `csq`: backend state with the candidate buffer
-* `terms`: search terms
-* `nterms`: number of terms
-* `scope_did`: CNID of the scope directory, or CNID_INVALID without a scope
-
-Returns: 0, or -1 when a search fails
-
-Calls: [cnid32_comp_fn](sl_cnid.c.md#cnid32_comp_fn), [cnid_find_scoped](../../../libatalk/cnid/cnid.c.md#cnid_find_scoped), [strnlen](../../../libatalk/compat/misc.c.md#strnlen)
 
 Called by: [sl_cnid_open_query](sl_cnid.c.md#sl_cnid_open_query)
 
@@ -320,7 +217,7 @@ Called by: [sl_cnid_open_query](sl_cnid.c.md#sl_cnid_open_query)
 static bool sl_cnid_scope_is_vol_root(const char *scope, const char *vol_path)
 ```
 
-Defined at lines 821 to 836.
+Defined at lines 475 to 490.
 
 Tell whether a search scope names the volume root, trailing slashes aside.
 
@@ -338,11 +235,11 @@ Called by: [sl_cnid_open_query](sl_cnid.c.md#sl_cnid_open_query)
 static int sl_cnid_open_query(slq_t *slq)
 ```
 
-Defined at lines 854 to 992.
+Defined at lines 508 to 656.
 
 Run a filename search in the CNID database for a Spotlight query.
 
-A query without a filename term, or with a scope that does not resolve, returns no results. A scope below the volume root restricts the search to its subtree inside the database. A query without a result limit starts with SL_CNID_START_RESULTS entries. While the database reports further matches, the search reruns on a buffer of SL_CNID_GROWTH times the size. A bounded query keeps up to its limit of results. The first page fills at once.
+A query without a name comparison, or with a scope that does not resolve, returns no results. A scope below the volume root restricts the search to its subtree inside the database. A query without a result limit starts with SL_CNID_START_RESULTS entries. While the database reports further matches, the search reruns on a buffer of SL_CNID_GROWTH times the size. A bounded query keeps up to its limit of results. The first page fills at once.
 
 A scope lookup that trips a CNID reset marks the volume reset and fails the query.
 
@@ -351,7 +248,7 @@ Parameters:
 
 Returns: 0, or -1 on error
 
-Calls: [cnid_for_path](../../../libatalk/util/cnid.c.md#cnid_for_path), [cnid_volume_reset](../../afpd/volume.c.md#cnid_volume_reset), [sl_cnid_cap_for](sl_cnid.c.md#sl_cnid_cap_for), [sl_cnid_collect](sl_cnid.c.md#sl_cnid_collect), [sl_cnid_extract_terms](sl_cnid.c.md#sl_cnid_extract_terms), [sl_cnid_fill_results](sl_cnid.c.md#sl_cnid_fill_results), [sl_cnid_scope_is_vol_root](sl_cnid.c.md#sl_cnid_scope_is_vol_root)
+Calls: [cnid_find_scoped](../../../libatalk/cnid/cnid.c.md#cnid_find_scoped), [cnid_for_path](../../../libatalk/util/cnid.c.md#cnid_for_path), [cnid_volume_reset](../../afpd/volume.c.md#cnid_volume_reset), [sl_cnid_cap_for](sl_cnid.c.md#sl_cnid_cap_for), [sl_cnid_fill_results](sl_cnid.c.md#sl_cnid_fill_results), [sl_cnid_query_free](sl_cnid.c.md#sl_cnid_query_free), [sl_cnid_scope_is_vol_root](sl_cnid.c.md#sl_cnid_scope_is_vol_root), [sl_name_query_free](../../../libatalk/util/sl_names.c.md#sl_name_query_free), [sl_name_query_parse_in](../../../libatalk/util/sl_names.c.md#sl_name_query_parse_in)
 
 Called through [`sl_backend_ops::sbo_open_query`](../../../include/atalk/spotlight.h.md#struct-sl_backend_ops) by: [sl_rpc_openQuery](../../afpd/spotlight.c.md#sl_rpc_openquery)
 
@@ -363,7 +260,7 @@ Dispatched via: [sl_cnid_ops](sl_cnid.c.md#sl_cnid_ops)
 static int sl_cnid_fetch_results(slq_t *slq)
 ```
 
-Defined at lines 1003 to 1020.
+Defined at lines 667 to 684.
 
 Fill the next result page of a CNID query.
 
@@ -386,7 +283,7 @@ Dispatched via: [sl_cnid_ops](sl_cnid.c.md#sl_cnid_ops)
 static void sl_cnid_close_query(slq_t *slq)
 ```
 
-Defined at lines 1027 to 1033.
+Defined at lines 691 to 697.
 
 Free the backend state of a CNID query.
 
@@ -401,7 +298,7 @@ Dispatched via: [sl_cnid_ops](sl_cnid.c.md#sl_cnid_ops)
 
 ### struct sl_cnid_query
 
-Defined at line 149.
+Defined at line 124.
 * `cnid_t * cnids`
 * `int cap`
 * `int count`
@@ -409,10 +306,11 @@ Defined at line 149.
 * `bool more_available`
 * `struct sl_did_cache_ent * dcache`
 * `int dcache_n`
+* `struct sl_name_query * names`
 
 ### struct sl_did_cache_ent
 
-Defined at line 137.
+Defined at line 112.
 * `cnid_t did`
 * `char * path`
 

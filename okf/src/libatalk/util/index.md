@@ -17,6 +17,7 @@
 * [server_ipc.c](server_ipc.c.md) - IPC over socketpair between parent and children.
 * [server_lock.c](server_lock.c.md) - Pid files and daemonizing of the netatalk servers.
 * [sigpipe.c](sigpipe.c.md) - Self-pipe that wakes a poll loop from signal handlers.
+* [sl_names.c](sl_names.c.md) - Spotlight name comparisons: reading a query and matching a name.
 * [socket.c](socket.c.md) - Netatalk utility functions: socket.
 * [strdicasecmp.c](strdicasecmp.c.md) - Case-insensitive string comparison through the Mac Roman uppercase map.
 * [unix.c](unix.c.md) - Netatalk utility functions: unix.

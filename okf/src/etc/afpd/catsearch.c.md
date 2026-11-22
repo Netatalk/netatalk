@@ -5,7 +5,7 @@ description: "FPCatSearch implementation."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/catsearch.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-30T10:57:24+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -265,6 +265,8 @@ Called by: [catsearch](catsearch.c.md#catsearch), [catsearch_db](catsearch.c.md#
 
 Uses file-scope variables: `c2`
 
+Mentioned in the documentation of: [catsearch_db](catsearch.c.md#catsearch_db)
+
 ### rslt_add
 
 ```c
@@ -290,13 +292,37 @@ Calls: [getdirparams](directory.c.md#getdirparams), [getfilparams](file.c.md#get
 
 Called by: [catsearch](catsearch.c.md#catsearch), [catsearch_db](catsearch.c.md#catsearch_db)
 
+### catsearch_time_up
+
+```c
+static bool catsearch_time_up(int *rounds, time_t start)
+```
+
+Defined at lines 831 to 839.
+
+Count an entry of a search and tell whether the search pauses.
+
+Mac OS 9 clients time out on slow commands, so every NUM_ROUNDS entries a call pauses once the clock has left the second the call started in.
+
+Parameters:
+* `rounds`: entries left before the next look at the clock
+* `start`: [coarse_time()](../../libatalk/util/unix.c.md#coarse_time) when the call started
+
+Returns: true when the search pauses
+
+Calls: [coarse_time](../../libatalk/util/unix.c.md#coarse_time)
+
+Called by: [catsearch](catsearch.c.md#catsearch), [catsearch_db](catsearch.c.md#catsearch_db)
+
+Mentioned in the documentation of: [catsearch_db](catsearch.c.md#catsearch_db)
+
 ### catsearch
 
 ```c
 static int catsearch(const AFPObj *obj, struct vol *vol, struct dir *dir, int rmatches, uint32_t *pos, char *rbuf, uint32_t *nrecs, int *rsize, int ext)
 ```
 
-Defined at lines 847 to 1097.
+Defined at lines 867 to 1112.
 
 Search the directory tree of a volume for FPCatSearch, resuming at a saved position.
 
@@ -317,30 +343,84 @@ Parameters:
 
 Returns: AFP_OK after a pause, AFPERR_EOF at the end of the tree, AFPERR_CATCHNG for a stale position, AFPERR_NFILE, or AFPERR_MISC
 
-Calls: [addstack](catsearch.c.md#addstack), [check_dirent](enumerate.c.md#check_dirent), [clearstack](catsearch.c.md#clearstack), [crit_check](catsearch.c.md#crit_check), [dir_add_fill](directory.c.md#dir_add_fill), [dircache_search_at_stat](dircache.c.md#dircache_search_at_stat), [dirlookup](directory.c.md#dirlookup), [movecwd](directory.c.md#movecwd), [of_stat](ofork.c.md#of_stat), [reducestack](catsearch.c.md#reducestack), [rslt_add](catsearch.c.md#rslt_add), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
+Calls: [addstack](catsearch.c.md#addstack), [catsearch_time_up](catsearch.c.md#catsearch_time_up), [check_dirent](enumerate.c.md#check_dirent), [clearstack](catsearch.c.md#clearstack), [coarse_time](../../libatalk/util/unix.c.md#coarse_time), [crit_check](catsearch.c.md#crit_check), [dir_add_fill](directory.c.md#dir_add_fill), [dircache_search_at_stat](dircache.c.md#dircache_search_at_stat), [dirlookup](directory.c.md#dirlookup), [movecwd](directory.c.md#movecwd), [of_stat](ofork.c.md#of_stat), [reducestack](catsearch.c.md#reducestack), [rslt_add](catsearch.c.md#rslt_add), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
 
-Called by: [catsearch_afp](catsearch.c.md#catsearch_afp)
+Called by: [catsearch_afp](catsearch.c.md#catsearch_afp), [catsearch_db](catsearch.c.md#catsearch_db)
 
 Uses file-scope variables: `dstack`, `save_cidx`
+
+Mentioned in the documentation of: [catsearch_db](catsearch.c.md#catsearch_db)
+
+### catsearch_db_drop
+
+```c
+static void catsearch_db_drop(struct catsearch_db_search *s)
+```
+
+Defined at lines 1141 to 1145.
+
+Free a search of the database and its slot.
+
+Parameters:
+* `s`: the search
+
+Called by: [catsearch_db](catsearch.c.md#catsearch_db)
+
+### catsearch_db_start
+
+```c
+static struct catsearch_db_search * catsearch_db_start(void)
+```
+
+Defined at lines 1152 to 1167.
+
+Start a new search of the database.
+
+Returns: the search, numbered for the position, the room of its CNIDs kept
+
+Called by: [catsearch_db](catsearch.c.md#catsearch_db)
+
+Uses file-scope variables: `catsearch_db_gen`, `catsearch_db_new`
+
+### catsearch_db_keep
+
+```c
+static struct catsearch_db_search * catsearch_db_keep(struct catsearch_db_search *s)
+```
+
+Defined at lines 1178 to 1203.
+
+Keep a pausing search in a slot, the oldest giving way.
+
+A search in a slot keeps it; a new one takes a free slot, or that of the search that started first.
+
+Parameters:
+* `s`: the search
+
+Returns: its slot
+
+Called by: [catsearch_db](catsearch.c.md#catsearch_db)
+
+Uses file-scope variables: `catsearch_db_new`, `catsearch_db_searches`
 
 ### catsearch_db
 
 ```c
-static int catsearch_db(const AFPObj *obj, struct vol *vol, const char *uname, int rmatches, uint32_t *pos, char *rbuf, uint32_t *nrecs, int *rsize, int ext)
+static int catsearch_db(const AFPObj *obj, struct vol *vol, const char *uname, int rmatches, uint32_t catpos[4], char *rbuf, uint32_t *nrecs, int *rsize, int ext)
 ```
 
-Defined at lines 1120 to 1294.
+Defined at lines 1233 to 1433.
 
 Search the CNID database by name for an FPCatSearch request.
 
-A new search looks up the CNIDs of the lowercased uname through cnid_find. Each call then resolves, stats, and tests the next CNIDs against the criteria in c1 and c2. The search always covers all of the volume. A call pauses after rmatches matches or 448 bytes of results. A CNID that no longer resolves drops out, but a missing file fails the search.
+A new search takes the CNIDs of uname from [cnid_find_exact()](../../libatalk/cnid/cnid.c.md#cnid_find_exact), which folds case and diacritics, so they hold every name [crit_check()](catsearch.c.md#crit_check) takes, growing its buffer while the database holds more, up to catsearch_db_max_results; a name of more files walks the volume through [catsearch()](catsearch.c.md#catsearch), one walk a session, as a partial name does. The search covers all of the volume. Each call resolves, stats and tests the next CNIDs against c1 and c2, and pauses after rmatches matches, 448 bytes of results, or as [catsearch_time_up()](catsearch.c.md#catsearch_time_up) says. A CNID that fails to resolve, or whose file is gone, drops out. The position holds the CNIDs taken and the search's number, so it continues only the search of its volume and name. A search takes one of CATSEARCH_DB_SLOTS slots when it first pauses, the one that started first giving way, and frees it when it ends, at its last CNID or by a failure.
 
 Parameters:
 * `obj`: session object
 * `vol`: volume to search
 * `uname`: name on disk to look up
 * `rmatches`: maximum number of matches to return
-* `pos`: catalog position, 0 for a new search
+* `catpos`: catalog position, all 0 for a new search
 * `rbuf`: result records
 * `nrecs`: match count, raised for each record added
 * `rsize`: length of the result records
@@ -348,9 +428,11 @@ Parameters:
 
 Returns: AFP_OK after a pause, AFPERR_EOF after the last CNID, AFPERR_CATCHNG for a stale position, or AFPERR_MISC
 
-Calls: [cnid_find](../../libatalk/cnid/cnid.c.md#cnid_find), [cnid_resolve](../../libatalk/cnid/cnid.c.md#cnid_resolve), [convert_charset](../../libatalk/unicode/charcnv.c.md#convert_charset), [crit_check](catsearch.c.md#crit_check), [dir_takes_stat](directory.c.md#dir_takes_stat), [dirlookup](directory.c.md#dirlookup), [getcwdpath](../../libatalk/util/unix.c.md#getcwdpath), [movecwd](directory.c.md#movecwd), [of_stat](ofork.c.md#of_stat), [rslt_add](catsearch.c.md#rslt_add), [utompath](desktop.c.md#utompath)
+Calls: [catsearch](catsearch.c.md#catsearch), [catsearch_db_drop](catsearch.c.md#catsearch_db_drop), [catsearch_db_keep](catsearch.c.md#catsearch_db_keep), [catsearch_db_start](catsearch.c.md#catsearch_db_start), [catsearch_time_up](catsearch.c.md#catsearch_time_up), [cnid_find_exact](../../libatalk/cnid/cnid.c.md#cnid_find_exact), [cnid_resolve](../../libatalk/cnid/cnid.c.md#cnid_resolve), [coarse_time](../../libatalk/util/unix.c.md#coarse_time), [crit_check](catsearch.c.md#crit_check), [dir_takes_stat](directory.c.md#dir_takes_stat), [dirlookup](directory.c.md#dirlookup), [getcwdpath](../../libatalk/util/unix.c.md#getcwdpath), [movecwd](directory.c.md#movecwd), [of_stat](ofork.c.md#of_stat), [rslt_add](catsearch.c.md#rslt_add), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy), [utompath](desktop.c.md#utompath)
 
 Called by: [catsearch_afp](catsearch.c.md#catsearch_afp)
+
+Uses file-scope variables: `catsearch_db_max_results`, `catsearch_db_searches`
 
 ### catsearch_afp
 
@@ -358,7 +440,7 @@ Called by: [catsearch_afp](catsearch.c.md#catsearch_afp)
 static int catsearch_afp(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen, int ext)
 ```
 
-Defined at lines 1315 to 1598.
+Defined at lines 1454 to 1737.
 
 Parse an FPCatSearch or FPCatSearchExt request and run the search.
 
@@ -386,7 +468,7 @@ Uses file-scope variables: `c2`
 int afp_catsearch(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1611 to 1615.
+Defined at lines 1750 to 1754.
 
 FPCatSearch: search a volume for files and directories that match the criteria.
 
@@ -409,7 +491,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_catsearch_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1628 to 1632.
+Defined at lines 1767 to 1771.
 
 FPCatSearchExt: search a volume for matching files and directories, with the full result bitmaps.
 
@@ -427,6 +509,17 @@ Calls: [catsearch_afp](catsearch.c.md#catsearch_afp)
 Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 
 # Types
+
+### struct catsearch_db_search
+
+Defined at line 1120.
+* `uint32_t gen`: its number in the position, 0 if free
+* `uint32_t pos`: CNIDs taken.
+* `uint32_t count`: CNIDs found.
+* `uint16_t vid`: volume searched
+* `size_t cap`: room in cnids
+* `cnid_t * cnids`: the CNIDs, in CNID order
+* `char uname`: name searched
 
 ### struct catsearch_spec_layout
 
@@ -478,8 +571,8 @@ Defined at line 88.
 
 # Macros
 
-* Undocumented: `CATPBIT_PARTIAL`, `DS_BSIZE`, `NUM_ROUNDS`, `VETO_STR`
+* Undocumented: `CATPBIT_PARTIAL`, `CATSEARCH_DB_SLOTS`, `DS_BSIZE`, `NUM_ROUNDS`, `VETO_STR`
 
 # File-scope variables
 
-`c2`, `dsidx`, `dssize`, `dstack`, `save_cidx`
+`c2`, `catsearch_db_gen`, `catsearch_db_max_results`, `catsearch_db_new`, `catsearch_db_searches`, `dsidx`, `dssize`, `dstack`, `save_cidx`

@@ -5,7 +5,7 @@ description: "Private MySQL CNID backend state and status flags."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/cnid_mysql_private.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,6 +28,7 @@ Defined at line 17.
 * `uint32_t cnid_mysql_flags`
 * `MYSQL * cnid_mysql_con`
 * `char * cnid_mysql_voluuid_str`
+* `char * cnid_mysql_volpath`: the volume path, escaped for a quoted SQL literal
 * `cnid_t cnid_mysql_hint`
 * `MYSQL_STMT * cnid_lookup_stmt`
 * `MYSQL_STMT * cnid_add_stmt`
@@ -38,6 +39,7 @@ Defined at line 17.
 * `MYSQL_STMT * cnid_purge_stmt`
 * `MYSQL_STMT * cnid_dirlist_stmt`
 * `bool cnid_find_scoped_unsupported`
+* `bool cnid_mysql_folded`: the table has the Folded1 column
 
 # Typedefs and enums
 

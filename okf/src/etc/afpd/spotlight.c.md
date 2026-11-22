@@ -5,7 +5,7 @@ description: "FPSpotlightRPC: Spotlight queries and attribute requests over the 
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/spotlight.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-16T11:02:17+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -360,17 +360,62 @@ Calls: [dalloc_strdup](../../libatalk/dalloc/dalloc.c.md#dalloc_strdup)
 
 Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 
+### sl_query_piece_starts
+
+```c
+static bool sl_query_piece_starts(const unsigned char *s, size_t left)
+```
+
+Defined at lines 884 to 909.
+
+Tell whether a query piece can start at a character.
+
+A piece starts at a character that composes with nothing before it. [precompose_w()](../../libatalk/unicode/util_unistr.c.md#precompose_w) composes some characters past the BMP with the one before them, so no character past the BMP starts one.
+
+Parameters:
+* `s`: the character's first byte
+* `left`: bytes from s to the end of the query
+
+Returns: true when the character starts a piece
+
+Called by: [sl_query_to_volume](spotlight.c.md#sl_query_to_volume)
+
+Uses file-scope variables: `sl_query_second`
+
+### sl_query_to_volume
+
+```c
+char * sl_query_to_volume(TALLOC_CTX *ctx, const struct vol *vol, const char *query)
+```
+
+Defined at lines 925 to 982.
+
+Convert a query of any length from UTF8-MAC to the volume's charset.
+
+A query longer than SL_QUERY_PIECE bytes converts in pieces, each with the volume's conversion flags. A piece ends before a character that composes with nothing before it, so a letter and its marks convert together, or failing that at the start of any character.
+
+Parameters:
+* `ctx`: talloc context of the result
+* `vol`: the volume
+* `query`: the query, NUL-terminated
+
+Returns: the converted query, or NULL when a piece does not convert or out of memory
+
+Calls: [convert_charset](../../libatalk/unicode/charcnv.c.md#convert_charset), [sl_query_piece_starts](spotlight.c.md#sl_query_piece_starts)
+
+Called by: [sl_rpc_openQuery](spotlight.c.md#sl_rpc_openquery)
+
 ### sl_rpc_openQuery
 
 ```c
 static int sl_rpc_openQuery(AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, struct vol *v)
 ```
 
-Defined at lines 873 to 1177.
+Defined at lines 1005 to 1304.
 
 Spotlight RPC openQueryWithParams:forContext: start a search on a volume.
 
-The request carries the 2 context IDs, the query string, the requested attributes, the scope, and an optional CNID filter. The query string converts from UTF8-MAC to the volume charset. A nested scope array, as macOS Tahoe sends, unwraps one level. A scope outside the volume root, or one with a ".." component, falls back to the volume root.
+The request carries the 2 context IDs, the query string, the requested attributes, the scope, and an optional CNID filter. The query string converts from UTF8-MAC to the volume charset whatever its length. A nested scope array, as macOS Tahoe sends, unwraps one level. A scope outside the volume root, or one with a ".." component, falls back to the volume root.
 
 The backend gets the query after its result buffers exist, so a synchronous backend can fill them at once. The query then joins the active list.
 
@@ -382,7 +427,7 @@ Parameters:
 
 Returns: 0, also after a failure, which the reply status reports
 
-Calls: [convert_charset](../../libatalk/unicode/charcnv.c.md#convert_charset), [create_result_handle](spotlight.c.md#create_result_handle), [dalloc_get](../../libatalk/dalloc/dalloc.c.md#dalloc_get), [dalloc_value_for_key](../../libatalk/dalloc/dalloc.c.md#dalloc_value_for_key), [path_has_dot_component](../../libatalk/util/unix.c.md#path_has_dot_component), [sl_createCNIDArray](spotlight.c.md#sl_createcnidarray), [sl_sanitize_reqinfo](spotlight.c.md#sl_sanitize_reqinfo), [slq_add](spotlight_queries.c.md#slq_add), [slq_destroy](spotlight_queries.c.md#slq_destroy), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
+Calls: [convert_charset](../../libatalk/unicode/charcnv.c.md#convert_charset), [create_result_handle](spotlight.c.md#create_result_handle), [dalloc_get](../../libatalk/dalloc/dalloc.c.md#dalloc_get), [dalloc_value_for_key](../../libatalk/dalloc/dalloc.c.md#dalloc_value_for_key), [path_has_dot_component](../../libatalk/util/unix.c.md#path_has_dot_component), [sl_createCNIDArray](spotlight.c.md#sl_createcnidarray), [sl_query_to_volume](spotlight.c.md#sl_query_to_volume), [sl_sanitize_reqinfo](spotlight.c.md#sl_sanitize_reqinfo), [slq_add](spotlight_queries.c.md#slq_add), [slq_destroy](spotlight_queries.c.md#slq_destroy), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
 
 Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 
@@ -396,7 +441,7 @@ Calls through [`sl_backend_ops::sbo_open_query`](../../include/atalk/spotlight.h
 static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *v)
 ```
 
-Defined at lines 1193 to 1279.
+Defined at lines 1320 to 1406.
 
 Spotlight RPC fetchQueryResultsForContext: return the results that a query gathered.
 
@@ -422,7 +467,7 @@ Calls through [`sl_backend_ops::sbo_fetch_results`](../../include/atalk/spotligh
 static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol)
 ```
 
-Defined at lines 1296 to 1354.
+Defined at lines 1423 to 1481.
 
 Spotlight RPC storeAttributes:forOIDArray:context: set the dates of an object.
 
@@ -446,7 +491,7 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 static int sl_rpc_fetchAttributeNamesForOIDArray(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol)
 ```
 
-Defined at lines 1370 to 1414.
+Defined at lines 1497 to 1541.
 
 Spotlight RPC fetchAttributeNamesForOIDArray:context: list the attributes of an object.
 
@@ -470,7 +515,7 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 static int sl_rpc_fetchAttributesForOIDArray(AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol)
 ```
 
-Defined at lines 1430 to 1503.
+Defined at lines 1557 to 1630.
 
 Spotlight RPC fetchAttributes:forOIDArray:context: return the metadata of an object.
 
@@ -494,7 +539,7 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 static int sl_rpc_closeQueryForContext(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *v)
 ```
 
-Defined at lines 1517 to 1562.
+Defined at lines 1644 to 1689.
 
 Spotlight RPC closeQueryForContext: end a query.
 
@@ -518,7 +563,7 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1585 to 1733.
+Defined at lines 1712 to 1860.
 
 FPSpotlightRPC: answer the Spotlight commands of a client.
 
@@ -539,4 +584,8 @@ Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 
 # Macros
 
-* Undocumented: `MAX_SL_REQINFO_ATTRS`, `MAX_SL_RESULTS`
+* Undocumented: `MAX_SL_REQINFO_ATTRS`, `MAX_SL_RESULTS`, `SL_QUERY_PIECE`
+
+# File-scope variables
+
+`sl_query_second`

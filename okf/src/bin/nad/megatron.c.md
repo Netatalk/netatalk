@@ -5,7 +5,7 @@ description: "Conversion driver of the nad archive commands bin, hex, unbin, and
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/megatron.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -399,7 +399,7 @@ Uses file-scope variables: `fallback_volume`
 static int resolve_metadata_volume(AFPObj *obj, int module, const char *path, int flags, struct nad_volume *volume)
 ```
 
-Defined at lines 665 to 761.
+Defined at lines 665 to 770.
 
 Find the AFP volume that holds the metadata of a conversion and open its CNID database.
 
@@ -416,7 +416,7 @@ Parameters:
 
 Returns: 0, or -1 for an error
 
-Calls: [close_metadata_volume](megatron.c.md#close_metadata_volume), [cnid_getstamp](../../libatalk/cnid/cnid.c.md#cnid_getstamp), [cnid_open](../../libatalk/cnid/cnid.c.md#cnid_open), [cnid_scheme_registered](../../libatalk/cnid/cnid.c.md#cnid_scheme_registered), [getvolbypath](../../libatalk/util/netatalk_conf.c.md#getvolbypath), [mode_creates_volume_file](megatron.c.md#mode_creates_volume_file), [mode_writes_metadata](megatron.c.md#mode_writes_metadata), [nad_not_inside_volume](nad_util.c.md#nad_not_inside_volume), [set_fallback_volume](megatron.c.md#set_fallback_volume), [validate_volume_metadata](megatron.c.md#validate_volume_metadata)
+Calls: [close_metadata_volume](megatron.c.md#close_metadata_volume), [cnid_getstamp](../../libatalk/cnid/cnid.c.md#cnid_getstamp), [cnid_open](../../libatalk/cnid/cnid.c.md#cnid_open), [cnid_scheme_registered](../../libatalk/cnid/cnid.c.md#cnid_scheme_registered), [getvolbypath](../../libatalk/util/netatalk_conf.c.md#getvolbypath), [load_charset](../../libatalk/util/netatalk_conf.c.md#load_charset), [mode_creates_volume_file](megatron.c.md#mode_creates_volume_file), [mode_writes_metadata](megatron.c.md#mode_writes_metadata), [nad_not_inside_volume](nad_util.c.md#nad_not_inside_volume), [set_fallback_volume](megatron.c.md#set_fallback_volume), [validate_volume_metadata](megatron.c.md#validate_volume_metadata)
 
 Called by: [nad_archive](megatron.c.md#nad_archive)
 
@@ -428,7 +428,7 @@ Uses file-scope variables: `forceflag` in [bin/nad/nad_util.c](nad_util.c.md)
 static void close_metadata_volume(struct nad_volume *volume)
 ```
 
-Defined at lines 769 to 777.
+Defined at lines 778 to 786.
 
 Close the CNID database that resolve_metadata_volume opened and clear the volume state.
 
@@ -445,7 +445,7 @@ Called by: [nad_archive](megatron.c.md#nad_archive), [resolve_metadata_volume](m
 static int arg_is_option_with_value(const char *arg)
 ```
 
-Defined at lines 785 to 788.
+Defined at lines 794 to 797.
 
 Tell whether an archive argument is an option that takes a value.
 
@@ -462,7 +462,7 @@ Called by: [nad_archive](megatron.c.md#nad_archive)
 static int arg_is_flag_option(const char *arg)
 ```
 
-Defined at lines 796 to 802.
+Defined at lines 805 to 811.
 
 Tell whether an archive argument is an option without a value.
 
@@ -479,7 +479,7 @@ Called by: [nad_archive](megatron.c.md#nad_archive)
 static int set_newname(char *newname, size_t newname_len, const char *name)
 ```
 
-Defined at lines 812 to 820.
+Defined at lines 821 to 829.
 
 Store the filename name for the next conversion.
 
@@ -500,7 +500,7 @@ Called by: [nad_archive](megatron.c.md#nad_archive)
 static int option_after_file(const char *arg)
 ```
 
-Defined at lines 828 to 833.
+Defined at lines 837 to 842.
 
 Report an option that follows a file argument.
 
@@ -517,7 +517,7 @@ Called by: [nad_archive](megatron.c.md#nad_archive)
 int nad_archive(int argc, char **argv, AFPObj *obj)
 ```
 
-Defined at lines 849 to 1001.
+Defined at lines 858 to 1010.
 
 Run the nad archive commands bin, hex, unbin, and unhex.
 

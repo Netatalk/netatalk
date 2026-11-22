@@ -5,7 +5,7 @@ description: "The CNID database front end and backend registry."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/cnid/cnid.c"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 ---
 
 Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -14,6 +14,7 @@ Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorde
 
 * [atalk/cnid.h](../../include/atalk/cnid.h.md)
 * [atalk/logger.h](../../include/atalk/logger.h.md)
+* [atalk/sl_names.h](../../include/atalk/sl_names.h.md)
 * [atalk/util.h](../../include/atalk/util.h.md)
 * [atalk/volume.h](../../include/atalk/volume.h.md)
 * System headers: `arpa/inet.h`, `errno.h`, `stdlib.h`, `string.h`, `strings.h`, `sys/param.h`, `sys/types.h`, `time.h`, `unistd.h`
@@ -26,7 +27,7 @@ Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorde
 static const cnid_module * cnid_module_named(const char *name)
 ```
 
-Defined at lines 50 to 59.
+Defined at lines 51 to 60.
 
 Find a registered CNID backend by name, ignoring case.
 
@@ -45,7 +46,7 @@ Uses file-scope variables: `modules`
 bool cnid_scheme_registered(const char *name)
 ```
 
-Defined at lines 67 to 70.
+Defined at lines 68 to 71.
 
 Tell whether cnid_register added a CNID backend of a name.
 
@@ -64,7 +65,7 @@ Called by: [main](../../bin/dbd/cmd_dbd.c.md#main), [openvol_optional](../../bin
 void cnid_register(struct _cnid_module *module)
 ```
 
-Defined at lines 81 to 99.
+Defined at lines 82 to 100.
 
 Add a CNID backend to the list of registered backends.
 
@@ -85,7 +86,7 @@ Uses file-scope variables: `modules`
 struct _cnid_db * cnid_open(struct vol *vol, char *type, int flags)
 ```
 
-Defined at lines 116 to 179.
+Defined at lines 117 to 180.
 
 Open the CNID database of a volume with the backend that a scheme names.
 
@@ -112,7 +113,7 @@ Mentioned in the documentation of: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqli
 static cnid_t valide(cnid_t id)
 ```
 
-Defined at lines 193 to 215.
+Defined at lines 194 to 216.
 
 Reject a CNID from a backend that falls in the reserved range.
 
@@ -131,7 +132,7 @@ Called by: [cnid_add](cnid.c.md#cnid_add), [cnid_get](cnid.c.md#cnid_get), [cnid
 static uint64_t dirtab_hash(const char *name, size_t len)
 ```
 
-Defined at lines 254 to 263.
+Defined at lines 255 to 264.
 
 FNV-1a hash of a name.
 
@@ -149,7 +150,7 @@ Called by: [dirtab_lookup](cnid.c.md#dirtab_lookup), [dirtab_take](cnid.c.md#dir
 static void dirtab_empty(struct cnid_dirtab *t)
 ```
 
-Defined at lines 270 to 275.
+Defined at lines 271 to 276.
 
 Free a table's rows and mark it free.
 
@@ -164,7 +165,7 @@ Called by: [cnid_close](cnid.c.md#cnid_close), [cnid_dir_arm](cnid.c.md#cnid_dir
 static struct cnid_dirtab * dirtab_of(const struct _cnid_db *cdb, cnid_t did)
 ```
 
-Defined at lines 284 to 294.
+Defined at lines 285 to 295.
 
 The table a folder holds, or NULL.
 
@@ -182,7 +183,7 @@ Called by: [cnid_add](cnid.c.md#cnid_add), [cnid_dir_arm](cnid.c.md#cnid_dir_arm
 static int dirtab_take(void *ctx, uint64_t id, const char *name, size_t len, uint64_t dev, uint64_t ino)
 ```
 
-Defined at lines 307 to 336.
+Defined at lines 308 to 337.
 
 Take one row of a folder into its table.
 
@@ -206,7 +207,7 @@ Called by: [dirtab_load](cnid.c.md#dirtab_load)
 static void dirtab_load(struct _cnid_db *cdb, struct cnid_dirtab *t)
 ```
 
-Defined at lines 348 to 386.
+Defined at lines 349 to 387.
 
 Load a folder's rows from one backend query.
 
@@ -228,7 +229,7 @@ Calls through [`_cnid_db::cnid_dirlist`](../../include/atalk/cnid.h.md#struct-_c
 static cnid_t dirtab_lookup(const struct cnid_dirtab *t, const char *name, size_t len, uint64_t dev, uint64_t ino)
 ```
 
-Defined at lines 399 to 419.
+Defined at lines 400 to 420.
 
 A loaded table's CNID for a name whose row holds the object's device and inode.
 
@@ -251,7 +252,7 @@ Called by: [cnid_add](cnid.c.md#cnid_add)
 static void dirtab_off(const struct _cnid_db *cdb)
 ```
 
-Defined at lines 426 to 433.
+Defined at lines 427 to 434.
 
 Turn the loaded tables off: a CNID write may have moved a row.
 
@@ -266,7 +267,7 @@ Called by: [cnid_delete](cnid.c.md#cnid_delete), [cnid_update](cnid.c.md#cnid_up
 void cnid_dir_arm(struct _cnid_db *cdb, cnid_t did)
 ```
 
-Defined at lines 446 to 474.
+Defined at lines 447 to 475.
 
 Let one backend query answer a folder's cnid_add calls.
 
@@ -288,7 +289,7 @@ Uses file-scope variables: `dirtab_clock`
 void cnid_dir_forget(struct _cnid_db *cdb, cnid_t did)
 ```
 
-Defined at lines 482 to 489.
+Defined at lines 483 to 490.
 
 Free a folder's table.
 
@@ -306,7 +307,7 @@ Called by: [dir_modify](../../etc/afpd/directory.c.md#dir_modify), [enumerate_in
 void cnid_dir_serve(struct _cnid_db *cdb, cnid_t did)
 ```
 
-Defined at lines 498 to 503.
+Defined at lines 499 to 504.
 
 Let a folder's table answer [cnid_add()](cnid.c.md#cnid_add) while its listing's batch runs, and no table outside one.
 
@@ -322,7 +323,7 @@ Called by: [enumerate_in](../../etc/afpd/enumerate.c.md#enumerate_in)
 void cnid_close(struct _cnid_db *db)
 ```
 
-Defined at lines 510 to 523.
+Defined at lines 511 to 524.
 
 Close a CNID database through its backend.
 
@@ -341,7 +342,7 @@ Calls through [`_cnid_db::cnid_close`](../../include/atalk/cnid.h.md#struct-_cni
 cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did, const char *name, const size_t len, cnid_t hint)
 ```
 
-Defined at lines 543 to 576.
+Defined at lines 544 to 577.
 
 Add an object to the CNID database or find its existing CNID.
 
@@ -371,7 +372,7 @@ Mentioned in the documentation of: [cnid_dir_serve](cnid.c.md#cnid_dir_serve), [
 int cnid_delete(struct _cnid_db *cdb, cnid_t id)
 ```
 
-Defined at lines 585 to 592.
+Defined at lines 586 to 593.
 
 Remove a CNID from the database.
 
@@ -393,7 +394,7 @@ Calls through [`_cnid_db::cnid_delete`](../../include/atalk/cnid.h.md#struct-_cn
 cnid_t cnid_get(struct _cnid_db *cdb, const cnid_t did, char *name, const size_t len)
 ```
 
-Defined at lines 604 to 611.
+Defined at lines 605 to 612.
 
 Look up the CNID of a name in a directory.
 
@@ -417,7 +418,7 @@ Calls through [`_cnid_db::cnid_get`](../../include/atalk/cnid.h.md#struct-_cnid_
 int cnid_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 ```
 
-Defined at lines 625 to 646.
+Defined at lines 626 to 647.
 
 Read the stamp of a CNID database.
 
@@ -440,7 +441,7 @@ Calls through [`_cnid_db::cnid_getstamp`](../../include/atalk/cnid.h.md#struct-_
 cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t did, char *name, const size_t len)
 ```
 
-Defined at lines 659 to 667.
+Defined at lines 660 to 668.
 
 Look up the CNID of an object by name and parent or by device and inode.
 
@@ -459,62 +460,141 @@ Called by: [afp_createid](../../etc/afpd/file.c.md#afp_createid), [afp_exchangef
 
 Calls through [`_cnid_db::cnid_lookup`](../../include/atalk/cnid.h.md#struct-_cnid_db): no table assigns this field
 
+### cnid_find_narrows
+
+```c
+static bool cnid_find_narrows(const struct sl_name_pattern *seed, void *ctx)
+```
+
+Defined at lines 684 to 690.
+
+[sl_name_query_seeds()](../util/sl_names.c.md#sl_name_query_seeds) test: whether the backend narrows by a seed
+
+Parameters:
+* `seed`: the seed
+* `ctx`: the search, a struct [cnid_find_search](cnid.c.md#struct-cnid_find_search)
+
+Returns: the backend's answer, false for a backend without the test
+
+Called by: [cnid_find_scoped](cnid.c.md#cnid_find_scoped)
+
+Calls through [`_cnid_db::cnid_find_narrows`](../../include/atalk/cnid.h.md#struct-_cnid_db): no table assigns this field
+
+### cnid_find_scoped
+
+```c
+int cnid_find_scoped(struct _cnid_db *cdb, const struct sl_name_query *query, cnid_t scope_did, void *buffer, size_t buflen, bool *more_available)
+```
+
+Defined at lines 718 to 750.
+
+Find the CNIDs whose names match a query, in a directory's subtree.
+
+Centralises parameter validation so all CNID backends behave identically against bad input. A backend that narrows by every seed of the query reads their candidates in one search, otherwise every name. The results are the first matches of the whole query in CNID order, each once, so the buffer's room counts matches. With `scope_did` other than CNID_INVALID only entries beneath that directory match, the directory itself excluded.
+
+`more_available`, when non-NULL, is false after any failure, the wrapper's included, and true when more matches exist than fit.
+
+Parameters:
+* `cdb`: CNID database handle
+* `query`: the name comparisons
+* `scope_did`: CNID of the scope directory in network byte order, or CNID_INVALID for the whole volume
+* `buffer`: receives the CNIDs in network byte order
+* `buflen`: capacity of `buffer` in bytes, at least CNID_FIND_MIN_BUFLEN
+* `more_available`: set to true when more matches exist than fit, NULL to opt out
+
+Returns: number of CNIDs written to `buffer` on success, -1 on failure (errno = CNID_ERR_PARAM for invalid arguments, otherwise the backend's CNID_ERR_* classification, or 0 where it makes none)
+
+Calls: [cnid_find_narrows](cnid.c.md#cnid_find_narrows), [sl_name_query_seeds](../util/sl_names.c.md#sl_name_query_seeds)
+
+Called by: [cnid_find_string](cnid.c.md#cnid_find_string), [sl_cnid_open_query](../../etc/spotlight/cnid/sl_cnid.c.md#sl_cnid_open_query)
+
+Calls through [`_cnid_db::cnid_find`](../../include/atalk/cnid.h.md#struct-_cnid_db): no table assigns this field
+
+Mentioned in the documentation of: [cnid_find_string](cnid.c.md#cnid_find_string)
+
+### cnid_find_string
+
+```c
+static int cnid_find_string(struct _cnid_db *cdb, const char *name, size_t namelen, bool exact, unsigned int flags, void *buffer, size_t buflen, bool *more_available)
+```
+
+Defined at lines 767 to 800.
+
+Find the CNIDs for a name string, within names or as whole names.
+
+Parameters:
+* `cdb`: CNID database handle
+* `name`: the name in the volume's charset, UTF-8 for a handle without a volume, NUL-terminated
+* `namelen`: bytes in `name`, range 1..MAXPATHLEN
+* `exact`: match whole names, the name's wildcards escaped
+* `flags`: SL_NAMES_CASE and SL_NAMES_DIACRITIC bits
+* `buffer`: receives the CNIDs in network byte order
+* `buflen`: capacity of `buffer` in bytes
+* `more_available`: set to true when more matches exist than fit, NULL to opt out
+
+Returns: the number of CNIDs, or -1 as [cnid_find_scoped()](cnid.c.md#cnid_find_scoped) fails
+
+Calls: [cnid_find_scoped](cnid.c.md#cnid_find_scoped), [sl_name_query_free](../util/sl_names.c.md#sl_name_query_free), [sl_name_query_term_in](../util/sl_names.c.md#sl_name_query_term_in)
+
+Called by: [cnid_find](cnid.c.md#cnid_find), [cnid_find_exact](cnid.c.md#cnid_find_exact)
+
 ### cnid_find
 
 ```c
 int cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen, void *buffer, size_t buflen, bool *more_available)
 ```
 
-Defined at lines 692 to 697.
+Defined at lines 829 to 834.
 
-Search the CNID database for entries whose name contains a substring.
+Search the CNID database for entries whose name contains a term.
 
-Centralises parameter validation so all CNID backends behave identically against bad input.
+The term follows Spotlight's value syntax: '*' matches any run of characters, '?' one character, and a backslash makes the next character literal; a backslash at the end means itself. Letters match without regard to case. Centralises parameter validation so all CNID backends behave identically against bad input.
 
-The optional `more_available` out-parameter, when non-NULL, is written unconditionally on entry to false and again by the backend: false on error, true iff the result set was truncated on success (more matches exist than fit in `buffer`).
+`more_available`, when non-NULL, is false after any failure, the wrapper's included, and true when more matches exist than fit.
 
 Parameters:
 * `cdb`: CNID database handle
-* `name`: UTF-8 substring to search for, NUL-terminated
+* `name`: term to search for in the volume's charset, UTF-8 for a handle without a volume, NUL-terminated
 * `namelen`: bytes in `name`, range 1..MAXPATHLEN
-* `buffer`: caller-provided buffer for matching CNIDs in network byte order
-* `buflen`: capacity of `buffer` in bytes, must be >= CNID_FIND_MIN_BUFLEN
-* `more_available`: set to true iff result set was truncated, NULL to opt out
+* `buffer`: receives the CNIDs in network byte order
+* `buflen`: capacity of `buffer` in bytes, at least CNID_FIND_MIN_BUFLEN
+* `more_available`: set to true when more matches exist than fit, NULL to opt out
 
-Returns: number of CNIDs written to `buffer` on success, -1 on failure (errno = CNID_ERR_PARAM for invalid arguments, otherwise the backend's CNID_ERR_* classification, or 0 where it makes none)
+Returns: number of CNIDs written to `buffer` on success, -1 on failure (errno = CNID_ERR_PARAM for invalid arguments, CNID_ERR_BUSY when the term does not parse, otherwise the backend's CNID_ERR_* classification, or 0 where it makes none)
 
-Calls: [cnid_find_scoped](cnid.c.md#cnid_find_scoped)
+Calls: [cnid_find_string](cnid.c.md#cnid_find_string)
 
-Called by: [catsearch_db](../../etc/afpd/catsearch.c.md#catsearch_db), [nad_find](../../bin/nad/nad_find.c.md#nad_find)
+Called by: [nad_find](../../bin/nad/nad_find.c.md#nad_find)
 
-Mentioned in the documentation of: [cnid_find_scoped](cnid.c.md#cnid_find_scoped)
+Mentioned in the documentation of: [cnid_find_exact](cnid.c.md#cnid_find_exact)
 
-### cnid_find_scoped
+### cnid_find_exact
 
 ```c
-int cnid_find_scoped(struct _cnid_db *cdb, const char *name, size_t namelen, cnid_t scope_did, void *buffer, size_t buflen, bool *more_available)
+int cnid_find_exact(struct _cnid_db *cdb, const char *name, size_t namelen, void *buffer, size_t buflen, bool *more_available)
 ```
 
-Defined at lines 719 to 757.
+Defined at lines 856 to 862.
 
-[cnid_find()](cnid.c.md#cnid_find) restricted to the subtree of a directory
+[cnid_find()](cnid.c.md#cnid_find) for whole names, every character of the name literal
 
-Identical contract to [cnid_find()](cnid.c.md#cnid_find); additionally, when `scope_did` is not CNID_INVALID only entries lying underneath that directory match. The scope directory itself is not a result.
+Letters match without regard to case or diacritics, so the result holds every name that a comparison without regard to case takes, I with dot above against i included, for a caller such as Catalog Search that compares each name itself.
 
 Parameters:
 * `cdb`: CNID database handle
-* `name`: UTF-8 substring to search for, NUL-terminated
+* `name`: name to search for in the volume's charset, UTF-8 for a handle without a volume, NUL-terminated
 * `namelen`: bytes in `name`, range 1..MAXPATHLEN
-* `scope_did`: CNID of the scope directory in network byte order, or CNID_INVALID for the whole volume
-* `buffer`: caller-provided buffer for matching CNIDs in network byte order
-* `buflen`: capacity of `buffer` in bytes, must be >= CNID_FIND_MIN_BUFLEN
-* `more_available`: set to true iff result set was truncated, NULL to opt out
+* `buffer`: receives the CNIDs in network byte order
+* `buflen`: capacity of `buffer` in bytes, at least CNID_FIND_MIN_BUFLEN
+* `more_available`: set to true when more matches exist than fit, NULL to opt out
 
-Returns: number of CNIDs written to `buffer` on success, -1 on failure (errno = CNID_ERR_PARAM for invalid arguments, otherwise the backend's CNID_ERR_* classification, or 0 where it makes none)
+Returns: the number of CNIDs, or -1 as [cnid_find()](cnid.c.md#cnid_find) fails
 
-Called by: [cnid_find](cnid.c.md#cnid_find), [sl_cnid_collect](../../etc/spotlight/cnid/sl_cnid.c.md#sl_cnid_collect)
+Calls: [cnid_find_string](cnid.c.md#cnid_find_string)
 
-Calls through [`_cnid_db::cnid_find`](../../include/atalk/cnid.h.md#struct-_cnid_db): no table assigns this field
+Called by: [catsearch_db](../../etc/afpd/catsearch.c.md#catsearch_db)
+
+Mentioned in the documentation of: [catsearch_db](../../etc/afpd/catsearch.c.md#catsearch_db)
 
 ### cnid_resolve
 
@@ -522,7 +602,7 @@ Calls through [`_cnid_db::cnid_find`](../../include/atalk/cnid.h.md#struct-_cnid
 char * cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
 ```
 
-Defined at lines 772 to 789.
+Defined at lines 877 to 894.
 
 Resolve a CNID to its name and parent directory.
 
@@ -548,7 +628,7 @@ Mentioned in the documentation of: [sl_cnid_to_path](../../etc/spotlight/cnid/sl
 int cnid_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st, const cnid_t did, char *name, const size_t len)
 ```
 
-Defined at lines 802 to 810.
+Defined at lines 907 to 915.
 
 Update the name, parent, and stat of a CNID entry.
 
@@ -574,7 +654,7 @@ Calls through [`_cnid_db::cnid_update`](../../include/atalk/cnid.h.md#struct-_cn
 int cnid_wipe(struct _cnid_db *cdb)
 ```
 
-Defined at lines 821 to 832.
+Defined at lines 926 to 937.
 
 Empty a CNID database.
 
@@ -597,7 +677,7 @@ Calls through [`_cnid_db::cnid_wipe`](../../include/atalk/cnid.h.md#struct-_cnid
 
 a folder's row, its name kept as a hash
 
-Defined at line 224.
+Defined at line 225.
 * `uint64_t hash`
 * `uint64_t dev`
 * `uint64_t ino`
@@ -607,7 +687,7 @@ Defined at line 224.
 
 the rows of one folder, indexed by name hash
 
-Defined at line 232.
+Defined at line 233.
 * `cnid_t did`
 * `enum dirtab_state state`
 * `unsigned long armed`: arm order; the oldest makes room
@@ -618,6 +698,12 @@ Defined at line 232.
 * `struct cnid_dirrow * rows`
 * `uint32_t * index`: row number + 1, 0 for a free slot
 * `uint32_t mask`
+
+### struct cnid_find_search
+
+Defined at line 672.
+* `struct _cnid_db * cdb`
+* `cnid_t scope_did`
 
 # Typedefs and enums
 

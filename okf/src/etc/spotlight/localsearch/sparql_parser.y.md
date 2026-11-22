@@ -5,7 +5,7 @@ description: "Grammar that maps Spotlight raw queries to SPARQL."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/spotlight/localsearch/sparql_parser.y"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 ---
 
 Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -91,7 +91,7 @@ Called by: [map_expr](sparql_parser.y.md#map_expr)
 ### map_daterange
 
 ```c
-static const char * map_daterange(const char *dateattr, time_t date1, time_t date2)
+static char * map_daterange(const char *dateattr, time_t date1, time_t date2)
 ```
 
 Defined at lines 107 to 142.
@@ -133,7 +133,7 @@ Uses file-scope variables: `ssp_slq`
 ### map_expr
 
 ```c
-static const char * map_expr(const char *attr, char op, const char *val)
+static char * map_expr(const char *attr, char op, const char *val)
 ```
 
 Defined at lines 202 to 380.

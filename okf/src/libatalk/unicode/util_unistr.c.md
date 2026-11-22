@@ -5,7 +5,7 @@ description: "UTF-16 string functions, with Unicode precomposition and decomposi
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/util_unistr.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 ---
 
 Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -428,9 +428,11 @@ Returns: the output length in bytes, or `(size_t)-1` for an odd, empty, or overs
 
 Calls: [do_precomposition](util_unistr.c.md#do_precomposition), [do_precomposition_sp](util_unistr.c.md#do_precomposition_sp)
 
-Called by: [charset_precompose](charcnv.c.md#charset_precompose), [convert_charset](charcnv.c.md#convert_charset), [convert_string](charcnv.c.md#convert_string), [convert_string_allocate](charcnv.c.md#convert_string_allocate)
+Called by: [charset_precompose](charcnv.c.md#charset_precompose), [convert_charset](charcnv.c.md#convert_charset), [convert_string_allocate](charcnv.c.md#convert_string_allocate), [convert_string_log](charcnv.c.md#convert_string_log), [sl_name_fold_units](../util/sl_names.c.md#sl_name_fold_units)
 
 Uses file-scope variables: `base` in [libatalk/unicode/precompose.h](precompose.h.md), `base_sp` in [libatalk/unicode/precompose.h](precompose.h.md), `comb` in [libatalk/unicode/precompose.h](precompose.h.md), `comb_sp` in [libatalk/unicode/precompose.h](precompose.h.md)
+
+Mentioned in the documentation of: [sl_name_fold_units](../util/sl_names.c.md#sl_name_fold_units), [sl_query_piece_starts](../../etc/afpd/spotlight.c.md#sl_query_piece_starts)
 
 ### decompose_w
 
@@ -454,6 +456,6 @@ Returns: the output length in bytes, or `(size_t)-1` for an odd or empty input o
 
 Calls: [do_decomposition](util_unistr.c.md#do_decomposition), [do_decomposition_sp](util_unistr.c.md#do_decomposition_sp)
 
-Called by: [charset_decompose](charcnv.c.md#charset_decompose), [convert_charset](charcnv.c.md#convert_charset), [convert_string](charcnv.c.md#convert_string), [convert_string_allocate](charcnv.c.md#convert_string_allocate)
+Called by: [charset_decompose](charcnv.c.md#charset_decompose), [convert_charset](charcnv.c.md#convert_charset), [convert_string_allocate](charcnv.c.md#convert_string_allocate), [convert_string_log](charcnv.c.md#convert_string_log), [sl_name_fold_units](../util/sl_names.c.md#sl_name_fold_units)
 
 Uses file-scope variables: `base` in [libatalk/unicode/precompose.h](precompose.h.md), `base_sp` in [libatalk/unicode/precompose.h](precompose.h.md), `comb` in [libatalk/unicode/precompose.h](precompose.h.md)

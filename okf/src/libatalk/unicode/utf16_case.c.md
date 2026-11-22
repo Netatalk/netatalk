@@ -5,7 +5,7 @@ description: "UTF-16 case mapping tables generated from the Unicode data."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/utf16_case.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 ---
 
 Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -79,7 +79,7 @@ Parameters:
 
 Returns: the lower case character
 
-Called by: [strcasechr_w](util_unistr.c.md#strcasechr_w), [strcasecmp_w](util_unistr.c.md#strcasecmp_w), [strlower_w](util_unistr.c.md#strlower_w), [strncasecmp_w](util_unistr.c.md#strncasecmp_w)
+Called by: [sl_name_case](../util/sl_names.c.md#sl_name_case), [strcasechr_w](util_unistr.c.md#strcasechr_w), [strcasecmp_w](util_unistr.c.md#strcasecmp_w), [strlower_w](util_unistr.c.md#strlower_w), [strncasecmp_w](util_unistr.c.md#strncasecmp_w)
 
 Uses file-scope variables: `lower_table_1` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_10` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_11` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_12` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_13` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_2` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_3` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_4` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_5` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_6` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_7` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_8` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_9` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md)
 
@@ -102,6 +102,6 @@ Parameters:
 
 Returns: the lower case surrogate pair
 
-Called by: [strcasechr_sp](util_unistr.c.md#strcasechr_sp), [strcasecmp_w](util_unistr.c.md#strcasecmp_w), [strlower_w](util_unistr.c.md#strlower_w), [strncasecmp_w](util_unistr.c.md#strncasecmp_w)
+Called by: [sl_name_fold_units](../util/sl_names.c.md#sl_name_fold_units), [strcasechr_sp](util_unistr.c.md#strcasechr_sp), [strcasecmp_w](util_unistr.c.md#strcasecmp_w), [strlower_w](util_unistr.c.md#strlower_w), [strncasecmp_w](util_unistr.c.md#strncasecmp_w)
 
 Uses file-scope variables: `lower_table_sp_1` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_sp_10` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_sp_2` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_sp_3` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_sp_4` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_sp_5` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_sp_6` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_sp_7` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_sp_8` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md), `lower_table_sp_9` in [libatalk/unicode/utf16_casetable.h](utf16_casetable.h.md)

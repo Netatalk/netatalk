@@ -5,7 +5,7 @@ description: "CNID database types, backend operations and catalog lookup interfa
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/cnid.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -43,6 +43,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [etc/spotlight/cnid/sl_cnid.c](../../etc/spotlight/cnid/sl_cnid.c.md)
 * [etc/spotlight/localsearch/sl_localsearch.c](../../etc/spotlight/localsearch/sl_localsearch.c.md)
 * [etc/spotlight/xapian/sl_xapian.c](../../etc/spotlight/xapian/sl_xapian.c.md)
+* [include/atalk/cnid_sqlite_private.h](cnid_sqlite_private.h.md)
 * [include/atalk/directory.h](directory.h.md)
 * [include/atalk/server_ipc.h](server_ipc.h.md)
 * [include/atalk/util.h](util.h.md)
@@ -58,7 +59,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 This is instance of CNID database object.
 
-Defined at line 85.
+Defined at line 90.
 * `uint32_t cnid_db_flags`
 * `struct vol * cnid_db_vol`
 * `void * cnid_db_private`
@@ -71,6 +72,7 @@ Defined at line 85.
 * `void(* cnid_close`: Called through by [cnid_close](../../libatalk/cnid/cnid.c.md#cnid_close).
 * `int(* cnid_getstamp`: Called through by [cnid_getstamp](../../libatalk/cnid/cnid.c.md#cnid_getstamp).
 * `int(* cnid_find`: Called through by [cnid_find_scoped](../../libatalk/cnid/cnid.c.md#cnid_find_scoped).
+* `bool(* cnid_find_narrows`: Called through by [cnid_find_narrows](../../libatalk/cnid/cnid.c.md#cnid_find_narrows).
 * `int(* cnid_wipe`: Called through by [cnid_wipe](../../libatalk/cnid/cnid.c.md#cnid_wipe).
 * `int(* cnid_dirlist`: Called through by [dirtab_load](../../libatalk/cnid/cnid.c.md#dirtab_load).
 * `struct cnid_dirtab * cnid_dirtabs`
@@ -78,14 +80,14 @@ Defined at line 85.
 
 ### struct _cnid_module
 
-Defined at line 127.
+Defined at line 136.
 * `char * name`
 * `struct _cnid_module * next`: Permanent registry link, owned by cnid.c.
 * `struct _cnid_db *(* cnid_open`: Assigned in [cnid_mysql_module](../../libatalk/cnid/cnid_mysql.c.md#cnid_mysql_module), [cnid_sqlite_module](../../libatalk/cnid/cnid_sqlite.c.md#cnid_sqlite_module); called through by [cnid_open](../../libatalk/cnid/cnid.c.md#cnid_open).
 
 ### struct cnid_open_args
 
-Defined at line 119.
+Defined at line 128.
 * `uint32_t cnid_args_flags`
 * `struct vol * cnid_args_vol`
 
@@ -107,4 +109,4 @@ Defined at line 119.
 * `CNID_FLAG_NODEV`: don't use device number only inode
 * `CNID_FLAG_PERSISTENT`: This backend implements DID persistence.
 * `CNID_START`: first valid ID
-* Undocumented: `CNID_DIRTAB_MISSES`, `CNID_DIRTAB_PROBES`, `CNID_DIRTAB_ROWS`, `CNID_ERRNO`, `CNID_ERR_MAX`, `CNID_ERR_PARAM`, `CNID_ERR_PATH`, `CNID_FIND_MIN_BUFLEN`, `CNID_FIND_MIN_RESULTS`, `CNID_INVALID`
+* Undocumented: `CNID_DIRTAB_MISSES`, `CNID_DIRTAB_PROBES`, `CNID_DIRTAB_ROWS`, `CNID_ERRNO`, `CNID_ERR_MAX`, `CNID_ERR_PARAM`, `CNID_ERR_PATH`, `CNID_FIND_MAX_SEEDS`, `CNID_FIND_MIN_BUFLEN`, `CNID_FIND_MIN_RESULTS`, `CNID_INVALID`

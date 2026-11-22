@@ -1,5 +1,5 @@
 {
-"commit": "2e685384eb59b2fa49ca98a24dce20e6d1be461b",
+"commit": "a4dae478640cbf2497ca078f1e6ab7c74e09f54e",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -514,7 +514,7 @@
 {
 "from": "bin/nad/nad_find.c",
 "kind": "include",
-"to": "include/atalk/unicode.h"
+"to": "include/atalk/sl_names.h"
 },
 {
 "from": "bin/nad/nad_find.c",
@@ -4869,6 +4869,11 @@
 {
 "from": "etc/spotlight/cnid/sl_cnid.c",
 "kind": "include",
+"to": "include/atalk/sl_names.h"
+},
+{
+"from": "etc/spotlight/cnid/sl_cnid.c",
+"kind": "include",
 "to": "include/atalk/spotlight.h"
 },
 {
@@ -5344,6 +5349,11 @@
 {
 "from": "include/atalk/cnid_sqlite_private.h",
 "kind": "include",
+"to": "include/atalk/cnid.h"
+},
+{
+"from": "include/atalk/cnid_sqlite_private.h",
+"kind": "include",
 "to": "include/atalk/uuid.h"
 },
 {
@@ -5445,6 +5455,11 @@
 "from": "include/atalk/server_ipc.h",
 "kind": "include",
 "to": "include/atalk/server_child.h"
+},
+{
+"from": "include/atalk/sl_names.h",
+"kind": "include",
+"to": "include/atalk/unicode.h"
 },
 {
 "from": "include/atalk/spotlight.h",
@@ -6279,6 +6294,11 @@
 {
 "from": "libatalk/cnid/cnid.c",
 "kind": "include",
+"to": "include/atalk/sl_names.h"
+},
+{
+"from": "libatalk/cnid/cnid.c",
+"kind": "include",
 "to": "include/atalk/util.h"
 },
 {
@@ -6324,6 +6344,11 @@
 {
 "from": "libatalk/cnid/cnid_mysql.c",
 "kind": "include",
+"to": "include/atalk/sl_names.h"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c",
+"kind": "include",
 "to": "include/atalk/unix.h"
 },
 {
@@ -6360,6 +6385,11 @@
 "from": "libatalk/cnid/cnid_sqlite.c",
 "kind": "include",
 "to": "include/atalk/logger.h"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c",
+"kind": "include",
+"to": "include/atalk/sl_names.h"
 },
 {
 "from": "libatalk/cnid/cnid_sqlite.c",
@@ -7215,6 +7245,21 @@
 "from": "libatalk/util/sigpipe.c",
 "kind": "include",
 "to": "include/atalk/util.h"
+},
+{
+"from": "libatalk/util/sl_names.c",
+"kind": "include",
+"to": "include/atalk/logger.h"
+},
+{
+"from": "libatalk/util/sl_names.c",
+"kind": "include",
+"to": "include/atalk/sl_names.h"
+},
+{
+"from": "libatalk/util/sl_names.c",
+"kind": "include",
+"to": "include/atalk/unicode.h"
 },
 {
 "from": "libatalk/util/socket.c",
@@ -15861,12 +15906,22 @@
 {
 "from": "etc/afpd/catsearch.c#catsearch",
 "kind": "call",
+"to": "etc/afpd/catsearch.c#catsearch_time_up"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch",
+"kind": "call",
 "to": "etc/afpd/enumerate.c#check_dirent"
 },
 {
 "from": "etc/afpd/catsearch.c#catsearch",
 "kind": "call",
 "to": "etc/afpd/catsearch.c#clearstack"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch",
+"kind": "call",
+"to": "libatalk/util/unix.c#coarse_time"
 },
 {
 "from": "etc/afpd/catsearch.c#catsearch",
@@ -15924,6 +15979,11 @@
 "to": "etc/afpd/catsearch.c#save_cidx"
 },
 {
+"from": "etc/afpd/catsearch.c#catsearch_db",
+"kind": "doc",
+"to": "etc/afpd/catsearch.c#catsearch"
+},
+{
 "from": "etc/afpd/catsearch.c#catsearch_afp",
 "kind": "call",
 "to": "etc/afpd/catsearch.c#catsearch"
@@ -15976,7 +16036,32 @@
 {
 "from": "etc/afpd/catsearch.c#catsearch_db",
 "kind": "call",
-"to": "libatalk/cnid/cnid.c#cnid_find"
+"to": "etc/afpd/catsearch.c#catsearch"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch_db",
+"kind": "call",
+"to": "etc/afpd/catsearch.c#catsearch_db_drop"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch_db",
+"kind": "call",
+"to": "etc/afpd/catsearch.c#catsearch_db_keep"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch_db",
+"kind": "call",
+"to": "etc/afpd/catsearch.c#catsearch_db_start"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch_db",
+"kind": "call",
+"to": "etc/afpd/catsearch.c#catsearch_time_up"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch_db",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_find_exact"
 },
 {
 "from": "etc/afpd/catsearch.c#catsearch_db",
@@ -15986,7 +16071,7 @@
 {
 "from": "etc/afpd/catsearch.c#catsearch_db",
 "kind": "call",
-"to": "libatalk/unicode/charcnv.c#convert_charset"
+"to": "libatalk/util/unix.c#coarse_time"
 },
 {
 "from": "etc/afpd/catsearch.c#catsearch_db",
@@ -16026,12 +16111,57 @@
 {
 "from": "etc/afpd/catsearch.c#catsearch_db",
 "kind": "call",
+"to": "libatalk/compat/strlcpy.c#strlcpy"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch_db",
+"kind": "call",
 "to": "etc/afpd/desktop.c#utompath"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch_db",
+"kind": "use",
+"to": "etc/afpd/catsearch.c#catsearch_db_max_results"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch_db",
+"kind": "use",
+"to": "etc/afpd/catsearch.c#catsearch_db_searches"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch_db_keep",
+"kind": "use",
+"to": "etc/afpd/catsearch.c#catsearch_db_new"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch_db_keep",
+"kind": "use",
+"to": "etc/afpd/catsearch.c#catsearch_db_searches"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch_db_start",
+"kind": "use",
+"to": "etc/afpd/catsearch.c#catsearch_db_gen"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch_db_start",
+"kind": "use",
+"to": "etc/afpd/catsearch.c#catsearch_db_new"
 },
 {
 "from": "etc/afpd/catsearch.c#catsearch_spec_layout",
 "kind": "call",
 "to": "etc/afpd/catsearch.c#catsearch_spec_addlen"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch_time_up",
+"kind": "call",
+"to": "libatalk/util/unix.c#coarse_time"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch_db",
+"kind": "doc",
+"to": "etc/afpd/catsearch.c#catsearch_time_up"
 },
 {
 "from": "etc/papd/headers.c#ch_creator",
@@ -17070,6 +17200,11 @@
 "to": "libatalk/cnid/cnid.c#cnid_close"
 },
 {
+"from": "libatalk/cnid/cnid_sqlite.c#close_prepared_stmt",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_retire"
+},
+{
 "from": "libatalk/util/logger.c#log_close_all",
 "kind": "doc",
 "to": "libatalk/util/unix.c#closeall"
@@ -17477,12 +17612,52 @@
 {
 "from": "libatalk/cnid/cnid.c#cnid_find",
 "kind": "call",
-"to": "libatalk/cnid/cnid.c#cnid_find_scoped"
+"to": "libatalk/cnid/cnid.c#cnid_find_string"
+},
+{
+"from": "libatalk/cnid/cnid.c#cnid_find_exact",
+"kind": "doc",
+"to": "libatalk/cnid/cnid.c#cnid_find"
+},
+{
+"from": "libatalk/cnid/cnid.c#cnid_find_exact",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_find_string"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch_db",
+"kind": "doc",
+"to": "libatalk/cnid/cnid.c#cnid_find_exact"
 },
 {
 "from": "libatalk/cnid/cnid.c#cnid_find_scoped",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_find_narrows"
+},
+{
+"from": "libatalk/cnid/cnid.c#cnid_find_scoped",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_query_seeds"
+},
+{
+"from": "libatalk/cnid/cnid.c#cnid_find_string",
 "kind": "doc",
-"to": "libatalk/cnid/cnid.c#cnid_find"
+"to": "libatalk/cnid/cnid.c#cnid_find_scoped"
+},
+{
+"from": "libatalk/cnid/cnid.c#cnid_find_string",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_find_scoped"
+},
+{
+"from": "libatalk/cnid/cnid.c#cnid_find_string",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_query_free"
+},
+{
+"from": "libatalk/cnid/cnid.c#cnid_find_string",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_query_term_in"
 },
 {
 "from": "libatalk/util/cnid.c#cnid_for_path",
@@ -17537,22 +17712,17 @@
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "call",
-"to": "libatalk/compat/misc.c#asprintf"
-},
-{
-"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
-"kind": "call",
 "to": "libatalk/cnid/cnid_mysql.c#close_prepared_stmt"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "call",
-"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_drain_results"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_empty"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "call",
-"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_execute"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_fold_param"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
@@ -17670,6 +17840,21 @@
 "to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_errno"
 },
 {
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_empty",
+"kind": "call",
+"to": "libatalk/compat/misc.c#asprintf"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_empty",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_drain_results"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_empty",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_execute"
+},
+{
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_execute",
 "kind": "call",
 "to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_errno"
@@ -17677,7 +17862,122 @@
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find",
 "kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_cut_short"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_bind"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_folded"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_prepare"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_folded_narrows"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_id_ok"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_id_order"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_like"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lowest"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_under"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_index_like"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_query_match"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_query_seeds"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find",
+"kind": "doc",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_folded"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_narrows",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_folded"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_narrows",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_like"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_prepare",
+"kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_prepare",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_cond"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_fold_param",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_fold_in"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_fold_param",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_folded"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_fold_param",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_folded_len"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_folded_narrows",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_index_like"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_folded_param",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_folded"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_folded_param",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_folded_len"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_get",
@@ -17728,6 +18028,16 @@
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_getstamp",
 "kind": "call",
 "to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_errno"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_like",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_index_like"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_like",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_like"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
@@ -17832,6 +18142,11 @@
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new",
 "kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_narrows"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new",
+"kind": "call",
 "to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_get"
 },
 {
@@ -17868,6 +18183,16 @@
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_open",
 "kind": "call",
 "to": "libatalk/util/unix.c#become_root"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_open",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_close"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_open",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_escape"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_open",
@@ -17950,9 +18275,29 @@
 "to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt"
 },
 {
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt",
+"kind": "doc",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_stmt_execute"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_under",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_resolve"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find",
+"kind": "doc",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_under"
+},
+{
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update",
 "kind": "call",
 "to": "libatalk/cnid/cnid_mysql.c#close_prepared_stmt"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_fold_param"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update",
@@ -18002,17 +18347,7 @@
 {
 "from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_wipe",
 "kind": "call",
-"to": "libatalk/compat/misc.c#asprintf"
-},
-{
-"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_wipe",
-"kind": "call",
-"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_drain_results"
-},
-{
-"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_wipe",
-"kind": "call",
-"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_execute"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_empty"
 },
 {
 "from": "libatalk/cnid/cnid.c#cnid_open",
@@ -18089,6 +18424,11 @@
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
 "kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_empty_table"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
+"kind": "call",
 "to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_execute"
 },
 {
@@ -18099,17 +18439,17 @@
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
 "kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_changed"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
+"kind": "call",
 "to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_lookup"
 },
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
 "kind": "call",
 "to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rollback"
-},
-{
-"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
-"kind": "call",
-"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_seed_sequence"
 },
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
@@ -18132,6 +18472,16 @@
 "to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_execute"
 },
 {
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_candidates",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_count"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_candidates",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_index_glob"
+},
+{
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_close",
 "kind": "call",
 "to": "libatalk/cnid/cnid_sqlite.c#close_prepared_stmt"
@@ -18140,6 +18490,16 @@
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_commit",
 "kind": "call",
 "to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_execute"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_count",
+"kind": "call",
+"to": "libatalk/compat/misc.c#asprintf"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_changed"
 },
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete",
@@ -18177,6 +18537,31 @@
 "to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_ready"
 },
 {
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_empty_table",
+"kind": "call",
+"to": "libatalk/compat/misc.c#asprintf"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_empty_table",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_execute"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_empty_table",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_create"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_empty_table",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_drop"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_empty_table",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_seed_sequence"
+},
+{
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_execute",
 "kind": "call",
 "to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_set_errno"
@@ -18189,7 +18574,37 @@
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find",
 "kind": "call",
-"to": "libatalk/compat/misc.c#asprintf"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_begin"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_candidates"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find_bind"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_abandon"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_broken"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_stmt"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rollback"
 },
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find",
@@ -18210,6 +18625,21 @@
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find",
 "kind": "call",
 "to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_reset"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find_bind",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_index_glob"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find_narrows",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_indexable"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_fold",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_fold_in"
 },
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_get",
@@ -18250,6 +18680,121 @@
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_getstamp",
 "kind": "call",
 "to": "libatalk/compat/strlcpy.c#strlcpy"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_abandon",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_retire"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_changed",
+"kind": "call",
+"to": "libatalk/compat/misc.c#asprintf"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_changed",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_begin"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_changed",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_commit"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_changed",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_count"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_changed",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_abandon"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_changed",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_broken"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_changed",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rollback"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_create",
+"kind": "call",
+"to": "libatalk/compat/misc.c#asprintf"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_create",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_count"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_create",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_drop"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_create",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_set_errno"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_drop",
+"kind": "call",
+"to": "libatalk/compat/misc.c#asprintf"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_drop",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_execute"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_prepare",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_count"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_prepare",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_abandon"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_prepare",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_broken"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_prepare",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_retire"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_prepare",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_stmt"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_prepare",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_prepare_one"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_stmt",
+"kind": "call",
+"to": "libatalk/compat/misc.c#asprintf"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_indexable",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_index_glob"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find_narrows",
+"kind": "doc",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_indexable"
 },
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_lookup",
@@ -18287,6 +18832,16 @@
 "to": "libatalk/compat/strlcpy.c#strlcpy"
 },
 {
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_match",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_query_match"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_names_left",
+"kind": "call",
+"to": "libatalk/compat/misc.c#asprintf"
+},
+{
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
 "kind": "call",
 "to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add"
@@ -18310,6 +18865,11 @@
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
 "kind": "call",
 "to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find_narrows"
 },
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
@@ -18394,6 +18954,31 @@
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_fold"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_create"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_drop"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_match"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_names_left"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
+"kind": "call",
 "to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new"
 },
 {
@@ -18445,6 +19030,11 @@
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
 "to": "libatalk/util/cnid.c#uuid_strip_dashes"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_prepare_one",
+"kind": "call",
+"to": "libatalk/compat/misc.c#asprintf"
 },
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_refused",
@@ -18499,6 +19089,11 @@
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update",
 "kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_changed"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update",
+"kind": "call",
 "to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rollback"
 },
 {
@@ -18539,17 +19134,17 @@
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_wipe",
 "kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_empty_table"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_wipe",
+"kind": "call",
 "to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_execute"
 },
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_wipe",
 "kind": "call",
 "to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rollback"
-},
-{
-"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_wipe",
-"kind": "call",
-"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_seed_sequence"
 },
 {
 "from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_wipe",
@@ -18585,6 +19180,11 @@
 "from": "libatalk/cnid/cnid.c#cnid_wipe",
 "kind": "call",
 "to": "libatalk/cnid/cnid.c#dirtab_off"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch_time_up",
+"kind": "doc",
+"to": "libatalk/util/unix.c#coarse_time"
 },
 {
 "from": "etc/afpd/volume.c#markvol",
@@ -18864,27 +19464,17 @@
 {
 "from": "libatalk/unicode/charcnv.c#convert_string",
 "kind": "call",
-"to": "libatalk/unicode/charcnv.c#charset_name"
+"to": "libatalk/unicode/charcnv.c#convert_string_log"
 },
 {
-"from": "libatalk/unicode/charcnv.c#convert_string",
-"kind": "call",
-"to": "libatalk/unicode/charcnv.c#convert_string_internal"
+"from": "libatalk/unicode/charcnv.c#convert_string_log",
+"kind": "doc",
+"to": "libatalk/unicode/charcnv.c#convert_string"
 },
 {
-"from": "libatalk/unicode/charcnv.c#convert_string",
-"kind": "call",
-"to": "libatalk/unicode/util_unistr.c#decompose_w"
-},
-{
-"from": "libatalk/unicode/charcnv.c#convert_string",
-"kind": "call",
-"to": "libatalk/unicode/util_unistr.c#precompose_w"
-},
-{
-"from": "libatalk/unicode/charcnv.c#convert_string",
-"kind": "use",
-"to": "libatalk/unicode/charcnv.c#charsets"
+"from": "libatalk/unicode/charcnv.c#convert_string_quiet",
+"kind": "doc",
+"to": "libatalk/unicode/charcnv.c#convert_string"
 },
 {
 "from": "libatalk/unicode/charcnv.c#convert_string_allocate",
@@ -18955,6 +19545,36 @@
 "from": "libatalk/unicode/charcnv.c#convert_string_internal",
 "kind": "use",
 "to": "libatalk/unicode/charcnv.c#conv_handles"
+},
+{
+"from": "libatalk/unicode/charcnv.c#convert_string_log",
+"kind": "call",
+"to": "libatalk/unicode/charcnv.c#charset_name"
+},
+{
+"from": "libatalk/unicode/charcnv.c#convert_string_log",
+"kind": "call",
+"to": "libatalk/unicode/charcnv.c#convert_string_internal"
+},
+{
+"from": "libatalk/unicode/charcnv.c#convert_string_log",
+"kind": "call",
+"to": "libatalk/unicode/util_unistr.c#decompose_w"
+},
+{
+"from": "libatalk/unicode/charcnv.c#convert_string_log",
+"kind": "call",
+"to": "libatalk/unicode/util_unistr.c#precompose_w"
+},
+{
+"from": "libatalk/unicode/charcnv.c#convert_string_log",
+"kind": "use",
+"to": "libatalk/unicode/charcnv.c#charsets"
+},
+{
+"from": "libatalk/unicode/charcnv.c#convert_string_quiet",
+"kind": "call",
+"to": "libatalk/unicode/charcnv.c#convert_string_log"
 },
 {
 "from": "etc/papd/print_cups.c#convert_to_mac_name",
@@ -20022,6 +20642,11 @@
 "from": "etc/afpd/catsearch.c#crit_check",
 "kind": "use",
 "to": "etc/afpd/catsearch.c#c2"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch_db",
+"kind": "doc",
+"to": "etc/afpd/catsearch.c#crit_check"
 },
 {
 "from": "etc/afpd/catsearch.c#crit_mac_name",
@@ -24439,6 +25064,11 @@
 "to": "etc/afpd/directory.c#openacc_rights"
 },
 {
+"from": "bin/nad/nad_find.c#filesystem_find",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_query_match"
+},
+{
 "from": "bin/nad/nad_stuffit.c#fill_header_from_entry",
 "kind": "call",
 "to": "bin/nad/nad_stuffit.c#path_basename"
@@ -26678,6 +27308,11 @@
 {
 "from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt",
 "kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#close_prepared_stmt"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt",
+"kind": "call",
 "to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_add"
 },
 {
@@ -26718,12 +27353,22 @@
 {
 "from": "libatalk/cnid/cnid_sqlite.c#init_prepared_stmt",
 "kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_prepare"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#init_prepared_stmt",
+"kind": "call",
 "to": "libatalk/cnid/cnid_sqlite.c#init_prepared_stmt_one"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_add",
 "kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_add",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_folded_param"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_add",
@@ -26754,6 +27399,11 @@
 "from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_add",
 "kind": "use",
 "to": "libatalk/cnid/cnid_mysql.c#stmt_param_name_len"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_put",
+"kind": "doc",
+"to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_add"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete",
@@ -26928,7 +27578,7 @@
 {
 "from": "libatalk/cnid/cnid_sqlite.c#init_prepared_stmt_one",
 "kind": "call",
-"to": "libatalk/compat/misc.c#asprintf"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_prepare_one"
 },
 {
 "from": "libatalk/cnid/cnid_sqlite.c#init_prepared_stmt_one",
@@ -26979,6 +27629,11 @@
 "from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_put",
 "kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_put",
+"kind": "call",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_folded_param"
 },
 {
 "from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_put",
@@ -31398,7 +32053,7 @@
 {
 "from": "bin/nad/nad_find.c#nad_find",
 "kind": "call",
-"to": "libatalk/unicode/charcnv.c#convert_charset"
+"to": "libatalk/unicode/charcnv.c#convert_string"
 },
 {
 "from": "bin/nad/nad_find.c#nad_find",
@@ -31419,6 +32074,16 @@
 "from": "bin/nad/nad_find.c#nad_find",
 "kind": "call",
 "to": "bin/nad/nad_util.c#set_signal"
+},
+{
+"from": "bin/nad/nad_find.c#nad_find",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_query_free"
+},
+{
+"from": "bin/nad/nad_find.c#nad_find",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_query_term_in"
 },
 {
 "from": "bin/nad/nad_find.c#nad_find",
@@ -34220,6 +34885,16 @@
 "to": "libatalk/unicode/precompose.h#comb_sp"
 },
 {
+"from": "libatalk/util/sl_names.c#sl_name_fold_units",
+"kind": "doc",
+"to": "libatalk/unicode/util_unistr.c#precompose_w"
+},
+{
+"from": "etc/afpd/spotlight.c#sl_query_piece_starts",
+"kind": "doc",
+"to": "libatalk/unicode/util_unistr.c#precompose_w"
+},
+{
 "from": "libatalk/vfs/extattr.c#prefix",
 "kind": "call",
 "to": "libatalk/compat/strlcpy.c#strlcpy"
@@ -35613,6 +36288,11 @@
 "from": "bin/nad/megatron.c#resolve_metadata_volume",
 "kind": "call",
 "to": "libatalk/util/netatalk_conf.c#getvolbypath"
+},
+{
+"from": "bin/nad/megatron.c#resolve_metadata_volume",
+"kind": "call",
+"to": "libatalk/util/netatalk_conf.c#load_charset"
 },
 {
 "from": "bin/nad/megatron.c#resolve_metadata_volume",
@@ -37782,36 +38462,6 @@
 "to": "bin/nad/hqx.c#skip_junk"
 },
 {
-"from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_collect",
-"kind": "call",
-"to": "etc/spotlight/cnid/sl_cnid.c#cnid32_comp_fn"
-},
-{
-"from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_collect",
-"kind": "call",
-"to": "libatalk/cnid/cnid.c#cnid_find_scoped"
-},
-{
-"from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_collect",
-"kind": "call",
-"to": "libatalk/compat/misc.c#strnlen"
-},
-{
-"from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_extract_terms",
-"kind": "call",
-"to": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_add_term"
-},
-{
-"from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_extract_terms",
-"kind": "call",
-"to": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_quoted_value"
-},
-{
-"from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_extract_terms",
-"kind": "call",
-"to": "libatalk/compat/misc.c#strnlen"
-},
-{
 "from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_fetch_results",
 "kind": "call",
 "to": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_fill_results"
@@ -37834,7 +38484,17 @@
 {
 "from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_fill_results",
 "kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_query_match"
+},
+{
+"from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_fill_results",
+"kind": "call",
 "to": "etc/afpd/spotlight.c#sl_path_in_scope"
+},
+{
+"from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_open_query",
+"kind": "call",
+"to": "libatalk/cnid/cnid.c#cnid_find_scoped"
 },
 {
 "from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_open_query",
@@ -37854,17 +38514,12 @@
 {
 "from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_open_query",
 "kind": "call",
-"to": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_collect"
-},
-{
-"from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_open_query",
-"kind": "call",
-"to": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_extract_terms"
-},
-{
-"from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_open_query",
-"kind": "call",
 "to": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_fill_results"
+},
+{
+"from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_open_query",
+"kind": "call",
+"to": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_query_free"
 },
 {
 "from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_open_query",
@@ -37872,9 +38527,19 @@
 "to": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_scope_is_vol_root"
 },
 {
-"from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_quoted_value",
+"from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_open_query",
 "kind": "call",
-"to": "libatalk/compat/misc.c#strnlen"
+"to": "libatalk/util/sl_names.c#sl_name_query_free"
+},
+{
+"from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_open_query",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_query_parse_in"
+},
+{
+"from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_query_free",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_query_free"
 },
 {
 "from": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_to_path",
@@ -37921,6 +38586,506 @@
 "from": "etc/spotlight/localsearch/sl_localsearch.c#sl_localsearch_open_query",
 "kind": "call",
 "to": "etc/spotlight/localsearch/sl_localsearch.c#tracker_query_cb"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_alnum",
+"kind": "use",
+"to": "libatalk/util/sl_names.c#sl_name_nonword"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_and",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_join"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_and",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_primary"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_and",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_take"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_boundary",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_joins"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_boundary",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pair_tail"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_boundary",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_unspaced"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_boundary",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_word"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_case",
+"kind": "call",
+"to": "libatalk/unicode/utf16_case.c#tolower_w"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_chain_holds",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_same"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_char_end",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_joins"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_comparison",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_ascii_same"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_comparison",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_modifiers"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_comparison",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_never"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_comparison",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_literals"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_comparison",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_new"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_comparison",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_same"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_comparison",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_phrase"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_comparison",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_query_free"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_comparison",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_query_value"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_comparison",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_skip_operand"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_comparison",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_skip_string"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_comparison",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_space"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_comparison",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_take"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_flush",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_fold_units"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_flush",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pair_tail"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_flush",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_put_utf8"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_fold",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_fold_units"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_fold",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_put_utf8"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_fold_in",
+"kind": "doc",
+"to": "libatalk/util/sl_names.c#sl_name_fold"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_fold_in",
+"kind": "call",
+"to": "libatalk/unicode/charcnv.c#convert_string_quiet"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_fold_in",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_converts"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_fold_in",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_fold"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_fold_units",
+"kind": "call",
+"to": "libatalk/unicode/util_unistr.c#decompose_w"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_fold_units",
+"kind": "call",
+"to": "libatalk/unicode/util_unistr.c#precompose_w"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_fold_units",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_atomic"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_fold_units",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_case"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_fold_units",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_mark"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_fold_units",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_next"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_fold_units",
+"kind": "call",
+"to": "libatalk/unicode/utf16_case.c#tolower_sp"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_folds_match",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_fold_units"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_folds_match",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_match"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_folds_match",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_units_match"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_glob",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_boundary"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_glob",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_char_end"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_glob",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_joins"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_join",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_chain_holds"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_join",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_query_free"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_joins",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_mark"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_fold_units",
+"kind": "doc",
+"to": "libatalk/util/sl_names.c#sl_name_mark"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_joins",
+"kind": "doc",
+"to": "libatalk/util/sl_names.c#sl_name_mark"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_node_match",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_folds_match"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_or",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_and"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_or",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_join"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_or",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_take"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_pattern_new",
+"kind": "doc",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_free"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_pattern_match",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_fold_units"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_pattern_match",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_negated"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_pattern_match",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_units_match"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_pattern_new",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_flush"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_pattern_new",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_next"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_pattern_new",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_free"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_primary",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_comparison"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_primary",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_or"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_primary",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_take"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_free",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_free"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_parse",
+"kind": "doc",
+"to": "libatalk/util/sl_names.c#sl_name_query_free"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_parse_in",
+"kind": "doc",
+"to": "libatalk/util/sl_names.c#sl_name_query_free"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_seeds",
+"kind": "doc",
+"to": "libatalk/util/sl_names.c#sl_name_query_free"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_term",
+"kind": "doc",
+"to": "libatalk/util/sl_names.c#sl_name_query_free"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_term_in",
+"kind": "doc",
+"to": "libatalk/util/sl_names.c#sl_name_query_free"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_value",
+"kind": "doc",
+"to": "libatalk/util/sl_names.c#sl_name_query_free"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_match",
+"kind": "call",
+"to": "libatalk/unicode/charcnv.c#convert_string_quiet"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_match",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_converts"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_match",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_node_match"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_parse",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_query_parse_in"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_parse_in",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_converts"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_parse_in",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_or"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_parse_in",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_free"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_parse_in",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_query_free"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_parse_in",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_space"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_parse_in",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_utf8_query"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_seeds",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_seed"
+},
+{
+"from": "libatalk/cnid/cnid.c#cnid_find_narrows",
+"kind": "doc",
+"to": "libatalk/util/sl_names.c#sl_name_query_seeds"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_term",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_query_term_in"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_term_in",
+"kind": "call",
+"to": "libatalk/unicode/charcnv.c#convert_string"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_term_in",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_converts"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_term_in",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_query_value"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_query_value",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_new"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_seed",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_negated"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_seed",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_same"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_skip_operand",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_skip_string"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_take",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_space"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_units_match",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_glob"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_units_match",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_holds"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_units_match",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pattern_negated"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_utf8_query",
+"kind": "call",
+"to": "libatalk/unicode/charcnv.c#convert_string_quiet"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_word",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_alnum"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_word",
+"kind": "call",
+"to": "libatalk/util/sl_names.c#sl_name_pair_tail"
+},
+{
+"from": "libatalk/util/sl_names.c#sl_name_word",
+"kind": "use",
+"to": "libatalk/util/sl_names.c#sl_name_nonword_sp"
 },
 {
 "from": "etc/afpd/spotlight_marshalling.c#sl_pack",
@@ -38143,6 +39308,21 @@
 "to": "etc/afpd/spotlight_marshalling.c#sl_put_le32"
 },
 {
+"from": "etc/afpd/spotlight.c#sl_query_piece_starts",
+"kind": "use",
+"to": "etc/afpd/spotlight.c#sl_query_second"
+},
+{
+"from": "etc/afpd/spotlight.c#sl_query_to_volume",
+"kind": "call",
+"to": "libatalk/unicode/charcnv.c#convert_charset"
+},
+{
+"from": "etc/afpd/spotlight.c#sl_query_to_volume",
+"kind": "call",
+"to": "etc/afpd/spotlight.c#sl_query_piece_starts"
+},
+{
 "from": "etc/afpd/spotlight.c#sl_rpc_closeQueryForContext",
 "kind": "call",
 "to": "libatalk/dalloc/dalloc.c#dalloc_get"
@@ -38274,6 +39454,11 @@
 "from": "etc/afpd/spotlight.c#sl_rpc_openQuery",
 "kind": "call",
 "to": "etc/afpd/spotlight.c#sl_createCNIDArray"
+},
+{
+"from": "etc/afpd/spotlight.c#sl_rpc_openQuery",
+"kind": "call",
+"to": "etc/afpd/spotlight.c#sl_query_to_volume"
 },
 {
 "from": "etc/afpd/spotlight.c#sl_rpc_openQuery",
@@ -44701,6 +45886,11 @@
 "subsystem": "include/atalk"
 },
 {
+"id": "include/atalk/sl_names.h",
+"kind": "file",
+"subsystem": "include/atalk"
+},
+{
 "id": "include/atalk/spotlight.h",
 "kind": "file",
 "subsystem": "include/atalk"
@@ -45307,6 +46497,11 @@
 },
 {
 "id": "libatalk/util/sigpipe.c",
+"kind": "file",
+"subsystem": "libatalk/util"
+},
+{
+"id": "libatalk/util/sl_names.c",
 "kind": "file",
 "subsystem": "libatalk/util"
 },
@@ -46753,7 +47948,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#add_charset",
 "kind": "function",
-"line": 167,
+"line": 168,
 "static": false
 },
 {
@@ -46793,7 +47988,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#add_null",
 "kind": "function",
-"line": 265,
+"line": 266,
 "static": true
 },
 {
@@ -47161,7 +48356,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#afp_catsearch",
 "kind": "function",
-"line": 1611,
+"line": 1750,
 "static": false
 },
 {
@@ -47169,7 +48364,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#afp_catsearch_ext",
 "kind": "function",
-"line": 1628,
+"line": 1767,
 "static": false
 },
 {
@@ -47833,7 +49028,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#afp_spotlight_rpc",
 "kind": "function",
-"line": 1585,
+"line": 1712,
 "static": false
 },
 {
@@ -48121,7 +49316,7 @@
 "file": "bin/nad/megatron.c",
 "id": "bin/nad/megatron.c#arg_is_flag_option",
 "kind": "function",
-"line": 796,
+"line": 805,
 "static": true
 },
 {
@@ -48129,7 +49324,7 @@
 "file": "bin/nad/megatron.c",
 "id": "bin/nad/megatron.c#arg_is_option_with_value",
 "kind": "function",
-"line": 785,
+"line": 794,
 "static": true
 },
 {
@@ -48985,7 +50180,7 @@
 "file": "bin/nad/nad_find.c",
 "id": "bin/nad/nad_find.c#bjoin_inv",
 "kind": "function",
-"line": 182,
+"line": 181,
 "static": false
 },
 {
@@ -49025,7 +50220,7 @@
 "file": "bin/nad/nad_find.c",
 "id": "bin/nad/nad_find.c#bstr_list_create_min",
 "kind": "function",
-"line": 154,
+"line": 153,
 "static": false
 },
 {
@@ -49033,7 +50228,7 @@
 "file": "bin/nad/nad_find.c",
 "id": "bin/nad/nad_find.c#bstr_list_push",
 "kind": "function",
-"line": 137,
+"line": 136,
 "static": false
 },
 {
@@ -49129,7 +50324,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#catsearch",
 "kind": "function",
-"line": 847,
+"line": 867,
 "static": true
 },
 {
@@ -49137,7 +50332,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#catsearch_afp",
 "kind": "function",
-"line": 1315,
+"line": 1454,
 "static": true
 },
 {
@@ -49145,7 +50340,31 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#catsearch_db",
 "kind": "function",
-"line": 1120,
+"line": 1233,
+"static": true
+},
+{
+"documented": true,
+"file": "etc/afpd/catsearch.c",
+"id": "etc/afpd/catsearch.c#catsearch_db_drop",
+"kind": "function",
+"line": 1141,
+"static": true
+},
+{
+"documented": true,
+"file": "etc/afpd/catsearch.c",
+"id": "etc/afpd/catsearch.c#catsearch_db_keep",
+"kind": "function",
+"line": 1178,
+"static": true
+},
+{
+"documented": true,
+"file": "etc/afpd/catsearch.c",
+"id": "etc/afpd/catsearch.c#catsearch_db_start",
+"kind": "function",
+"line": 1152,
 "static": true
 },
 {
@@ -49162,6 +50381,14 @@
 "id": "etc/afpd/catsearch.c#catsearch_spec_layout",
 "kind": "function",
 "line": 167,
+"static": true
+},
+{
+"documented": true,
+"file": "etc/afpd/catsearch.c",
+"id": "etc/afpd/catsearch.c#catsearch_time_up",
+"kind": "function",
+"line": 831,
 "static": true
 },
 {
@@ -49393,7 +50620,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#charset_decompose",
 "kind": "function",
-"line": 741,
+"line": 792,
 "static": false
 },
 {
@@ -49401,7 +50628,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#charset_name",
 "kind": "function",
-"line": 74,
+"line": 75,
 "static": true
 },
 {
@@ -49409,7 +50636,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#charset_precompose",
 "kind": "function",
-"line": 701,
+"line": 752,
 "static": false
 },
 {
@@ -49417,7 +50644,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#charset_strlower",
 "kind": "function",
-"line": 634,
+"line": 685,
 "static": false
 },
 {
@@ -49425,7 +50652,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#charset_strupper",
 "kind": "function",
-"line": 598,
+"line": 649,
 "static": false
 },
 {
@@ -49737,7 +50964,7 @@
 "file": "bin/nad/megatron.c",
 "id": "bin/nad/megatron.c#close_metadata_volume",
 "kind": "function",
-"line": 769,
+"line": 778,
 "static": true
 },
 {
@@ -49745,7 +50972,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#close_prepared_stmt",
 "kind": "function",
-"line": 474,
+"line": 580,
 "static": true
 },
 {
@@ -49753,7 +50980,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#close_prepared_stmt",
 "kind": "function",
-"line": 288,
+"line": 551,
 "static": true
 },
 {
@@ -49838,18 +51065,10 @@
 },
 {
 "documented": true,
-"file": "etc/spotlight/cnid/sl_cnid.c",
-"id": "etc/spotlight/cnid/sl_cnid.c#cnid32_comp_fn",
-"kind": "function",
-"line": 77,
-"static": true
-},
-{
-"documented": true,
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_add",
 "kind": "function",
-"line": 543,
+"line": 544,
 "static": false
 },
 {
@@ -49857,7 +51076,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_close",
 "kind": "function",
-"line": 510,
+"line": 511,
 "static": false
 },
 {
@@ -49873,7 +51092,7 @@
 "file": "etc/spotlight/cnid/sl_cnid.c",
 "id": "etc/spotlight/cnid/sl_cnid.c#cnid_comp_fn",
 "kind": "function",
-"line": 54,
+"line": 56,
 "static": true
 },
 {
@@ -49897,7 +51116,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_delete",
 "kind": "function",
-"line": 585,
+"line": 586,
 "static": false
 },
 {
@@ -49905,7 +51124,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_dir_arm",
 "kind": "function",
-"line": 446,
+"line": 447,
 "static": false
 },
 {
@@ -49913,7 +51132,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_dir_forget",
 "kind": "function",
-"line": 482,
+"line": 483,
 "static": false
 },
 {
@@ -49921,7 +51140,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_dir_serve",
 "kind": "function",
-"line": 498,
+"line": 499,
 "static": false
 },
 {
@@ -49929,16 +51148,40 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_find",
 "kind": "function",
-"line": 692,
+"line": 829,
 "static": false
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid.c",
+"id": "libatalk/cnid/cnid.c#cnid_find_exact",
+"kind": "function",
+"line": 856,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid.c",
+"id": "libatalk/cnid/cnid.c#cnid_find_narrows",
+"kind": "function",
+"line": 684,
+"static": true
 },
 {
 "documented": true,
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_find_scoped",
 "kind": "function",
-"line": 719,
+"line": 718,
 "static": false
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid.c",
+"id": "libatalk/cnid/cnid.c#cnid_find_string",
+"kind": "function",
+"line": 767,
+"static": true
 },
 {
 "documented": true,
@@ -49961,7 +51204,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_get",
 "kind": "function",
-"line": 604,
+"line": 605,
 "static": false
 },
 {
@@ -49969,7 +51212,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_getstamp",
 "kind": "function",
-"line": 625,
+"line": 626,
 "static": false
 },
 {
@@ -49985,7 +51228,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_lookup",
 "kind": "function",
-"line": 659,
+"line": 660,
 "static": false
 },
 {
@@ -49993,7 +51236,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_module_named",
 "kind": "function",
-"line": 50,
+"line": 51,
 "static": true
 },
 {
@@ -50001,7 +51244,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "function",
-"line": 1033,
+"line": 1216,
 "static": false
 },
 {
@@ -50009,15 +51252,23 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_close",
 "kind": "function",
-"line": 672,
+"line": 846,
 "static": false
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_cut_short",
+"kind": "function",
+"line": 1862,
+"static": true
 },
 {
 "documented": true,
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_delete",
 "kind": "function",
-"line": 647,
+"line": 821,
 "static": false
 },
 {
@@ -50025,7 +51276,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_dirlist",
 "kind": "function",
-"line": 1777,
+"line": 2393,
 "static": true
 },
 {
@@ -50033,7 +51284,23 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_drain_results",
 "kind": "function",
-"line": 530,
+"line": 636,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_empty",
+"kind": "function",
+"line": 670,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_escape",
+"kind": "function",
+"line": 788,
 "static": true
 },
 {
@@ -50041,7 +51308,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_execute",
 "kind": "function",
-"line": 626,
+"line": 767,
 "static": true
 },
 {
@@ -50049,15 +51316,79 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find",
 "kind": "function",
-"line": 1492,
+"line": 2133,
 "static": false
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_bind",
+"kind": "function",
+"line": 1908,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_cond",
+"kind": "function",
+"line": 1732,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_folded",
+"kind": "function",
+"line": 1678,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_narrows",
+"kind": "function",
+"line": 1693,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find_prepare",
+"kind": "function",
+"line": 1773,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_fold_param",
+"kind": "function",
+"line": 221,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_folded_narrows",
+"kind": "function",
+"line": 1712,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_folded_param",
+"kind": "function",
+"line": 203,
+"static": true
 },
 {
 "documented": true,
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_get",
 "kind": "function",
-"line": 1252,
+"line": 1423,
 "static": false
 },
 {
@@ -50065,7 +51396,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_getstamp",
 "kind": "function",
-"line": 1410,
+"line": 1581,
 "static": false
 },
 {
@@ -50073,7 +51404,31 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_hint_usable",
 "kind": "function",
-"line": 115,
+"line": 132,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_id_ok",
+"kind": "function",
+"line": 1959,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_id_order",
+"kind": "function",
+"line": 2026,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_like",
+"kind": "function",
+"line": 1660,
 "static": true
 },
 {
@@ -50081,15 +51436,23 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "function",
-"line": 815,
+"line": 996,
 "static": false
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lowest",
+"kind": "function",
+"line": 1980,
+"static": true
 },
 {
 "documented": true,
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new",
 "kind": "function",
-"line": 1816,
+"line": 2432,
 "static": true
 },
 {
@@ -50097,7 +51460,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_open",
 "kind": "function",
-"line": 1853,
+"line": 2470,
 "static": false
 },
 {
@@ -50105,7 +51468,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_resolve",
 "kind": "function",
-"line": 1334,
+"line": 1505,
 "static": false
 },
 {
@@ -50113,7 +51476,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_errno",
 "kind": "function",
-"line": 501,
+"line": 607,
 "static": true
 },
 {
@@ -50121,7 +51484,15 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_stmt_execute",
 "kind": "function",
-"line": 565,
+"line": 706,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_under",
+"kind": "function",
+"line": 2064,
 "static": true
 },
 {
@@ -50129,7 +51500,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update",
 "kind": "function",
-"line": 715,
+"line": 890,
 "static": false
 },
 {
@@ -50137,7 +51508,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_wipe",
 "kind": "function",
-"line": 1721,
+"line": 2354,
 "static": false
 },
 {
@@ -50145,7 +51516,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_open",
 "kind": "function",
-"line": 116,
+"line": 117,
 "static": false
 },
 {
@@ -50153,7 +51524,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_register",
 "kind": "function",
-"line": 81,
+"line": 82,
 "static": false
 },
 {
@@ -50161,7 +51532,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_resolve",
 "kind": "function",
-"line": 772,
+"line": 877,
 "static": false
 },
 {
@@ -50169,7 +51540,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_scheme_registered",
 "kind": "function",
-"line": 67,
+"line": 68,
 "static": false
 },
 {
@@ -50177,7 +51548,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
 "kind": "function",
-"line": 1230,
+"line": 1992,
 "static": false
 },
 {
@@ -50185,7 +51556,15 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_begin",
 "kind": "function",
-"line": 572,
+"line": 836,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_candidates",
+"kind": "function",
+"line": 1348,
 "static": true
 },
 {
@@ -50193,7 +51572,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_close",
 "kind": "function",
-"line": 726,
+"line": 1487,
 "static": false
 },
 {
@@ -50201,7 +51580,15 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_commit",
 "kind": "function",
-"line": 592,
+"line": 856,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_count",
+"kind": "function",
+"line": 939,
 "static": true
 },
 {
@@ -50209,7 +51596,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete",
 "kind": "function",
-"line": 674,
+"line": 1434,
 "static": false
 },
 {
@@ -50217,7 +51604,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_by_uuid",
 "kind": "function",
-"line": 465,
+"line": 729,
 "static": true
 },
 {
@@ -50225,7 +51612,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_sequence_row",
 "kind": "function",
-"line": 515,
+"line": 779,
 "static": true
 },
 {
@@ -50233,7 +51620,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_volumes_row",
 "kind": "function",
-"line": 502,
+"line": 766,
 "static": true
 },
 {
@@ -50241,7 +51628,15 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_dirlist",
 "kind": "function",
-"line": 2076,
+"line": 2918,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_empty_table",
+"kind": "function",
+"line": 1406,
 "static": true
 },
 {
@@ -50249,7 +51644,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_execute",
 "kind": "function",
-"line": 437,
+"line": 701,
 "static": true
 },
 {
@@ -50257,7 +51652,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_fchmod_companions",
 "kind": "function",
-"line": 153,
+"line": 271,
 "static": true
 },
 {
@@ -50265,7 +51660,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_fchmod_regular",
 "kind": "function",
-"line": 94,
+"line": 212,
 "static": true
 },
 {
@@ -50273,15 +51668,39 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find",
 "kind": "function",
-"line": 1835,
+"line": 2641,
 "static": false
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find_bind",
+"kind": "function",
+"line": 2585,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find_narrows",
+"kind": "function",
+"line": 1387,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_fold",
+"kind": "function",
+"line": 322,
+"static": true
 },
 {
 "documented": true,
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_get",
 "kind": "function",
-"line": 1518,
+"line": 2274,
 "static": false
 },
 {
@@ -50289,7 +51708,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_getstamp",
 "kind": "function",
-"line": 1731,
+"line": 2487,
 "static": false
 },
 {
@@ -50297,7 +51716,79 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_hint_usable",
 "kind": "function",
-"line": 329,
+"line": 593,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_abandon",
+"kind": "function",
+"line": 1162,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_broken",
+"kind": "function",
+"line": 1143,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_changed",
+"kind": "function",
+"line": 1254,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_create",
+"kind": "function",
+"line": 1061,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_drop",
+"kind": "function",
+"line": 973,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_prepare",
+"kind": "function",
+"line": 1180,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_retire",
+"kind": "function",
+"line": 480,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_index_stmt",
+"kind": "function",
+"line": 506,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_indexable",
+"kind": "function",
+"line": 1312,
 "static": true
 },
 {
@@ -50305,15 +51796,31 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_lookup",
 "kind": "function",
-"line": 960,
+"line": 1722,
 "static": false
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_match",
+"kind": "function",
+"line": 302,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_names_left",
+"kind": "function",
+"line": 1024,
+"static": true
 },
 {
 "documented": true,
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
 "kind": "function",
-"line": 2116,
+"line": 2958,
 "static": true
 },
 {
@@ -50321,15 +51828,23 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "function",
-"line": 2254,
+"line": 3097,
 "static": false
+},
+{
+"documented": true,
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_prepare_one",
+"kind": "function",
+"line": 353,
+"static": true
 },
 {
 "documented": true,
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_refused",
 "kind": "function",
-"line": 2150,
+"line": 2993,
 "static": true
 },
 {
@@ -50337,7 +51852,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_report_orphan",
 "kind": "function",
-"line": 2198,
+"line": 3041,
 "static": true
 },
 {
@@ -50345,7 +51860,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_resolve",
 "kind": "function",
-"line": 1620,
+"line": 2376,
 "static": false
 },
 {
@@ -50353,7 +51868,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rollback",
 "kind": "function",
-"line": 615,
+"line": 879,
 "static": true
 },
 {
@@ -50361,7 +51876,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rowid_ok",
 "kind": "function",
-"line": 345,
+"line": 609,
 "static": true
 },
 {
@@ -50369,7 +51884,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_seed_sequence",
 "kind": "function",
-"line": 641,
+"line": 905,
 "static": true
 },
 {
@@ -50377,7 +51892,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_set_errno",
 "kind": "function",
-"line": 394,
+"line": 658,
 "static": true
 },
 {
@@ -50385,7 +51900,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_ready",
 "kind": "function",
-"line": 548,
+"line": 812,
 "static": true
 },
 {
@@ -50393,7 +51908,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_reset",
 "kind": "function",
-"line": 530,
+"line": 794,
 "static": true
 },
 {
@@ -50401,7 +51916,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update",
 "kind": "function",
-"line": 779,
+"line": 1540,
 "static": false
 },
 {
@@ -50409,7 +51924,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_uuid_usable",
 "kind": "function",
-"line": 362,
+"line": 626,
 "static": true
 },
 {
@@ -50417,7 +51932,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_wipe",
 "kind": "function",
-"line": 1988,
+"line": 2839,
 "static": false
 },
 {
@@ -50425,7 +51940,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_update",
 "kind": "function",
-"line": 802,
+"line": 907,
 "static": false
 },
 {
@@ -50449,7 +51964,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_wipe",
 "kind": "function",
-"line": 821,
+"line": 926,
 "static": false
 },
 {
@@ -50625,7 +52140,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#convert_charset",
 "kind": "function",
-"line": 1304,
+"line": 1355,
 "static": false
 },
 {
@@ -50657,7 +52172,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#convert_string",
 "kind": "function",
-"line": 369,
+"line": 436,
 "static": false
 },
 {
@@ -50665,7 +52180,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#convert_string_allocate",
 "kind": "function",
-"line": 540,
+"line": 591,
 "static": false
 },
 {
@@ -50673,7 +52188,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#convert_string_allocate_internal",
 "kind": "function",
-"line": 430,
+"line": 481,
 "static": true
 },
 {
@@ -50681,8 +52196,24 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#convert_string_internal",
 "kind": "function",
-"line": 294,
+"line": 295,
 "static": true
+},
+{
+"documented": true,
+"file": "libatalk/unicode/charcnv.c",
+"id": "libatalk/unicode/charcnv.c#convert_string_log",
+"kind": "function",
+"line": 366,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/unicode/charcnv.c",
+"id": "libatalk/unicode/charcnv.c#convert_string_quiet",
+"kind": "function",
+"line": 458,
+"static": false
 },
 {
 "documented": true,
@@ -51321,7 +52852,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#decode_source_ucs2",
 "kind": "function",
-"line": 904,
+"line": 955,
 "static": true
 },
 {
@@ -52073,7 +53604,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#dirtab_empty",
 "kind": "function",
-"line": 270,
+"line": 271,
 "static": true
 },
 {
@@ -52081,7 +53612,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#dirtab_hash",
 "kind": "function",
-"line": 254,
+"line": 255,
 "static": true
 },
 {
@@ -52089,7 +53620,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#dirtab_load",
 "kind": "function",
-"line": 348,
+"line": 349,
 "static": true
 },
 {
@@ -52097,7 +53628,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#dirtab_lookup",
 "kind": "function",
-"line": 399,
+"line": 400,
 "static": true
 },
 {
@@ -52105,7 +53636,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#dirtab_of",
 "kind": "function",
-"line": 284,
+"line": 285,
 "static": true
 },
 {
@@ -52113,7 +53644,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#dirtab_off",
 "kind": "function",
-"line": 426,
+"line": 427,
 "static": true
 },
 {
@@ -52121,7 +53652,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#dirtab_take",
 "kind": "function",
-"line": 307,
+"line": 308,
 "static": true
 },
 {
@@ -52833,7 +54364,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#emit_filename_chars",
 "kind": "function",
-"line": 1027,
+"line": 1078,
 "static": true
 },
 {
@@ -53073,7 +54604,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#filename_hex_value",
 "kind": "function",
-"line": 777,
+"line": 828,
 "static": true
 },
 {
@@ -53081,7 +54612,7 @@
 "file": "bin/nad/nad_find.c",
 "id": "bin/nad/nad_find.c#filesystem_find",
 "kind": "function",
-"line": 75,
+"line": 73,
 "static": true
 },
 {
@@ -53233,7 +54764,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#free_charset_names",
 "kind": "function",
-"line": 114,
+"line": 115,
 "static": false
 },
 {
@@ -53433,7 +54964,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#get_charset_functions",
 "kind": "function",
-"line": 133,
+"line": 134,
 "static": true
 },
 {
@@ -54593,7 +56124,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#init_iconv",
 "kind": "function",
-"line": 226,
+"line": 227,
 "static": false
 },
 {
@@ -54617,7 +56148,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt",
 "kind": "function",
-"line": 450,
+"line": 550,
 "static": true
 },
 {
@@ -54625,7 +56156,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#init_prepared_stmt",
 "kind": "function",
-"line": 234,
+"line": 417,
 "static": true
 },
 {
@@ -54633,7 +56164,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_add",
 "kind": "function",
-"line": 186,
+"line": 246,
 "static": true
 },
 {
@@ -54641,7 +56172,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete",
 "kind": "function",
-"line": 299,
+"line": 392,
 "static": true
 },
 {
@@ -54649,7 +56180,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_dirlist",
 "kind": "function",
-"line": 405,
+"line": 498,
 "static": true
 },
 {
@@ -54657,7 +56188,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_get",
 "kind": "function",
-"line": 265,
+"line": 358,
 "static": true
 },
 {
@@ -54665,7 +56196,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_lookup",
 "kind": "function",
-"line": 130,
+"line": 147,
 "static": true
 },
 {
@@ -54673,7 +56204,7 @@
 "file": "libatalk/cnid/cnid_sqlite.c",
 "id": "libatalk/cnid/cnid_sqlite.c#init_prepared_stmt_one",
 "kind": "function",
-"line": 189,
+"line": 389,
 "static": true
 },
 {
@@ -54681,7 +56212,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_purge",
 "kind": "function",
-"line": 363,
+"line": 456,
 "static": true
 },
 {
@@ -54689,7 +56220,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_put",
 "kind": "function",
-"line": 224,
+"line": 307,
 "static": true
 },
 {
@@ -54697,7 +56228,7 @@
 "file": "libatalk/cnid/cnid_mysql.c",
 "id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_resolve",
 "kind": "function",
-"line": 326,
+"line": 419,
 "static": true
 },
 {
@@ -55033,7 +56564,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#lazy_initialize_conv",
 "kind": "function",
-"line": 147,
+"line": 148,
 "static": true
 },
 {
@@ -56417,7 +57948,7 @@
 "file": "bin/nad/megatron.c",
 "id": "bin/nad/megatron.c#nad_archive",
 "kind": "function",
-"line": 849,
+"line": 858,
 "static": false
 },
 {
@@ -56449,7 +57980,7 @@
 "file": "bin/nad/nad_find.c",
 "id": "bin/nad/nad_find.c#nad_find",
 "kind": "function",
-"line": 259,
+"line": 258,
 "static": false
 },
 {
@@ -57369,7 +58900,7 @@
 "file": "bin/nad/megatron.c",
 "id": "bin/nad/megatron.c#option_after_file",
 "kind": "function",
-"line": 828,
+"line": 837,
 "static": true
 },
 {
@@ -58329,7 +59860,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#pull_charset_flags",
 "kind": "function",
-"line": 1145,
+"line": 1196,
 "static": true
 },
 {
@@ -58337,7 +59868,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#push_charset_flags",
 "kind": "function",
-"line": 1190,
+"line": 1241,
 "static": true
 },
 {
@@ -58889,7 +60420,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#restore_source_bom",
 "kind": "function",
-"line": 857,
+"line": 908,
 "static": true
 },
 {
@@ -59505,7 +61036,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#set_charset_name",
 "kind": "function",
-"line": 100,
+"line": 101,
 "static": false
 },
 {
@@ -59569,7 +61100,7 @@
 "file": "bin/nad/megatron.c",
 "id": "bin/nad/megatron.c#set_newname",
 "kind": "function",
-"line": 812,
+"line": 821,
 "static": true
 },
 {
@@ -60119,17 +61650,9 @@
 {
 "documented": true,
 "file": "etc/spotlight/cnid/sl_cnid.c",
-"id": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_add_term",
-"kind": "function",
-"line": 291,
-"static": true
-},
-{
-"documented": true,
-"file": "etc/spotlight/cnid/sl_cnid.c",
 "id": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_cap_for",
 "kind": "function",
-"line": 711,
+"line": 454,
 "static": true
 },
 {
@@ -60137,7 +61660,7 @@
 "file": "etc/spotlight/cnid/sl_cnid.c",
 "id": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_close",
 "kind": "function",
-"line": 570,
+"line": 307,
 "static": true
 },
 {
@@ -60145,23 +61668,7 @@
 "file": "etc/spotlight/cnid/sl_cnid.c",
 "id": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_close_query",
 "kind": "function",
-"line": 1027,
-"static": true
-},
-{
-"documented": true,
-"file": "etc/spotlight/cnid/sl_cnid.c",
-"id": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_collect",
-"kind": "function",
-"line": 744,
-"static": true
-},
-{
-"documented": true,
-"file": "etc/spotlight/cnid/sl_cnid.c",
-"id": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_extract_terms",
-"kind": "function",
-"line": 326,
+"line": 691,
 "static": true
 },
 {
@@ -60169,7 +61676,7 @@
 "file": "etc/spotlight/cnid/sl_cnid.c",
 "id": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_fetch_results",
 "kind": "function",
-"line": 1003,
+"line": 667,
 "static": true
 },
 {
@@ -60177,7 +61684,7 @@
 "file": "etc/spotlight/cnid/sl_cnid.c",
 "id": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_fill_results",
 "kind": "function",
-"line": 589,
+"line": 327,
 "static": true
 },
 {
@@ -60185,7 +61692,7 @@
 "file": "etc/spotlight/cnid/sl_cnid.c",
 "id": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_init",
 "kind": "function",
-"line": 559,
+"line": 296,
 "static": true
 },
 {
@@ -60193,15 +61700,15 @@
 "file": "etc/spotlight/cnid/sl_cnid.c",
 "id": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_open_query",
 "kind": "function",
-"line": 854,
+"line": 508,
 "static": true
 },
 {
 "documented": true,
 "file": "etc/spotlight/cnid/sl_cnid.c",
-"id": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_quoted_value",
+"id": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_query_free",
 "kind": "function",
-"line": 187,
+"line": 152,
 "static": true
 },
 {
@@ -60209,7 +61716,7 @@
 "file": "etc/spotlight/cnid/sl_cnid.c",
 "id": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_scope_is_vol_root",
 "kind": "function",
-"line": 821,
+"line": 475,
 "static": true
 },
 {
@@ -60217,7 +61724,7 @@
 "file": "etc/spotlight/cnid/sl_cnid.c",
 "id": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_to_path",
 "kind": "function",
-"line": 494,
+"line": 231,
 "static": true
 },
 {
@@ -60241,7 +61748,7 @@
 "file": "etc/spotlight/cnid/sl_cnid.c",
 "id": "etc/spotlight/cnid/sl_cnid.c#sl_dcache_get",
 "kind": "function",
-"line": 432,
+"line": 169,
 "static": true
 },
 {
@@ -60249,7 +61756,7 @@
 "file": "etc/spotlight/cnid/sl_cnid.c",
 "id": "etc/spotlight/cnid/sl_cnid.c#sl_dcache_put",
 "kind": "function",
-"line": 453,
+"line": 190,
 "static": true
 },
 {
@@ -60314,6 +61821,446 @@
 "id": "etc/spotlight/localsearch/sl_localsearch.c#sl_localsearch_open_query",
 "kind": "function",
 "line": 418,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_alnum",
+"kind": "function",
+"line": 570,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_and",
+"kind": "function",
+"line": 1788,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_ascii_same",
+"kind": "function",
+"line": 1459,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_atomic",
+"kind": "function",
+"line": 313,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_boundary",
+"kind": "function",
+"line": 685,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_case",
+"kind": "function",
+"line": 232,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_chain_holds",
+"kind": "function",
+"line": 1681,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_char_end",
+"kind": "function",
+"line": 438,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_comparison",
+"kind": "function",
+"line": 1518,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_converts",
+"kind": "function",
+"line": 115,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_flush",
+"kind": "function",
+"line": 822,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_fold",
+"kind": "function",
+"line": 1169,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_fold_in",
+"kind": "function",
+"line": 1199,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_fold_units",
+"kind": "function",
+"line": 343,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_folds_match",
+"kind": "function",
+"line": 1133,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_glob",
+"kind": "function",
+"line": 722,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_holds",
+"kind": "function",
+"line": 1032,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_join",
+"kind": "function",
+"line": 1708,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_joins",
+"kind": "function",
+"line": 155,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_mark",
+"kind": "function",
+"line": 131,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_modifiers",
+"kind": "function",
+"line": 1384,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_never",
+"kind": "function",
+"line": 1487,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_next",
+"kind": "function",
+"line": 182,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_node_match",
+"kind": "function",
+"line": 2113,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_or",
+"kind": "function",
+"line": 1805,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_pair_tail",
+"kind": "function",
+"line": 625,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_pattern_free",
+"kind": "function",
+"line": 1013,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_pattern_index_glob",
+"kind": "function",
+"line": 1223,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_pattern_index_like",
+"kind": "function",
+"line": 1239,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_pattern_like",
+"kind": "function",
+"line": 1250,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_pattern_literals",
+"kind": "function",
+"line": 1157,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_pattern_match",
+"kind": "function",
+"line": 1092,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_pattern_negated",
+"kind": "function",
+"line": 1058,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_pattern_new",
+"kind": "function",
+"line": 883,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_pattern_same",
+"kind": "function",
+"line": 1262,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_phrase",
+"kind": "function",
+"line": 1421,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_primary",
+"kind": "function",
+"line": 1758,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_put_utf8",
+"kind": "function",
+"line": 779,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_query_free",
+"kind": "function",
+"line": 2096,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_query_match",
+"kind": "function",
+"line": 2140,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_query_parse",
+"kind": "function",
+"line": 1836,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_query_parse_in",
+"kind": "function",
+"line": 1934,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_query_seeds",
+"kind": "function",
+"line": 2238,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_query_term",
+"kind": "function",
+"line": 2024,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_query_term_in",
+"kind": "function",
+"line": 2043,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_query_value",
+"kind": "function",
+"line": 1995,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_seed",
+"kind": "function",
+"line": 2185,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_skip_operand",
+"kind": "function",
+"line": 1347,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_skip_string",
+"kind": "function",
+"line": 1318,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_space",
+"kind": "function",
+"line": 1283,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_take",
+"kind": "function",
+"line": 1298,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_units_match",
+"kind": "function",
+"line": 1071,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_unspaced",
+"kind": "function",
+"line": 604,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_utf8_query",
+"kind": "function",
+"line": 1867,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/sl_names.c",
+"id": "libatalk/util/sl_names.c#sl_name_word",
+"kind": "function",
+"line": 643,
 "static": true
 },
 {
@@ -60463,6 +62410,22 @@
 {
 "documented": true,
 "file": "etc/afpd/spotlight.c",
+"id": "etc/afpd/spotlight.c#sl_query_piece_starts",
+"kind": "function",
+"line": 884,
+"static": true
+},
+{
+"documented": true,
+"file": "etc/afpd/spotlight.c",
+"id": "etc/afpd/spotlight.c#sl_query_to_volume",
+"kind": "function",
+"line": 925,
+"static": false
+},
+{
+"documented": true,
+"file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_reqinfo_contains",
 "kind": "function",
 "line": 401,
@@ -60473,7 +62436,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_rpc_closeQueryForContext",
 "kind": "function",
-"line": 1517,
+"line": 1644,
 "static": true
 },
 {
@@ -60481,7 +62444,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_rpc_fetchAttributeNamesForOIDArray",
 "kind": "function",
-"line": 1370,
+"line": 1497,
 "static": true
 },
 {
@@ -60489,7 +62452,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_rpc_fetchAttributesForOIDArray",
 "kind": "function",
-"line": 1430,
+"line": 1557,
 "static": true
 },
 {
@@ -60505,7 +62468,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_rpc_fetchQueryResultsForContext",
 "kind": "function",
-"line": 1193,
+"line": 1320,
 "static": true
 },
 {
@@ -60513,7 +62476,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_rpc_openQuery",
 "kind": "function",
-"line": 873,
+"line": 1005,
 "static": true
 },
 {
@@ -60521,7 +62484,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_rpc_storeAttributesForOIDArray",
 "kind": "function",
-"line": 1296,
+"line": 1423,
 "static": true
 },
 {
@@ -61009,7 +62972,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#source_code_unit_size",
 "kind": "function",
-"line": 807,
+"line": 858,
 "static": true
 },
 {
@@ -62265,7 +64228,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#ucs2_to_charset",
 "kind": "function",
-"line": 668,
+"line": 719,
 "static": false
 },
 {
@@ -62273,7 +64236,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#ucs2_to_charset_allocate",
 "kind": "function",
-"line": 684,
+"line": 735,
 "static": false
 },
 {
@@ -62849,7 +64812,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#valide",
 "kind": "function",
-"line": 193,
+"line": 194,
 "static": true
 },
 {

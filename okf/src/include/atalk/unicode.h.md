@@ -5,7 +5,7 @@ description: "Character set conversion types and Unicode string operations."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/unicode.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -18,7 +18,6 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 * [bin/dbd/cmd_dbd_scanvol.c](../../bin/dbd/cmd_dbd_scanvol.c.md)
 * [bin/getzones/getzones.c](../../bin/getzones/getzones.c.md)
-* [bin/nad/nad_find.c](../../bin/nad/nad_find.c.md)
 * [bin/nad/nad_util.c](../../bin/nad/nad_util.c.md)
 * [bin/nbp/nbplkup.c](../../bin/nbp/nbplkup.c.md)
 * [bin/nbp/nbplkup_output.c](../../bin/nbp/nbplkup_output.c.md)
@@ -36,6 +35,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [etc/papd/main.c](../../etc/papd/main.c.md)
 * [etc/papd/print_cups.c](../../etc/papd/print_cups.c.md)
 * [include/atalk/globals.h](globals.h.md)
+* [include/atalk/sl_names.h](sl_names.h.md)
 * [include/atalk/util.h](util.h.md)
 * [include/atalk/volume.h](volume.h.md)
 * [libatalk/unicode/charcnv.c](../../libatalk/unicode/charcnv.c.md)
@@ -52,6 +52,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [libatalk/unicode/utf8.c](../../libatalk/unicode/utf8.c.md)
 * [libatalk/unicode/util_unistr.c](../../libatalk/unicode/util_unistr.c.md)
 * [libatalk/util/cnid.c](../../libatalk/util/cnid.c.md)
+* [libatalk/util/sl_names.c](../../libatalk/util/sl_names.c.md)
 
 # Types
 

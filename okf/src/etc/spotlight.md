@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "etc/spotlight"
-description: "10 files, 68 functions."
+description: "10 files, 64 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/spotlight"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 ---
 
 # Files
@@ -23,7 +23,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 
 # Includes headers from
 
-* [include/atalk](../include/atalk.md): 32 includes
+* [include/atalk](../include/atalk.md): 33 includes
 * [etc/afpd](afpd.md): 3 includes
 
 # Headers included by
@@ -32,10 +32,10 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 
 # Calls into
 
+* [libatalk/util](../libatalk/util.md): 9 calls
 * [etc/afpd](afpd.md): 8 calls
-* [libatalk/util](../libatalk/util.md): 5 calls
-* [libatalk/compat](../libatalk/compat.md): 4 calls
 * [libatalk/cnid](../libatalk/cnid.md): 2 calls
+* [libatalk/compat](../libatalk/compat.md): 1 calls
 
 # Most called functions
 
@@ -45,10 +45,10 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 * [sl_xapian_fill_results](spotlight/xapian/sl_xapian.c.md#sl_xapian_fill_results): 2 callers
 * [tracker_cursor_cb](spotlight/localsearch/sl_localsearch.c.md#tracker_cursor_cb): 2 callers
 * [ascii_lower_dup](spotlight/localsearch/sparql_parser.y.md#ascii_lower_dup): 1 callers
-* [cnid32_comp_fn](spotlight/cnid/sl_cnid.c.md#cnid32_comp_fn): 1 callers
 * [cnid_comp_fn](spotlight/cnid/sl_cnid.c.md#cnid_comp_fn): 1 callers
 * [cnid_comp_fn](spotlight/localsearch/sl_localsearch.c.md#cnid_comp_fn): 1 callers
 * [cnid_comp_fn](spotlight/xapian/sl_xapian.c.md#cnid_comp_fn): 1 callers
+* [configure_spotlight_attributes](spotlight/localsearch/sparql_map.c.md#configure_spotlight_attributes): 1 callers
 
 # Functions without a static caller
 

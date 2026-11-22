@@ -35,6 +35,7 @@
 * [rtmp.h](rtmp.h.md) - Routing Table Maintenance Protocol packet types and operation codes.
 * [server_child.h](server_child.h.md) - AFP child process state and session management interface.
 * [server_ipc.h](server_ipc.h.md) - Parent and child IPC message types and cache hint interface.
+* [sl_names.h](sl_names.h.md) - Spotlight's name comparisons: the value syntax, the c, d and w modifiers, and the && and || of a query.
 * [spotlight.h](spotlight.h.md) - Spotlight query types, backend callbacks and RPC interface.
 * [srp.h](srp.h.md) - SRP group constants and verifier validation helpers.
 * [uam.h](uam.h.md) - User authentication module registration and server callback interface.

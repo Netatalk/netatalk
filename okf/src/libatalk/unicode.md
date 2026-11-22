@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "libatalk/unicode"
-description: "31 files, 113 functions."
+description: "31 files, 115 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/unicode"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 ---
 
 # Files
@@ -49,9 +49,9 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 # Called from
 
 * [etc/afpd](../etc/afpd.md): 34 calls
+* [libatalk/util](util.md): 15 calls
 * [bin/nbp](../bin/nbp.md): 10 calls
 * [etc/papd](../etc/papd.md): 8 calls
-* [libatalk/util](util.md): 7 calls
 * [bin/netacnv](../bin/netacnv.md): 6 calls
 * [bin/getzones](../bin/getzones.md): 5 calls
 * [etc/atalkd](../etc/atalkd.md): 3 calls
@@ -63,8 +63,8 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 # Most called functions
 
 * [convert_string_allocate](unicode/charcnv.c.md#convert_string_allocate): 19 callers
-* [convert_string](unicode/charcnv.c.md#convert_string): 16 callers
-* [convert_charset](unicode/charcnv.c.md#convert_charset): 15 callers
+* [convert_string](unicode/charcnv.c.md#convert_string): 18 callers
+* [convert_charset](unicode/charcnv.c.md#convert_charset): 14 callers
 * [add_charset](unicode/charcnv.c.md#add_charset): 10 callers
 * [charset_name](unicode/charcnv.c.md#charset_name): 9 callers
 * [cjk_lookup](unicode/charsets/generic_cjk.c.md#cjk_lookup): 8 callers

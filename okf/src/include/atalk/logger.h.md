@@ -5,7 +5,7 @@ description: "Logging levels, categories, configuration and message interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/logger.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T10:01:45+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -141,6 +141,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [libatalk/util/pathconv.c](../../libatalk/util/pathconv.c.md)
 * [libatalk/util/server_child.c](../../libatalk/util/server_child.c.md)
 * [libatalk/util/server_ipc.c](../../libatalk/util/server_ipc.c.md)
+* [libatalk/util/sl_names.c](../../libatalk/util/sl_names.c.md)
 * [libatalk/util/socket.c](../../libatalk/util/socket.c.md)
 * [libatalk/util/unix.c](../../libatalk/util/unix.c.md)
 * [libatalk/vfs/acl.c](../../libatalk/vfs/acl.c.md)

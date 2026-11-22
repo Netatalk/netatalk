@@ -5,7 +5,7 @@ description: "4 files, 6 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/compat"
 tags: ["libatalk/compat"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 ---
 
 # Files
@@ -21,11 +21,11 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
 
 # Called from
 
-* [etc/afpd](../etc/afpd.md): 55 calls
+* [etc/afpd](../etc/afpd.md): 56 calls
 * [bin/afppasswd](../bin/afppasswd.md): 30 calls
 * [bin/nad](../bin/nad.md): 30 calls
 * [etc/uams](../etc/uams.md): 30 calls
-* [libatalk/cnid](cnid.md): 22 calls
+* [libatalk/cnid](cnid.md): 27 calls
 * [libatalk/util](util.md): 19 calls
 * [etc/netatalk](../etc/netatalk.md): 8 calls
 * [libatalk/adouble](adouble.md): 8 calls
@@ -33,16 +33,16 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
 * [libatalk/vfs](vfs.md): 7 calls
 * [bin/dbd](../bin/dbd.md): 5 calls
 * [etc/atalkd](../etc/atalkd.md): 4 calls
-* [etc/spotlight](../etc/spotlight.md): 4 calls
 * [bin/getzones](../bin/getzones.md): 1 calls
+* [etc/spotlight](../etc/spotlight.md): 1 calls
 * [include/atalk](../include/atalk.md): 1 calls
 * [libatalk/dsi](dsi.md): 1 calls
 
 # Most called functions
 
-* [strlcpy](compat/strlcpy.c.md#strlcpy): 88 callers
-* [strnlen](compat/misc.c.md#strnlen): 59 callers
+* [strlcpy](compat/strlcpy.c.md#strlcpy): 89 callers
+* [strnlen](compat/misc.c.md#strnlen): 56 callers
 * [explicit_bzero](compat/explicit_bzero.c.md#explicit_bzero): 35 callers
+* [asprintf](compat/misc.c.md#asprintf): 27 callers
 * [strlcat](compat/strlcpy.c.md#strlcat): 25 callers
-* [asprintf](compat/misc.c.md#asprintf): 22 callers
 * [vasprintf](compat/misc.c.md#vasprintf): 4 callers

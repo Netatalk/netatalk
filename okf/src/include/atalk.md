@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "include/atalk"
-description: "45 files, 39 functions."
+description: "46 files, 39 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/include/atalk"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-22T14:39:48+01:00 }
 ---
 
 # Files
@@ -45,6 +45,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
 * [include/atalk/rtmp.h](atalk/rtmp.h.md): Routing Table Maintenance Protocol packet types and operation codes.
 * [include/atalk/server_child.h](atalk/server_child.h.md): AFP child process state and session management interface.
 * [include/atalk/server_ipc.h](atalk/server_ipc.h.md): Parent and child IPC message types and cache hint interface.
+* [include/atalk/sl_names.h](atalk/sl_names.h.md): Spotlight's name comparisons: the value syntax, the c, d and w modifiers, and the && and || of a query.
 * [include/atalk/spotlight.h](atalk/spotlight.h.md): Spotlight query types, backend callbacks and RPC interface.
 * [include/atalk/srp.h](atalk/srp.h.md): SRP group constants and verifier validation helpers.
 * [include/atalk/uam.h](atalk/uam.h.md): User authentication module registration and server callback interface.
@@ -64,20 +65,20 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
 
 * [etc/afpd](../etc/afpd.md): 355 includes
 * [bin/nad](../bin/nad.md): 76 includes
-* [libatalk/util](../libatalk/util.md): 69 includes
+* [libatalk/util](../libatalk/util.md): 72 includes
 * [libatalk/vfs](../libatalk/vfs.md): 52 includes
 * [etc/uams](../etc/uams.md): 51 includes
 * [libatalk/adouble](../libatalk/adouble.md): 48 includes
 * [etc/papd](../etc/papd.md): 40 includes
 * [libatalk/dsi](../libatalk/dsi.md): 34 includes
-* [etc/spotlight](../etc/spotlight.md): 32 includes
+* [etc/spotlight](../etc/spotlight.md): 33 includes
 * [libatalk/unicode](../libatalk/unicode.md): 29 includes
 * [etc/atalkd](../etc/atalkd.md): 27 includes
 * [libatalk/asp](../libatalk/asp.md): 26 includes
 * [etc/netatalk](../etc/netatalk.md): 25 includes
+* [libatalk/cnid](../libatalk/cnid.md): 25 includes
 * [libatalk/acl](../libatalk/acl.md): 23 includes
 * [libatalk/atp](../libatalk/atp.md): 22 includes
-* [libatalk/cnid](../libatalk/cnid.md): 22 includes
 * [bin/dbd](../bin/dbd.md): 16 includes
 * [bin/nbp](../bin/nbp.md): 12 includes
 * [libatalk/nbp](../libatalk/nbp.md): 10 includes
