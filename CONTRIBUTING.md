@@ -172,6 +172,21 @@ The use of bounded string functions such as `strnlen()`, `strlcpy()`, and `strlc
 [include/atalk/compat.h](https://netatalk.io/developer/compat_8h) declares compatibility implementations
 for standard C libraries that don't support them natively.
 
+### libatalk ABI versioning
+
+When changing C interfaces exported by `libatalk`, check compatibility against
+the previous published release. If the next release breaks that ABI, bump
+`soversion` in `libatalk/meson.build` exactly once for that release version and
+update the shared library `version` alongside it. Further ABI breaks during
+unstable development for the same release use the new `soversion`. Releases
+that preserve the published ABI keep the existing `soversion`.
+
+Update the [shared library version roster](doc/developer/libatalk.md#shared-library-version-history)
+whenever you bump `soversion`.
+
+See the [ABI compatibility checks](https://netatalk.io/developer/md_developer_2libatalk)
+for how to inspect ABI changes and refresh the digest ledger.
+
 ### Error handling and logging
 
 Check operations that can fail and preserve the function's documented return
