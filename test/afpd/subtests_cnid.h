@@ -51,6 +51,17 @@ extern int utest_cnid_resolve_notfound_errno(struct vol *vol);
 extern int utest_cnid_corrupt_row_classified(struct vol *vol);
 extern int utest_cnid_find_no_truncated_id(struct vol *vol);
 extern int utest_cnid_dup_row_no_truncated_delete(struct vol *vol);
+extern int utest_cnid_dup_row_parent_out_of_range(struct vol *vol);
+extern int utest_cnid_delete_row_conditional(struct vol *vol);
+extern int utest_cnid_update_row_conditional(struct vol *vol);
+extern int utest_cnid_update_row_moved_keeps_other(struct vol *vol);
+extern int utest_cnid_update_row_replace_calls(struct vol *vol);
+extern int utest_cnid_update_row_after_reconnect(struct vol *vol);
+extern int utest_cnid_mysql_failed_open_closes(struct vol *vol);
+extern int utest_cnid_update_row_dropped_in_hold(struct vol *vol);
+extern int utest_cnid_lookup_row_changed(struct vol *vol);
+extern int utest_cnid_lookup_rows_changed(struct vol *vol);
+extern int utest_cnid_row_case_renamed(struct vol *vol);
 extern int utest_cnid_sqlite_owner_only(struct vol *vol);
 extern int utest_cnid_desktop_folder_as_owner(struct AFPObj *obj,
                                               struct vol *vol);

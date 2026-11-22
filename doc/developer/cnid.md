@@ -76,6 +76,27 @@ Retries must be bounded; contention or an unusable row must not cause an
 endless lookup/insert cycle. Backend code validates rows, UUIDs, and metadata
 hints before using them.
 
+cnid_resolve_row() hands back a row's device and inode with its name.
+cnid_delete_row() and cnid_update_row() change a row only while it records the
+parent, name, device, and inode such a resolve read, so a row that another
+session moved or rewrote meanwhile stays. On MySQL both compare the name byte
+for byte as the connection hands names back, so a name that differs only in
+case does not match them, unless its results charset has a name the SQL
+cannot carry; lookups by name still match under the table's collation. A
+lookup deletes a stale row it read on the same condition, and SQLite's
+lookup deletes by its ID alone a surplus row whose parent no CNID can name.
+
+cnid_update_row() holds the row from its check to its update: SQLite takes
+the write lock, and MySQL locks the row on an InnoDB table and the table on
+any other engine or one whose engine the open could not read. A MySQL user
+who may not lock tables gets no hold there, with a warning. A caller's
+replace runs only when the row matched, inside the hold where there is one.
+Another session's conditional delete or update of a held row waits and then
+finds the row as the update left it, or gives up with `CNID_ERR_BUSY`, which
+leaves open whether the row matched. That session's queries that only read
+wait only under MySQL's table lock. The update deletes as stale another row
+that holds the new device and inode.
+
 The optional MySQL backend uses an external server and UUID-based volume
 tables. A table it creates holds each name folded in `Folded1`, NULL where
 an older build wrote the row, and a name search of the whole volume compares

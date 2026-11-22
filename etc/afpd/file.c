@@ -302,43 +302,67 @@ static int replace_blocked(const struct vol *vol, struct path *path)
 }
 
 /*!
- * @brief Atomically replace a file with a symbolic link.
+ * @brief Whether FPDelete's delete-inhibit and lock checks refuse a replace
  *
- * Stage the symlink beside its destination and rename it over the file.
- * symlink() supplies O_EXCL-like collision handling, so an existing temporary
- * name is never overwritten.  If staging or rename fails, the original file
- * remains in place and the temporary symlink is removed when possible.
- *
- * @param[in] path      path of the file to replace
- * @param[in] target    symbolic link target
- *
- * @returns 0 on success, -1 on error with errno set
+ * @param[in]     vol   volume of the file
+ * @param[in,out] path  the file in the working directory, with its stat
+ * @returns AFP_OK, or the refusal's answer: AFPERR_OLOCK, AFPERR_BUSY,
+ *          AFPERR_NOOBJ or AFPERR_ACCESS
  */
-static int replace_with_symlink(const char *path, const char *target)
+static int replace_refused(const struct vol *vol, struct path *path)
+{
+    const int err = check_delete_inhibit(vol, -1, path);
+    return err != AFP_OK ? err : replace_blocked(vol, path);
+}
+
+/*!
+ * @brief Stage a symbolic link beside a file, under a name of its own
+ *
+ * symlink() supplies O_EXCL-like collision handling, so an existing name is
+ * never overwritten. The name is VFS_SYMLINK_STAGE, the process ID, a dash
+ * and a serial, a form that listings leave out and requests may not name.
+ *
+ * @param[in]  path     the file the link is to replace, relative to the
+ *                      working directory
+ * @param[in]  target   symbolic link target
+ * @param[out] tmppath  receives the staged link's path, MAXPATHLEN + 1 bytes
+ * @param[out] lst      receives the staged link's lstat()
+ *
+ * @returns 0, or -1 with errno set and no link left, unless the link's
+ *          unlink failed too, which the log names
+ */
+static int stage_symlink(const char *path, const char *target, char *tmppath,
+                         struct stat *lst)
 {
     static unsigned int serial;
-    char tmppath[MAXPATHLEN + 1];
     const char *slash = strrchr(path, '/');
     size_t dirlen = slash ? (size_t)(slash - path + 1) : 0;
     int saved_errno;
 
     for (unsigned int attempt = 0; attempt < 128; attempt++) {
-        int len = snprintf(tmppath, sizeof(tmppath),
-                           "%.*s.netatalk-symlink-%ld-%u",
+        int len = snprintf(tmppath, MAXPATHLEN + 1,
+                           "%.*s" VFS_SYMLINK_STAGE "%ld-%u",
                            (int)dirlen, path, (long)getpid(), serial++);
 
-        if (len < 0 || (size_t)len >= sizeof(tmppath)) {
+        if (len < 0 || len > MAXPATHLEN) {
             errno = ENAMETOOLONG;
             return -1;
         }
 
         if (symlink(target, tmppath) == 0) {
-            if (rename(tmppath, path) == 0) {
+            if (lstat(tmppath, lst) == 0) {
                 return 0;
             }
 
             saved_errno = errno;
-            netatalk_unlink(tmppath);
+
+            if (netatalk_unlink(tmppath) != AFP_OK) {
+                LOG(log_error, logtype_afpd,
+                    "stage_symlink(\"%s\"): the staged link %s/%s stays: %s",
+                    path, cfrombstr(curdir->d_fullpath), tmppath,
+                    strerror(errno));
+            }
+
             errno = saved_errno;
             return -1;
         }
@@ -350,6 +374,229 @@ static int replace_with_symlink(const char *path, const char *target)
 
     errno = EEXIST;
     return -1;
+}
+
+/*! A staged link and the file it replaces */
+struct staged_link {
+    const struct vol *vol;
+    struct path *file;  /*!< the file, named in the working directory, with
+                         *   the stat the request's checks read */
+    const char *tmppath;
+    int refused;        /*!< the answer to a rename whose checks failed */
+    bool renamed;       /*!< the link took the file's name */
+};
+
+/*!
+ * @brief Whether a conversion's name still holds the file's device and inode
+ *
+ * @param[in]  link  the staged link
+ * @param[out] st    the name's stat
+ * @returns AFP_OK when it does, AFPERR_NOOBJ when the name holds another
+ *          object, or the failed stat's answer
+ */
+static int name_holds_file(const struct staged_link *link, struct stat *st)
+{
+    if (ostat(link->file->u_name, st, vol_syml_opt(link->vol)) != 0) {
+        return stat_answer(errno);
+    }
+
+    return st->st_dev == link->file->st.st_dev
+           && st->st_ino == link->file->st.st_ino ? AFP_OK : AFPERR_NOOBJ;
+}
+
+/*!
+ * @brief Rename a staged link over its file if the request's checks pass again
+ *
+ * Another session can lock, delete or replace the file while the backend
+ * waits to hold its row. The name must hold the file as the request read it
+ * before the refusal checks, as closing their probes drops this process's
+ * locks on whatever the name holds, and after them with the same ctime: a
+ * new file can take the freed inode, and a changed one leaves the link's
+ * target, read from it, stale. A change within one ctime tick passes.
+ *
+ * @param[in,out] arg  the staged link
+ * @returns 0, or -1 with errno set
+ */
+static int rename_staged_link(void *arg)
+{
+    struct staged_link *link = arg;
+    const struct timespec was = atalk_stat_ctime_timespec(&link->file->st);
+    struct timespec now;
+    struct stat st;
+
+    if ((link->refused = name_holds_file(link, &st)) == AFP_OK) {
+        link->refused = replace_refused(link->vol, link->file);
+    }
+
+    if (link->refused == AFP_OK
+            && (link->refused = name_holds_file(link, &st)) == AFP_OK) {
+        now = atalk_stat_ctime_timespec(&st);
+
+        if (!atalk_timespec_eq(&was, &now)) {
+            link->refused = AFPERR_MISC;
+        }
+    }
+
+    if (link->refused != AFP_OK) {
+        errno = EBUSY;
+        return -1;
+    }
+
+    if (rename(link->tmppath, link->file->u_name) != 0) {
+        return -1;
+    }
+
+    link->renamed = true;
+    return 0;
+}
+
+/*!
+ * @brief Replace a file with a symlink that keeps the file's CNID
+ *
+ * The link keeps the CNID only while its row records the file's device and
+ * inode: a row another object left at the name stays that object's. Where it
+ * keeps the CNID, the backend renames the link over the file inside its hold
+ * of the row and gives the row the link's device and inode, so another
+ * session's lookup or listing that meets the link waits for the hold to end.
+ * On MySQL, a user who may not lock a table that the open did not read as
+ * InnoDB gets no hold: a row change after the backend's check then leaves
+ * the link without the CNID. A row another session moved or rewrote before
+ * the check leaves the file in place. An update that fails after the rename
+ * runs once more while the row still records the file. A row dropped before
+ * the check, or after such an update, leaves the link to take a CNID of its
+ * own.
+ *
+ * @param[in]     vol     volume of the file
+ * @param[in,out] path    the file, named in the working directory, which
+ *                        takes the link's stat
+ * @param[in]     target  the link's target
+ * @param[out]    id      the CNID the link keeps, CNID_INVALID when it keeps
+ *                        none, or after a failure the CNID read for the name
+ *                        or CNID_INVALID
+ * @returns AFP_OK, the refusal's answer of a check at the rename, or
+ *          AFPERR_MISC when the link could not be staged, the backend could
+ *          not answer, another session moved or rewrote the row or changed
+ *          the file, the replace failed, the link had no stat after it, or
+ *          the row could not take the link
+ */
+static int symlink_keeps_cnid(const struct vol *vol, struct path *path,
+                              const char *target, cnid_t *id)
+{
+    static char buf[CNID_PATH_OVERHEAD + MAXPATHLEN + 1];
+    char rowname[MAXPATHLEN + 1];
+    char tmppath[MAXPATHLEN + 1];
+    const size_t len = strnlen(path->u_name, CNID_MAX_PATH_LEN);
+    struct staged_link link = { vol, path, tmppath, AFP_OK, false };
+    struct dir *stale;
+    struct stat lst;
+    uint64_t dev = 0;
+    uint64_t ino = 0;
+    int changed = 0;
+    AFP_CNID_START("cnid_get");
+    *id = cnid_get(vol->v_cdb, curdir->d_did, path->u_name, len);
+    AFP_CNID_DONE();
+
+    if (*id == CNID_INVALID && CNID_ERRNO_IS_BACKEND_FAILURE()) {
+        return AFPERR_MISC;
+    }
+
+    if (*id != CNID_INVALID) {
+        cnid_t row = *id;
+        const char *name;
+        AFP_CNID_START("cnid_resolve");
+        name = cnid_resolve_row(vol->v_cdb, &row, buf, sizeof(buf), &dev,
+                                &ino);
+        AFP_CNID_DONE();
+
+        if (name == NULL && CNID_ERRNO_IS_BACKEND_FAILURE()) {
+            return AFPERR_MISC;
+        }
+
+        if (name == NULL || !cnid_row_holds(vol->v_cdb, dev, ino, &path->st)) {
+            *id = CNID_INVALID;
+        } else {
+            /* the update's condition is the row's name as it reads back */
+            strlcpy(rowname, name, sizeof(rowname));
+        }
+    }
+
+    /* the file's entry records the file's inode, not the link's */
+    if ((stale = dircache_search_by_name(vol, curdir, path->u_name, len))
+            != NULL) {
+        dir_remove(vol, stale, 0);
+    }
+
+    if (stage_symlink(path->u_name, target, tmppath, &lst) != 0) {
+        return AFPERR_MISC;
+    }
+
+    if (*id == CNID_INVALID) {
+        (void)rename_staged_link(&link);
+    } else {
+        AFP_CNID_START("cnid_update_row");
+        changed = cnid_update_row(vol->v_cdb, *id, curdir->d_did, rowname,
+                                  strlen(rowname), dev, ino, &lst,
+                                  rename_staged_link, &link);
+        AFP_CNID_DONE();
+    }
+
+    /* a second read tells a dropped row from a changed one and, after the
+     * rename, whether the row took the link or still records the file */
+    if (*id != CNID_INVALID && changed != 1
+            && (changed == 0 || link.renamed)) {
+        cnid_t row = *id;
+        uint64_t now_dev = 0;
+        uint64_t now_ino = 0;
+        const char *now;
+        AFP_CNID_START("cnid_resolve");
+        now = cnid_resolve_row(vol->v_cdb, &row, buf, sizeof(buf), &now_dev,
+                               &now_ino);
+        AFP_CNID_DONE();
+
+        if (now == NULL && !CNID_ERRNO_IS_BACKEND_FAILURE()) {
+            *id = CNID_INVALID;
+
+            if (!link.renamed) {
+                (void)rename_staged_link(&link);
+            }
+        } else if (now != NULL && link.renamed && row == curdir->d_did
+                   && strcmp(now, rowname) == 0) {
+            if (cnid_row_holds(vol->v_cdb, now_dev, now_ino, &lst)) {
+                changed = 1;
+            } else if (now_dev == dev && now_ino == ino) {
+                AFP_CNID_START("cnid_update_row");
+                changed = cnid_update_row(vol->v_cdb, *id, curdir->d_did,
+                                          rowname, strlen(rowname), dev, ino,
+                                          &lst, NULL, NULL);
+                AFP_CNID_DONE();
+            }
+        }
+    }
+
+    if (!link.renamed) {
+        if (netatalk_unlink(tmppath) != AFP_OK) {
+            LOG(log_error, logtype_afpd,
+                "symlink_keeps_cnid(\"%s\"): the staged link %s/%s stays: %s",
+                path->u_name, cfrombstr(curdir->d_fullpath), tmppath,
+                strerror(errno));
+        }
+
+        return link.refused != AFP_OK ? link.refused : AFPERR_MISC;
+    }
+
+    /* the metadata written next needs the link's stat */
+    if (of_stat(vol, path) != 0) {
+        return AFPERR_MISC;
+    }
+
+    if (*id != CNID_INVALID && changed != 1) {
+        LOG(log_error, logtype_afpd,
+            "symlink_keeps_cnid(\"%s\"): the link could not take CNID %u",
+            path->u_name, ntohl(*id));
+        return AFPERR_MISC;
+    }
+
+    return AFP_OK;
 }
 
 /*!
@@ -1900,6 +2147,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
     char symbuf[MAXPATHLEN + 1];
     int                 timeoffset = 0;
     struct dir          *cached = NULL;
+    cnid_t              link_id = CNID_INVALID;
     LOG(log_debug9, logtype_afpd, "begin setfilparams:");
 
     if (path == NULL) {
@@ -2009,47 +2257,16 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
                     goto setfilparam_refused;
                 }
 
-                err = check_delete_inhibit(vol, -1, path);
-
-                if (err != AFP_OK) {
+                if ((err = replace_refused(vol, path)) != AFP_OK) {
                     goto setfilparam_refused;
                 }
 
-                /* the link replaces the file, which a deny mode or a lock
-                 * keeps as it keeps it from FPDelete */
-                if ((err = replace_blocked(vol, path)) != AFP_OK) {
+                if ((err = symlink_keeps_cnid(vol, path, symbuf, &link_id))
+                        != AFP_OK) {
                     goto setfilparam_refused;
-                }
-
-                if (replace_with_symlink(path->u_name, symbuf) != 0) {
-                    err = AFPERR_MISC;
-                    goto setfilparam_refused;
-                }
-
-                of_stat(vol, path);
-
-                /* Invalidate stale dircache entry: new symlink has new inode */
-                if (path->u_name != NULL) {
-                    size_t uname_len = strnlen(path->u_name, CNID_MAX_PATH_LEN);
-                    struct dir *stale = dircache_search_by_name(
-                                            vol, curdir, path->u_name, uname_len);
-
-                    if (stale != NULL) {
-                        dir_remove(vol, stale, 0);
-                    }
                 }
 
                 symlinked = 1;
-                /* File replaced by symlink — remove stale cache entry */
-                {
-                    size_t upath_slen = strnlen(upath, CNID_MAX_PATH_LEN);
-                    struct dir *stale = dircache_search_by_name(vol, curdir,
-                                                                upath, upath_slen);
-
-                    if (stale) {
-                        dir_remove(vol, stale, 0);
-                    }
-                }
             }
 
             memcpy(finder_buf, buf, 32);
@@ -2358,7 +2575,7 @@ setfilparam_refused:
      * Fallback to cnid_get() when object isn't in our local dircache -
      * may still be cached by sibling processes even if we never enumerated it. */
     if (vol) {
-        cnid_t hint_cnid = cached ? cached->d_did : CNID_INVALID;
+        cnid_t hint_cnid = cached ? cached->d_did : link_id;
 
         if (hint_cnid == CNID_INVALID && upath && curdir) {
             size_t ulen = strnlen(upath, CNID_MAX_PATH_LEN);
@@ -3202,8 +3419,8 @@ int afp_createid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         return AFPERR_BADTYPE;
     }
 
-    /* an empty path names the file the DID names, and cname() leaves it
-     * unstat'ed */
+    /* a folder that cname() could not enter comes back unstat'ed, and a
+     * lookup of device and inode 0 would take its row */
     if (!s_path->st_valid) {
         of_stat(vol, s_path);
     }
@@ -3369,7 +3586,8 @@ reenumerate_id(struct vol *vol, char *name, struct dir *dir)
  * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
  *                         return
  * @returns AFP_OK, AFPERR_NOID, AFPERR_NOOP, AFPERR_ACCESS, AFPERR_MISC when
- *          the CNID backend failed, or AFPERR_PARAM
+ *          the CNID backend, a stat along the folder's path or the chdir into
+ *          the folder failed, or AFPERR_PARAM
  */
 int afp_resolveid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                   size_t *rbuflen)
@@ -3426,10 +3644,8 @@ retry:
     }
 
     if (NULL == (dir = dirlookup(vol, id))) {
-        /* dirlookup sets AFPERR_MISC when the backend could not answer; the
-         * AFPERR_NOID below is permanent */
-        if (afp_errno == AFPERR_MISC) {
-            return AFPERR_MISC;
+        if (lookup_inconclusive(afp_errno)) {
+            return afp_errno;
         }
 
         /* idem AFPERR_PARAM */
@@ -3442,7 +3658,12 @@ retry:
         case EPERM:
             return AFPERR_ACCESS;
 
+        /* an I/O error, or movecwd()'s self-heal whose lookup could not tell */
+        case EIO:
+            return AFPERR_MISC;
+
         case ENOENT:
+        case ENOTDIR:
             return AFPERR_NOID;
 
         default:
@@ -3533,7 +3754,7 @@ retry:
  * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
  * @returns AFP_OK, AFPERR_NOOBJ when only the record remained, AFPERR_NOID,
  *          AFPERR_NOOP, AFPERR_VLOCK, AFPERR_BADTYPE, AFPERR_MISC when the CNID
- *          backend failed, or AFPERR_PARAM
+ *          backend, a stat or a chdir failed, or AFPERR_PARAM
  */
 int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                  char *rbuf _U_, size_t *rbuflen)
@@ -3590,10 +3811,8 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             goto delete;
         }
 
-        /* dirlookup sets AFPERR_MISC when the backend could not answer; the
-         * AFPERR_PARAM below is permanent */
-        if (afp_errno == AFPERR_MISC) {
-            return AFPERR_MISC;
+        if (lookup_inconclusive(afp_errno)) {
+            return afp_errno;
         }
 
         return AFPERR_PARAM;
@@ -3606,11 +3825,16 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         case EACCES:
         case EPERM:
             return AFPERR_ACCESS;
+
+        /* an I/O error, or movecwd()'s self-heal whose lookup could not tell */
+        case EIO:
+            return AFPERR_MISC;
 #ifdef ESTALE
 
         case ESTALE:
 #endif
         case ENOENT:
+        case ENOTDIR:
             /* still try to delete the id */
             err = AFPERR_NOOBJ;
             break;

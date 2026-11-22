@@ -164,6 +164,8 @@ extern struct dir  *dirlookup_strict(const struct vol *, cnid_t);
 extern struct dir *dirlookup_bypath(const struct vol *vol, const char *path);
 
 extern int         movecwd(const struct vol *, struct dir *);
+extern bool        lookup_inconclusive(int err);
+extern int         stat_answer(int err);
 extern struct path *cname(struct vol *, struct dir *, char **);
 
 extern int         deletecurdir(struct vol *);

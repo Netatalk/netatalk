@@ -22,7 +22,8 @@
 /*!
  * @file
  * @brief The component tests' helpers: AFP commands called on a session
- *        object, files written to disk, and DSI sessions served in a child
+ *        object and their replies, files written to disk, and DSI sessions
+ *        served in a child
  */
 
 #ifdef HAVE_CONFIG_H
@@ -153,8 +154,10 @@ static int push_eaname(char **bufp, const char *attr)
 char **cnamewrap(const char *name)
 {
     static char buf[256] = { 0 };
-    static char *p = buf;
+    static char *p;
     int len = 0;
+    /* cname() moved p past the path the last call handed out */
+    p = buf;
     PUSHVAL(p, uint8_t, 3, len); /* path type */
     PUSHVAL(p, uint32_t, htonl(kTextEncodingUTF8), len); /* text encoding hint */
     size_t avail = sizeof(buf) - len - sizeof(uint16_t);
@@ -605,7 +608,8 @@ static cnid_t dsi_test_cnid_get(struct _cnid_db *cdb _U_, cnid_t did _U_,
  * @returns NULL
  */
 static char *dsi_test_cnid_resolve(struct _cnid_db *cdb _U_, cnid_t *id _U_,
-                                   void *buffer _U_, size_t len _U_)
+                                   void *buffer _U_, size_t len _U_,
+                                   uint64_t *dev _U_, uint64_t *ino _U_)
 {
     return NULL;
 }
@@ -958,6 +962,25 @@ int resolveid(AFPObj *obj, uint16_t vid, cnid_t cnid)
     PUSHVAL(p, cnid_t, cnid, len);
     PUSHVAL(p, uint16_t, htons(1 << FILPBIT_FNUM), len);
     return afp_resolveid(obj, buf, len, rbuf, &rbuflen);
+}
+
+/*!
+ * @brief FPDeleteID of a CNID
+ *
+ * @param[in] obj   the test session
+ * @param[in] vid   the open volume
+ * @param[in] cnid  the file's ID
+ * @returns the AFP result
+ */
+int deleteid(AFPObj *obj, uint16_t vid, cnid_t cnid)
+{
+    static char buf[256] = { 0 };
+    char *p = buf;
+    int len = 0;
+    ADD(p, len, 2);
+    PUSHVAL(p, uint16_t, vid, len);
+    PUSHVAL(p, cnid_t, cnid, len);
+    return afp_deleteid(obj, buf, len, rbuf, &rbuflen);
 }
 
 /*!
@@ -1561,17 +1584,39 @@ int getfiledirparms_lname(AFPObj *obj, uint16_t vid, cnid_t did,
  * @brief Create an empty file behind the server's back
  *
  * @param[in] path  the file
- * @returns 0, -1 when the file exists or cannot be made
+ * @returns 0, or -1 when the file exists or cannot be made, or when its stat
+ *          or close fails, which leaves the file
  */
 int create_disk_file(const char *path)
 {
+    struct stat st;
+    return create_disk_file_stat(path, &st);
+}
+
+/*!
+ * @brief Create an empty file behind the server's back and fstat() it
+ *
+ * @param[in]  path  the file
+ * @param[out] st    the file's stat
+ * @returns 0, or -1 when the file exists or cannot be made, or when its stat
+ *          or close fails, which leaves the file
+ */
+int create_disk_file_stat(const char *path, struct stat *st)
+{
     int fd = open(path, O_WRONLY | O_CREAT | O_EXCL, 0600);
+    int ret;
 
     if (fd == -1) {
         return -1;
     }
 
-    return close(fd);
+    ret = fstat(fd, st);
+
+    if (close(fd) != 0) {
+        ret = -1;
+    }
+
+    return ret;
 }
 
 /*!
@@ -1746,6 +1791,57 @@ int catsearch_ext_ids(AFPObj *obj, uint16_t vid, uint32_t reqmatches,
 }
 
 /*!
+ * @brief FPCatSearchExt over the volume for a name, from a catalog position
+ *
+ * @param[in]     obj         session
+ * @param[in]     vid         volume
+ * @param[in]     reqmatches  matches the reply may carry, 1 to 8
+ * @param[in,out] pos         the catalog position, all zero for a new
+ *                            search; the reply's on return
+ * @param[in]     name        the files' name, at most 32 bytes
+ * @param[out]    nrecs       matches in the reply, 0 for a rejected request
+ * @param[out]    pdid        the matches' parent DIDs, room for reqmatches
+ * @returns the AFP result, or AFPERR_PARAM for a longer name or a match
+ *          count outside 1 to 8
+ */
+int catsearch_from(AFPObj *obj, uint16_t vid, uint32_t reqmatches,
+                   unsigned char pos[16], const char *name, uint32_t *nrecs,
+                   cnid_t *pdid)
+{
+    /* the UTF-8 name's offset past the record's fixed part, then an
+     * encoding hint, the name's length and its bytes */
+    unsigned char spec[12 + 32] = { 0, 6 };
+    const size_t namelen = strnlen(name, 33);
+    const unsigned char *rec = (const unsigned char *)rbuf + 24;
+    uint16_t size;
+    int ret;
+    *nrecs = 0;
+
+    if (namelen > 32 || reqmatches == 0 || reqmatches > 8) {
+        return AFPERR_PARAM;
+    }
+
+    spec[11] = (unsigned char)namelen;
+    memcpy(spec + 12, name, namelen);
+    ret = catsearch_ext_at(obj, vid, reqmatches, 1 << FILPBIT_PDID, 0,
+                           1U << FILPBIT_PDINFO, spec, spec,
+                           (uint16_t)(12 + namelen), pos, nrecs);
+
+    if (ret != AFP_OK && ret != AFPERR_EOF) {
+        return ret;
+    }
+
+    /* a record is a length, the kind byte, a pad, and the parent's DID */
+    for (uint32_t i = 0; i < *nrecs && i < reqmatches; i++) {
+        memcpy(&size, rec, sizeof(size));
+        memcpy(&pdid[i], rec + 4, sizeof(pdid[i]));
+        rec += 4 + ntohs(size);
+    }
+
+    return ret;
+}
+
+/*!
  * @brief Pack an AppleDouble header into buf: the magic, version 2, a zero
  *        filler and n entries of an id, an offset and a length each
  *
@@ -1813,6 +1909,16 @@ int disk_file_is(const char *path, const void *want, size_t len)
     n = read(fd, buf, len);
     close(fd);
     return n == (ssize_t)len && memcmp(buf, want, len) == 0;
+}
+
+/*!
+ * @brief A SIGALRM handler that does nothing: the signal alone ends a wait
+ *
+ * @param[in] sig  the signal, unused
+ */
+void alarm_wakes(int sig _U_)
+{
+    /* the signal's arrival alone ends the wait */
 }
 
 /*!

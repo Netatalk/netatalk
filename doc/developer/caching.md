@@ -124,12 +124,23 @@ new inode under the same DID, it resolves the DID again through the
 database; an entry left with its old inode, as at a stale path, leaves the
 cache with its children first.
 
-On a miss, the CNID database returns the object's name and its parent's
-DID. The same resolution, strict, walks the parent chain until a cached
-ancestor or the volume root. The lookup then builds the full path, stats
-it, and adds the entry. It cleans a path the stat no longer finds from the
-cache and retries through the CNID database once per level. Figure 2 shows
-the order.
+On a miss, the CNID database returns the object's name, its parent's DID,
+and the device and inode its row records. The same resolution, strict,
+walks the parent chain until a cached ancestor or the volume root. The
+lookup then builds the full path, stats it, and adds the entry. When the
+stat shows another device or inode than the row records, the lookup caches
+nothing, deletes the row while it still records what the resolve read, and
+answers kFPObjectNotFound. On a volume that follows symlinks, a row that
+records the symlink at the name holds, and a name whose `lstat()` fails
+keeps the row and answers by the errno: kFPObjectNotFound, kFPAccessDenied
+or kFPMiscErr. A row another session moved or rewrote meanwhile stays, and
+when it now records the object at the name, the lookup serves that object;
+a backend that cannot finish the delete or the second read of the row
+answers kFPMiscErr, and the row stays. The object's AppleDouble metadata
+does not count, as a copy carries it; an object that moved away gets back
+the CNID its metadata holds when its new folder is listed. The lookup
+removes a path its stat cannot find from the cache and retries through the
+CNID database once per level. Figure 2 shows the order.
 
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"fontFamily": "Inter, Segoe UI, Helvetica Neue, Arial, sans-serif", "fontSize": "16px", "primaryColor": "#ffffff", "primaryBorderColor": "#495057", "primaryTextColor": "#212529", "lineColor": "#868e96"}}}%%
@@ -142,9 +153,15 @@ flowchart TD
     Refresh -->|"Same DID, unless a strict<br/>lookup kept the old inode"| Use
     Refresh -->|"Re-keyed, removed, or<br/>kept by a strict lookup"| Cnid
     Stat -->|"Not found"| Drop["Remove the entry"]:::warn --> Cnid
-    Hit -->|No| Cnid["CNID database: the name<br/>and the parent's DID"]:::store
+    Hit -->|"No, or a file's entry"| Cnid["CNID database: the name, the parent's<br/>DID, the device and the inode"]:::store
     Cnid --> Parent["Resolve the parent chain to a<br/>cached ancestor or the root"]:::act
-    Parent --> Build["Build the path, stat it,<br/>add the entry"]:::store --> Use
+    Parent --> Build["Build the path and stat it"]:::store
+    Build --> Same{"The row's device<br/>and inode?"}:::dec
+    Same -->|"Yes, or the row records<br/>the followed symlink"| Add["Add the entry"]:::store --> Use
+    Same -->|No| Retire["Delete the row while it records<br/>what the resolve read"]:::store
+    Retire -->|"Deleted, or the row now<br/>names another object"| Gone["kFPObjectNotFound"]:::warn
+    Retire -->|"Rewritten for the<br/>object at the name"| Add
+    Retire -->|"The backend cannot<br/>answer"| Misc["kFPMiscErr, the row stays"]:::warn
     classDef dec fill:#fff3bf,stroke:#fcc419,color:#212529
     classDef act fill:#ffffff,stroke:#495057,color:#212529
     classDef store fill:#d0ebff,stroke:#74c0fc,color:#212529
@@ -153,6 +170,12 @@ flowchart TD
 ```
 
 Figure 2: how a DID resolves through the cache, the CNID database, and the filesystem
+
+The search by DID drops a file entry it finds, so a file a request names by
+its CNID resolves through the database at every request. The request then
+names the file in its folder, with the file's stat, through the entry the
+lookup built, and the reply takes the file's CNID from that entry. A FIFO,
+a socket or a device node named so is refused, as it is by name.
 
 The filesystem is the authority. The CNID database is the persistent map
 from an ID to a name and a parent. The cache is the fast path in front of

@@ -2301,8 +2301,8 @@ int utest_cname_step_refuses_another_device(AFPObj *obj, struct vol *vol)
         int rc;
         snprintf(bpath, sizeof(bpath), "%s/%s", vol->v_path, t.path[STEP_B]);
         arm_walk_count(vol);
-        fi.stat_dev_name = bname;
-        fi.stat_dev = vol->v_dev + 1;
+        fi.stat_dev.path = bname;
+        fi.stat_dev.dev = vol->v_dev + 1;
         rc = getfiledirparms(obj, vol->v_vid, DIRDID_ROOT, t.path[STEP_B]);
         walks = fi.chdir_abs_calls + fi.openat_fd_calls;
         fault_inject_reset();
@@ -3374,17 +3374,18 @@ out:
  * the backend's resolve that it wraps */
 static time_t resolved_sec;
 static char *(*backend_resolve)(struct _cnid_db *cdb, cnid_t *id,
-                                void *buffer, size_t len);
+                                void *buffer, size_t len, uint64_t *dev,
+                                uint64_t *ino);
 
 /*!
  * @brief A cnid_resolve() that takes seconds: the fake clock moves on to
  *        resolved_sec before the backend answers
  */
 static char *slow_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
-                          size_t len)
+                          size_t len, uint64_t *dev, uint64_t *ino)
 {
     fi.clock_sec = resolved_sec;
-    return backend_resolve(cdb, id, buffer, len);
+    return backend_resolve(cdb, id, buffer, len, dev, ino);
 }
 
 /*!
