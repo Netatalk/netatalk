@@ -1,22 +1,22 @@
 /*
- * Copyright (C) 1999-2000 Free Software Foundation, Inc.
+ * Copyright (C) 1999-2001 Free Software Foundation, Inc.
+ * Copyright (C) 2004 Bjoern Fernhomberg
+ * This file is from the GNU LIBICONV Library and modified for use in Netatalk
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * The GNU LIBICONV Library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * The GNU LIBICONV Library is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * from GNU libiconv
- * modified by Bjorn (Apple Logo 0xf0 to Apple unicode 0xf8ff )
+ * along with the GNU LIBICONV Library; see the file COPYING.
+ * If not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 /*!
@@ -116,6 +116,7 @@ static const unsigned short mac_roman_2uni[128] = {
     0x2021, 0x00b7, 0x201a, 0x201e, 0x2030, 0x00c2, 0x00ca, 0x00c1,
     0x00cb, 0x00c8, 0x00cd, 0x00ce, 0x00cf, 0x00cc, 0x00d3, 0x00d4,
     /* 0xf0 */
+    /* modified from LIBICONV original: Apple Logo 0xf0 to Apple unicode 0xf8ff */
     0xf8ff, 0x00d2, 0x00da, 0x00db, 0x00d9, 0x0131, 0x02c6, 0x02dc,
     0x00af, 0x02d8, 0x02d9, 0x02da, 0x00b8, 0x02dd, 0x02db, 0x02c7,
 };
