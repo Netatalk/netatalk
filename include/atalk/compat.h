@@ -26,11 +26,6 @@
 #define ENOTSUP EOPNOTSUPP
 #endif
 
-#if !defined(HAVE_PSELECT) || defined(__OpenBSD__)
-extern int pselect(int, fd_set *, fd_set *, fd_set *, const struct timespec *,
-                   const sigset_t *);
-#endif
-
 #ifndef HAVE_STRNLEN
 extern size_t strnlen(const char *s, size_t n);
 #endif

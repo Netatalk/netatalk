@@ -66,7 +66,15 @@ If the socket cannot accept more output, dsi_peek() watches both read and
 write readiness. It can consume client input into readahead while waiting
 to send, avoiding a deadlock in which both endpoints have full send buffers.
 A full readahead buffer is therefore a transport diagnostic, rather than
-proof that the filesystem needs a larger cache.
+proof that the filesystem needs a larger cache. The session timeout bounds
+the wait. Input that arrives while readahead has room starts the bound
+again, as does room the client frees by reading, and on Linux a fall in
+what the socket queues, counted from 100 ms into the wait. Past the bound,
+or when a reconnect takes the session over, the wait ends and leaves the
+session disconnected for a reconnect. Once the session is to end, as after
+a SIGTERM, the client has a second to take more of a reply: a client that
+reads gets the whole reply, and one that does not lets the session end. A
+request's wait keeps its bound.
 
 The parser bounds the multiplier and the total allocation product, including
 address-space checks. Increasing both quantum and readahead multiplies

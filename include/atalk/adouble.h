@@ -535,7 +535,6 @@ extern int ad_convert(const char *path, const struct stat *sp,
 /* ad_read.c/ad_write.c */
 extern int     sys_ftruncate(int fd, off_t length);
 extern ssize_t ad_read(struct adouble *, uint32_t, off_t, char *, size_t);
-extern ssize_t ad_pread(struct ad_fd *, void *, size_t, off_t);
 extern ssize_t ad_write(struct adouble *, uint32_t, off_t, int, const char *,
                         size_t);
 extern ssize_t adf_pread(struct ad_fd *, void *, size_t, off_t);

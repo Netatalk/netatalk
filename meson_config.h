@@ -244,15 +244,6 @@
 /* Define to 1 if you have the `pthread_condattr_setclock' function. */
 #mesondefine HAVE_PTHREAD_CONDATTR_SETCLOCK
 
-/* Define to 1 if you have the `pread' function. */
-#mesondefine HAVE_PREAD
-
-/* Define to 1 if you have the `pselect' function. */
-#mesondefine HAVE_PSELECT
-
-/* Define to 1 if you have the `pwrite' function. */
-#mesondefine HAVE_PWRITE
-
 /* Define to 1 if you have the `removeea' function. */
 #mesondefine HAVE_REMOVEEA
 

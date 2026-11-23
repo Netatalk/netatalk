@@ -15,6 +15,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <poll.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -329,19 +330,10 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
          * the workaround: wait for the client to close its
          * side. timeouts prevent indefinite resource use.
          */
-        static struct timeval timeout = {120, 0};
-        fd_set readfds;
+        struct pollfd pfd = { .fd = dsi->socket, .events = POLLIN };
         dsi_getstatus(dsi);
-
-        if (dsi->socket >= FD_SETSIZE) {
-            free(dsi);
-            exit(0);
-        }
-
-        FD_ZERO(&readfds);
-        FD_SET(dsi->socket, &readfds);
         free(dsi);
-        select(FD_SETSIZE, &readfds, NULL, NULL, &timeout);
+        poll(&pfd, 1, 120 * 1000);
         exit(0);
     }
 

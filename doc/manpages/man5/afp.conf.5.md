@@ -1168,8 +1168,8 @@ timeout = *number* (default: *4*) **(G)**
 
 > Number of tickles to send before timing out a connection. With the
 defaults, a connection times out after 2 minutes. A client that stops
-sending in the middle of a request times out the same way and can
-reconnect.
+sending in the middle of a request, or stops reading a reply, times out
+the same way and can reconnect.
 
 client polling = *BOOLEAN* (default: *no*) **(G)**
 

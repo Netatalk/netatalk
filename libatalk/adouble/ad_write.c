@@ -39,28 +39,7 @@
 ssize_t adf_pwrite(struct ad_fd *ad_fd, const void *buf, size_t count,
                    off_t offset)
 {
-    ssize_t		cc;
-#ifndef  HAVE_PWRITE
-
-    if (ad_fd->adf_off != offset) {
-        if (lseek(ad_fd->adf_fd, offset, SEEK_SET) < 0) {
-            return -1;
-        }
-
-        ad_fd->adf_off = offset;
-    }
-
-    cc = write(ad_fd->adf_fd, buf, count);
-
-    if (cc < 0) {
-        return -1;
-    }
-
-    ad_fd->adf_off += cc;
-#else
-    cc = pwrite(ad_fd->adf_fd, buf, count, offset);
-#endif
-    return cc;
+    return pwrite(ad_fd->adf_fd, buf, count, offset);
 }
 
 /*!
@@ -151,20 +130,17 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end,
  *
  * ftruncate does the work. When it fails on a file shorter than length, the
  * function writes one zero byte at length minus one instead. That covers
- * platforms whose ftruncate cannot extend a file. Without HAVE_PWRITE it also
- * restores the file position afterwards. The caller holds any locks the
- * region needs.
+ * platforms whose ftruncate cannot extend a file. A file that already has
+ * the length needs nothing. The caller holds any locks the region needs.
  *
  * @param[in] fd      open file
  * @param[in] length  new length in bytes
- * @returns 0, or -1 with the ftruncate errno, or the write errno when the
- *          extension failed
+ * @returns 0, also when ftruncate fails on a file that has the length; or -1
+ *          with the ftruncate errno, or the write errno when the extension
+ *          failed
  */
 int sys_ftruncate(int fd, off_t length)
 {
-#ifndef  HAVE_PWRITE
-    off_t           curpos;
-#endif
     int             err;
     struct stat	st;
     char            c = 0;
@@ -175,15 +151,6 @@ int sys_ftruncate(int fd, off_t length)
 
     /* maybe ftruncate doesn't work if we try to extend the size */
     err = errno;
-#ifndef  HAVE_PWRITE
-
-    /* we only care about file pointer if we don't use pwrite */
-    if ((off_t) -1 == (curpos = lseek(fd, 0, SEEK_CUR))) {
-        errno = err;
-        return -1;
-    }
-
-#endif
 
     if (fstat(fd, &st) < 0) {
         errno = err;
@@ -195,24 +162,15 @@ int sys_ftruncate(int fd, off_t length)
         return -1;
     }
 
-    if (lseek(fd, length - 1, SEEK_SET) != length - 1) {
-        errno = err;
-        return -1;
+    if (st.st_size == length) {
+        return 0;
     }
 
-    if (1 != write(fd, &c, 1)) {
+    if (1 != pwrite(fd, &c, 1, length - 1)) {
         /* return the write errno */
         return -1;
     }
 
-#ifndef  HAVE_PWRITE
-
-    if (curpos != lseek(fd, curpos,  SEEK_SET)) {
-        errno = err;
-        return -1;
-    }
-
-#endif
     return 0;
 }
 

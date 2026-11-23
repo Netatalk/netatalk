@@ -195,7 +195,8 @@ The replay cache stores request ID, AFP command, and result code in
 (128 slots). A matching repeated DSICommand can reuse the result without
 running the handler again. A later request can replace the same cache slot.
 DSIWrite bypasses this cache. Entries do not retain arbitrary full reply
-payloads.
+payloads: a reused result goes out with no reply data, and a streamed FPRead
+takes its slot with no command, so a repeated read reads again.
 
 ## Open-fork state
 

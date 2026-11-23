@@ -64,8 +64,10 @@ typedef struct DSI {
     int      serversock;        /*!< listening socket */
     int      splice_pipe[2];    /*!< recvfile pipe, opened on first use */
     int      splice_size;       /*!< recvfile round size, 0 once declined */
-    /*! points at the flag that ends a wait for input once set, or NULL */
+    /*! points at the flag that ends a wait on the client once set, or NULL */
     volatile sig_atomic_t *stop_wait;
+    /*! points at the flag set once the session is to end, or NULL */
+    volatile sig_atomic_t *ending;
 
     /* DSI readahead buffer used for buffered reads in dsi_peek */
     size_t   dsireadbuf;        /*!< size of the DSI readahead buffer used in dsi_peek() */

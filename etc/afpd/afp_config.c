@@ -227,7 +227,8 @@ int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
         nbp_unrgstr(Obj, Type, Zone, &asp_obj->options.ddpaddr);
 
         if (nbp_rgstr(atp_sockaddr(atp), Obj, Type, Zone) < 0) {
-            LOG(log_error, logtype_afpd, "Can't register %s:%s@%s", Obj, Type, Zone);
+            LOG(log_error, logtype_afpd, "Can't register %s:%s@%s: %s",
+                Obj, Type, Zone, strerror(errno));
             free(asp_obj->Obj);
             free(asp_obj->Type);
             free(asp_obj->Zone);
