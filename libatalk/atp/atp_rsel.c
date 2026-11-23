@@ -121,7 +121,8 @@ static int atp_resp_incomplete(ATP ah)
  * @param[in,out] faddr  address to accept, receives the sender
  * @param[in]     func   ATP_TREQ, ATP_TRESP, or 0 for both
  * @returns ATP_TREQ, ATP_TRESP, 0 for a packet that completes nothing, or -1
- *          for an error, ETIMEDOUT after the last try
+ *          for an error, ETIMEDOUT after the last try, EINVAL for a pending
+ *          request on a socket at or above FD_SETSIZE
  */
 int atp_rsel(ATP ah, struct sockaddr_at *faddr, int func)
 {
@@ -149,6 +150,11 @@ int atp_rsel(ATP ah, struct sockaddr_at *faddr, int func)
          * we already have a complete atp response; just return
          */
         return ATP_TRESP;
+    }
+
+    if (requesting && ah->atph_socket >= FD_SETSIZE) {
+        errno = EINVAL;
+        return -1;
     }
 
     if ((abuf = atp_alloc_buf()) == NULL) {

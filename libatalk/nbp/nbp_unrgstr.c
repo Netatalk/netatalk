@@ -45,8 +45,11 @@
  * @param[in] type  type name of up to NBPSTRLEN bytes, or NULL for an empty one
  * @param[in] zone  zone name of up to NBPSTRLEN bytes, or NULL for an empty one
  * @param[in] addr  node that holds the name, or NULL
- * @returns 0 when atalkd answers NBPOP_OK, or -1 for a name that is too long,
- *          no reply with ETIMEDOUT, or another answer
+ * @returns 0 when atalkd answers NBPOP_OK, or -1 with errno ENAMETOOLONG for
+ *          a name part longer than NBPSTRLEN, EINVAL after the request for a
+ *          socket at or above FD_SETSIZE, ETIMEDOUT for no reply,
+ *          EADDRNOTAVAIL for another answer, EPROTO for a reply that is not
+ *          NBP, or the error of a call that fails
  */
 int nbp_unrgstr(const char *obj, const char *type, const char  *zone,
                 const struct at_addr *addr)
@@ -77,7 +80,8 @@ int nbp_unrgstr(const char *obj, const char *type, const char  *zone,
 
     if (obj) {
         if ((cc = strlen(obj)) > NBPSTRLEN) {
-            return -1;
+            errno = ENAMETOOLONG;
+            goto unregister_err;
         }
 
         *data++ = cc;
@@ -89,7 +93,8 @@ int nbp_unrgstr(const char *obj, const char *type, const char  *zone,
 
     if (type) {
         if ((cc = strlen(type)) > NBPSTRLEN) {
-            return -1;
+            errno = ENAMETOOLONG;
+            goto unregister_err;
         }
 
         *data++ = cc;
@@ -101,7 +106,8 @@ int nbp_unrgstr(const char *obj, const char *type, const char  *zone,
 
     if (zone) {
         if ((cc = strlen(zone)) > NBPSTRLEN) {
-            return -1;
+            errno = ENAMETOOLONG;
+            goto unregister_err;
         }
 
         *data++ = cc;
@@ -138,6 +144,11 @@ int nbp_unrgstr(const char *obj, const char *type, const char  *zone,
         goto unregister_err;
     }
 
+    if (s >= FD_SETSIZE) {
+        errno = EINVAL;
+        goto unregister_err;
+    }
+
     FD_ZERO(&readfd);
     FD_SET(s, &readfd);
     timeout.tv_sec = 2;
@@ -163,12 +174,14 @@ int nbp_unrgstr(const char *obj, const char *type, const char  *zone,
     data = nbp_recv;
 
     if (*data++ != DDPTYPE_NBP) {
+        errno = EPROTO;
         return -1;
     }
 
     memcpy(&nh, data, SZ_NBPHDR);
 
     if (nh.nh_op != NBPOP_OK) {
+        errno = EADDRNOTAVAIL;
         return -1;
     }
 

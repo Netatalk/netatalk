@@ -61,7 +61,9 @@ int nbp_lookup(const char *obj, const char *type, const char *zone,
  * dstaddr is NULL, which reaches the local atalkd. The call sends it 3 times
  * and waits 2 seconds for replies after each send. It stops early once nn
  * is full. Two replies that match without regard to zone and wildcards count
- * once. Success sets errno to 0, and a bad array sets EINVAL.
+ * once. Success sets errno to 0, a bad array or a socket at or above
+ * FD_SETSIZE sets EINVAL, and a name part longer than NBPSTRLEN sets
+ * ENAMETOOLONG.
  *
  * @param[in]  obj      object name of up to NBPSTRLEN bytes, or NULL for `=`
  * @param[in]  type     type name of up to NBPSTRLEN bytes, or NULL for `=`
@@ -72,7 +74,7 @@ int nbp_lookup(const char *obj, const char *type, const char *zone,
  * @param[in]  dstaddr  node to ask, or NULL for the local atalkd
  * @param[in]  op       NBP operation, such as NBPOP_BRRQ or NBPOP_LKUP
  * @returns the number of matches, or -1 for a bad array, a name that is too
- *          long, or a socket error
+ *          long, a socket at or above FD_SETSIZE, or a socket error
  */
 int nbp_do_lookup_op(const char *obj, const char *type, const char *zone,
                      struct nbpnve *nn, int nncnt, const struct at_addr *srcaddr,
@@ -109,6 +111,12 @@ int nbp_do_lookup_op(const char *obj, const char *type, const char *zone,
         return -1;
     }
 
+    if (s >= FD_SETSIZE) {
+        netddp_close(s);
+        errno = EINVAL;
+        return -1;
+    }
+
     if (!dstaddr) {
         /* Without a destination address, we assume we're doing loopback, so copy
          * the source address to the destination.  We have to do this here, after
@@ -132,6 +140,7 @@ int nbp_do_lookup_op(const char *obj, const char *type, const char *zone,
 
     if (obj) {
         if ((cc = strlen(obj)) > NBPSTRLEN) {
+            errno = ENAMETOOLONG;
             goto lookup_err;
         }
 
@@ -145,6 +154,7 @@ int nbp_do_lookup_op(const char *obj, const char *type, const char *zone,
 
     if (type) {
         if ((cc = strlen(type)) > NBPSTRLEN) {
+            errno = ENAMETOOLONG;
             goto lookup_err;
         }
 
@@ -158,6 +168,7 @@ int nbp_do_lookup_op(const char *obj, const char *type, const char *zone,
 
     if (zone) {
         if ((cc = strlen(zone)) > NBPSTRLEN) {
+            errno = ENAMETOOLONG;
             goto lookup_err;
         }
 

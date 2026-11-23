@@ -1,5 +1,5 @@
 /*
- * Tests for dsi_getsession() when a session cannot start
+ * Tests for dsi_getsession(): session starts that fail, and the status child
  *
  * Copyright (c) 2026 Andy Lemin (andylemin)
  *
@@ -14,6 +14,12 @@
  * GNU General Public License for more details.
  */
 
+/*!
+ * @file
+ * @brief Tests for dsi_getsession(): session starts that fail, and the
+ *        status child
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -23,15 +29,21 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <poll.h>
+#include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <atalk/dsi.h>
 #include <atalk/server_child.h>
 #include <atalk/unix.h>
+
+#include "high_fd.h"
 
 #define FILL_MAX 64
 
@@ -231,10 +243,133 @@ cannot:
     return -1;
 }
 
+/*! the session end of the status test's socket pair, which open_status()
+ *  hands over as an accept() would */
+static int status_sock = -1;
+/*! the client end, which the session process of an accept() does not hold */
+static int status_client = -1;
+
+/*! @brief proto_open() stand-in that accepts a DSIGetStatus and forks */
+static pid_t open_status(DSI *dsi)
+{
+    pid_t pid;
+    dsi->socket = status_sock;
+    dsi->header.dsi_command = DSIFUNC_STAT;
+
+    /* children must not inherit buffered TAP output */
+    if (fflush(stdout) == EOF) {
+        return -1;
+    }
+
+    if ((pid = fork()) == 0) {
+        close(status_client);
+    }
+
+    return pid;
+}
+
+/*! @brief proto_close() stand-in: close the session socket */
+static void close_status(DSI *dsi)
+{
+    close(dsi->socket);
+    dsi->socket = -1;
+}
+
+/*!
+ * @brief The status child of a socket above FD_SETSIZE keeps the socket after
+ *        its reply until the client closes its end
+ *
+ * The child waits for the close for OpenTransport 1.1.2, up to 120 seconds.
+ *
+ * @returns 1, 0, or -1 when no descriptor that high can be had
+ */
+static int test_status_child_waits(void)
+{
+    struct timespec half = { .tv_nsec = 500 * 1000 * 1000 };
+    struct timespec tick = { .tv_nsec = 10 * 1000 * 1000 };
+    static AFPObj obj;
+    static uint8_t commands[DSI_BLOCKSIZ];
+    uint8_t reply[DSI_BLOCKSIZ];
+    server_child_t *children;
+    afp_child_t *child = NULL;
+    struct rlimit saved;
+    DSI *dsi;
+    pid_t pid = -1;
+    pid_t w;
+    int waited = 0;
+    int ended = 0;
+    int pair[2];
+    int status;
+    int rc;
+
+    if ((rc = high_fd_pair(pair, &saved)) != 1) {
+        return rc == 0 ? -1 : 0;
+    }
+
+    children = server_child_alloc(10);
+    dsi = calloc(1, sizeof(*dsi));
+    status_sock = pair[1];
+    status_client = pair[0];
+
+    if (children == NULL || dsi == NULL) {
+        close(pair[1]);
+    } else {
+        dsi->socket = -1;
+        dsi->serversock = -1;
+        dsi->AFPobj = &obj;
+        dsi->commands = commands;
+        dsi->proto_open = open_status;
+        dsi->proto_close = close_status;
+
+        /* the master's side closes its copy of the socket */
+        if (dsi_getsession(dsi, children, 30, &child) == 0 && child != NULL) {
+            pid = child->afpch_pid;
+        }
+    }
+
+    if (pid != -1 && recv(pair[0], reply, sizeof(reply), MSG_WAITALL)
+            == (ssize_t)sizeof(reply) && nanosleep(&half, NULL) == 0) {
+        /* half a second after its reply the child still waits */
+        w = waitpid(pid, &status, WNOHANG);
+        waited = w == 0;
+        pid = w == 0 ? pid : -1;
+    }
+
+    close(pair[0]);
+
+    /* the client's close ends the wait */
+    for (int i = 0; i < 500 && pid != -1; i++) {
+        if ((w = waitpid(pid, &status, WNOHANG)) == 0) {
+            nanosleep(&tick, NULL);
+            continue;
+        }
+
+        ended = w == pid && WIFEXITED(status) && WEXITSTATUS(status) == 0;
+        pid = -1;
+    }
+
+    if (pid != -1) {
+        kill(pid, SIGKILL);
+        waitpid(pid, NULL, 0);
+    }
+
+    setrlimit(RLIMIT_NOFILE, &saved);
+
+    if (children != NULL) {
+        server_child_free(children);
+    }
+
+    free(dsi);
+    return waited && ended;
+}
+
+/*! @brief Run the tests and print their TAP report */
 int main(void)
 {
     const char *starved =
         "with no descriptor free, a waiting client gets a busy reply";
+    const char *status_wait =
+        "a status child above FD_SETSIZE waits for the client to close";
     int result;
     printf("TAP version 13\n");
     report(test_no_leak(open_accept_fails),
@@ -247,6 +382,14 @@ int main(void)
         skip(starved, "a starved session start cannot be set up here");
     } else {
         report(result, starved);
+    }
+
+    result = test_status_child_waits();
+
+    if (result < 0) {
+        skip(status_wait, "the descriptor limit allows none above FD_SETSIZE");
+    } else {
+        report(result, status_wait);
     }
 
     printf("1..%d\n", tests_run);

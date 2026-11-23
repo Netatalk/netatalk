@@ -54,11 +54,14 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/uio.h>
-#include <time.h>
 #include <unistd.h>
 
 #if defined(SENDFILE_FLAVOR_LINUX) || defined(SENDFILE_FLAVOR_SOLARIS)
 #include <sys/sendfile.h>
+#endif
+
+#ifdef __linux__
+#include <sys/ioctl.h>
 #endif
 
 #include <atalk/dsi.h>
@@ -85,26 +88,27 @@ static void dsi_header_pack_reply(const DSI *dsi, char *buf)
     memcpy(buf + 12, &dsi->header.dsi_reserved, sizeof(dsi->header.dsi_reserved));
 }
 
+static int dsi_wait(DSI *dsi, short events);
+
 /*!
  * @brief Wait until the socket accepts writes, reading pending input meanwhile
  *
  * A blocked send can mean the client itself blocks while it sends to afpd.
- * The call therefore selects for both directions and reads into the
- * read-ahead buffer. Reading may unblock the client. A full read-ahead buffer
- * logs a note once and leaves only the write test. End of file, a select
- * failure, a read error, or a socket at FD_SETSIZE or above ends the wait.
+ * The call therefore waits for both directions and reads into the read-ahead
+ * buffer. Reading may unblock the client. A full read-ahead buffer logs a note
+ * once and leaves only the write test. End of file, a read error or a failed
+ * dsi_wait() ends the wait.
  *
  * @param[in,out] dsi  DSI session
- * @returns 0 when the socket accepts writes again, -1 on failure or a closed
- *          socket
+ * @returns 0 when the socket accepts writes again, or has an error or a hangup
+ *          for the next send to report; -1 on failure or a closed socket
  */
 static int dsi_peek(DSI *dsi)
 {
     static int warned = 0;
-    fd_set readfds, writefds;
+    short  events;
     int    len;
-    int    maxfd;
-    int    ret;
+    int    revents;
     LOG(log_maxdebug, logtype_dsi, "dsi_peek");
 
     while (1) {
@@ -114,18 +118,11 @@ static int dsi_peek(DSI *dsi)
             return -1;
         }
 
-        if (dsi->socket >= FD_SETSIZE) {
-            errno = EINVAL;
-            return -1;
-        }
-
-        maxfd = dsi->socket + 1;
-        FD_ZERO(&readfds);
-        FD_ZERO(&writefds);
+        events = POLLOUT;
 
         if (dsi->eof < dsi->end) {
             /* space in read buffer */
-            FD_SET(dsi->socket, &readfds);
+            events |= POLLIN;
         } else {
             if (!warned) {
                 warned = 1;
@@ -139,51 +136,39 @@ static int dsi_peek(DSI *dsi)
             }
         }
 
-        FD_SET(dsi->socket, &writefds);
-
-        /* No timeout: if there's nothing to read nor nothing to write,
-         * we've got nothing to do at all */
-        if ((ret = select(maxfd, &readfds, &writefds, NULL, NULL)) <= 0) {
-            if (ret == -1 && errno == EINTR)
-                /* we might have been interrupted by out timer, so restart select */
-            {
-                continue;
-            }
-
-            /* give up */
-            LOG(log_error, logtype_dsi, "dsi_peek: unexpected select return: %d %s",
-                ret, ret < 0 ? strerror(errno) : "");
+        if ((revents = dsi_wait(dsi, events)) == -1) {
             return -1;
         }
 
-        if (FD_ISSET(dsi->socket, &writefds)) {
-            /* we can write again */
-            LOG(log_maxdebug, logtype_dsi, "dsi_peek: can write again");
+        /*
+         * A hangup without input comes from a socket that cannot send, so the
+         * send reports it. macOS reports a client that shut down its sending
+         * side as POLLIN with POLLHUP and no POLLOUT, which is input to read.
+         */
+        if ((revents & (POLLOUT | POLLERR | POLLNVAL)) || !(revents & POLLIN)) {
+            LOG(log_maxdebug, logtype_dsi, "dsi_peek: send again");
             break;
         }
 
-        /* Check if there's sth to read, hopefully reading that will unblock the client */
-        if (FD_ISSET(dsi->socket, &readfds)) {
-            len = dsi->end - dsi->eof; /* it's ensured above that there's space */
+        len = dsi->end - dsi->eof; /* it's ensured above that there's space */
 
-            if ((len = recv(dsi->socket, dsi->eof, len, 0)) <= 0) {
-                if (len == 0) {
-                    LOG(log_error, logtype_dsi, "dsi_peek: EOF");
-                    return -1;
-                }
-
-                LOG(log_error, logtype_dsi, "dsi_peek: read: %s", strerror(errno));
-
-                if (errno == EAGAIN) {
-                    continue;
-                }
-
+        if ((len = recv(dsi->socket, dsi->eof, len, 0)) <= 0) {
+            if (len == 0) {
+                LOG(log_error, logtype_dsi, "dsi_peek: EOF");
                 return -1;
             }
 
-            LOG(log_maxdebug, logtype_dsi, "dsi_peek: read %d bytes", len);
-            dsi->eof += len;
+            LOG(log_error, logtype_dsi, "dsi_peek: read: %s", strerror(errno));
+
+            if (errno == EAGAIN) {
+                continue;
+            }
+
+            return -1;
         }
+
+        LOG(log_maxdebug, logtype_dsi, "dsi_peek: read %d bytes", len);
+        dsi->eof += len;
     }
 
     return 0;
@@ -338,18 +323,6 @@ static void unblock_sig(DSI *dsi)
     dsi->in_write--;
 }
 
-/*!
- * @brief Read the monotonic clock
- *
- * @returns milliseconds since an arbitrary start
- */
-static long long monotonic_ms(void)
-{
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return (long long)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
-}
-
 /*********************************************************************************
  * Public functions
  *********************************************************************************/
@@ -385,33 +358,67 @@ int dsi_disconnect(DSI *dsi)
     return 0;
 }
 
+/* milliseconds a reply's client has to take more once the session is to end */
+#define DSI_TERM_GRACE 1000
+
+#ifdef __linux__
+/* milliseconds a reply's wait polls before it first counts what the socket
+ * queues, so the short waits of a client that keeps up make no ioctl */
+#define DSI_COUNT_SLICE 100
+
 /*!
- * @brief Wait until the client sends more of the request being read
+ * @brief Count what the session socket still queues for the client
+ *
+ * TIOCOUTQ is SIOCOUTQ: on TCP the unsent and unacknowledged bytes, on a
+ * socket pair the buffers the peer has not read.
+ *
+ * @param[in] dsi  DSI session
+ * @returns the count, or -1
+ */
+static int dsi_queued(const DSI *dsi)
+{
+    int n;
+    return ioctl(dsi->socket, TIOCOUTQ, &n) == 0 ? n : -1;
+}
+#endif
+
+/*!
+ * @brief Wait for the client to send more of a request or take more of a reply
  *
  * The tickle timer that disconnects a client silent for the timeout option's
  * count of tickleval intervals runs in the main loop, which a request being
- * read never reaches, so the wait applies the same bound from the last bytes
- * received; past it the session enters the disconnected state, from which the
- * client can reconnect. The flag stop_wait points to, set for a reconnect's
+ * read or a reply being sent never reaches, so each wait applies the same
+ * bound; past it the session enters the disconnected state, from which the
+ * client can reconnect. Linux reports room on TCP only once a third of the
+ * send buffer is free, so there a reply's bound starts again while what the
+ * socket queues falls. The flag stop_wait points to, set for a reconnect's
  * hand-over, ends the wait at once the same way, as the client has left the
- * connection. Other signals leave the wait waiting, so a termination lets a
- * request whose client still sends finish. A session without its options
- * waits without a bound.
+ * connection. Once the flag ending points to is set, a reply's bound shrinks
+ * to DSI_TERM_GRACE. Other signals leave the wait waiting. A session without
+ * its options waits without a bound.
  *
- * @param[in,out] dsi  DSI session
- * @returns 0 once the socket has input; -1 with errno ETIMEDOUT at the bound or
- *          ECONNABORTED for a hand-over, both after the session disconnected,
- *          or with the errno of poll. An unusable signal pipe terminates the
- *          session through its exit callback, or returns -1 if none is set.
+ * @param[in,out] dsi     DSI session
+ * @param[in]     events  POLLIN for input; POLLOUT for room to send, with
+ *                        POLLIN for input meanwhile
+ * @returns the events poll reports on the socket; -1 with errno ETIMEDOUT at
+ *          the bound or ECONNABORTED for a hand-over, both after the session
+ *          disconnected, or with the errno of poll. An unusable signal pipe
+ *          terminates the session through its exit callback, or returns -1 if
+ *          none is set.
  */
-int dsi_wait_input(DSI *dsi)
+static int dsi_wait(DSI *dsi, short events)
 {
     struct pollfd pfd[2] = {
-        { .fd = dsi->socket, .events = POLLIN },
+        { .fd = dsi->socket, .events = events },
         { .fd = atalk_sigpipe_readfd(), .events = POLLIN },
     };
+    const bool reply = (events & POLLOUT) != 0;
     long long limit = -1;
     long long end = 0;
+#ifdef __linux__
+    bool counted = !reply;
+    int queued = -1;
+#endif
 
     if (dsi->AFPobj != NULL) {
         limit = MIN((long long)dsi->AFPobj->options.timeout
@@ -421,11 +428,27 @@ int dsi_wait_input(DSI *dsi)
 
     while (dsi->stop_wait == NULL || !*dsi->stop_wait) {
         long long now = monotonic_ms();
-        int ret = poll(pfd, pfd[1].fd == -1 ? 1 : 2,
-                       limit < 0 ? -1 : (int)(end > now ? end - now : 0));
+        int ms;
+        int ret;
+
+        if (reply && dsi->ending != NULL && *dsi->ending && limit >= 0
+                && end > now + DSI_TERM_GRACE) {
+            limit = DSI_TERM_GRACE;
+            end = now + limit;
+        }
+
+        ms = limit < 0 ? -1 : (int)(end > now ? end - now : 0);
+#ifdef __linux__
+
+        if (!counted && ms > DSI_COUNT_SLICE) {
+            ms = DSI_COUNT_SLICE;
+        }
+
+#endif
+        ret = poll(pfd, pfd[1].fd == -1 ? 1 : 2, ms);
 
         if (ret > 0 && pfd[0].revents != 0) {
-            return 0;
+            return pfd[0].revents;
         }
 
         if (ret > 0) {
@@ -437,7 +460,7 @@ int dsi_wait_input(DSI *dsi)
                                   : (pfd[1].revents & POLLHUP) ? EPIPE
                                   : (pfd[1].revents & POLLERR) ? EIO : errno;
                 LOG(log_error, logtype_dsi,
-                    "dsi_wait_input: signal pipe fd %d unusable: %s",
+                    "dsi_wait: signal pipe fd %d unusable: %s",
                     pfd[1].fd, strerror(saved_errno));
 
                 if (dsi->AFPobj != NULL && dsi->AFPobj->exit != NULL) {
@@ -448,23 +471,55 @@ int dsi_wait_input(DSI *dsi)
                 return -1;
             }
         } else if (ret == 0) {
+#ifdef __linux__
+            int left;
+
+            if (!counted) {
+                counted = true;
+                queued = dsi_queued(dsi);
+                continue;
+            }
+
+            left = queued >= 0 ? dsi_queued(dsi) : -1;
+
+            if (left >= 0 && left < queued) {
+                queued = left;
+                end = monotonic_ms() + limit;
+                continue;
+            }
+
+#endif
             LOG(log_error, logtype_dsi,
-                "dsi_wait_input: the client sent nothing for %lld s of a request",
-                limit / 1000);
+                "dsi_wait: the client %s nothing for %lld s of a %s",
+                reply ? "took" : "sent", limit / 1000,
+                reply ? "reply" : "request");
             dsi_disconnect(dsi);
             errno = ETIMEDOUT;
             return -1;
         } else if (errno != EINTR) {
-            LOG(log_error, logtype_dsi, "dsi_wait_input: poll: %s",
+            LOG(log_error, logtype_dsi, "dsi_wait: poll: %s",
                 strerror(errno));
             return -1;
         }
     }
 
-    LOG(log_note, logtype_dsi, "dsi_wait_input: a reconnect ended the request");
+    LOG(log_note, logtype_dsi, "dsi_wait: a reconnect ended the %s",
+        reply ? "reply" : "request");
     dsi_disconnect(dsi);
     errno = ECONNABORTED;
     return -1;
+}
+
+/*!
+ * @brief Wait until the client sends more of the request being read
+ *
+ * @param[in,out] dsi  DSI session
+ * @returns 0 once the socket has input, or -1 with errno set as dsi_wait()
+ *          sets it
+ */
+int dsi_wait_input(DSI *dsi)
+{
+    return dsi_wait(dsi, POLLIN) == -1 ? -1 : 0;
 }
 
 /*!
@@ -480,7 +535,8 @@ int dsi_wait_input(DSI *dsi)
  * @param[in]     data    bytes to send
  * @param[in]     length  bytes to send
  * @param[in]     mode    0 or DSI_NOWAIT
- * @returns bytes sent, or -1 for a disconnected session or a failed send
+ * @returns bytes sent, or -1 for a disconnected session, a failed send or a
+ *          failed wait for room
  */
 ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
 {
@@ -619,8 +675,9 @@ static int sendfile_call(const DSI *dsi, int fromfd, off_t pos, size_t count,
  * @param[in,out] left    file bytes the reply still owes, reduced by those sent
  * @param[in]     hdr     unsent header bytes
  * @param[in]     hdrlen  bytes at hdr
- * @returns 0, or -1 with errno set, which stays EAGAIN when the client ends
- *          the stream during a wait
+ * @returns 0, or -1 with errno set: ETIMEDOUT or ECONNABORTED when a wait
+ *          for room ends at the session timeout or for a hand-over, EAGAIN
+ *          when the client ends the stream during a wait
  */
 static int dsi_stream_copy_file(DSI *dsi, int fromfd, off_t pos, size_t *left,
                                 char *hdr, size_t hdrlen)
@@ -679,8 +736,10 @@ static int dsi_stream_copy_file(DSI *dsi, int fromfd, off_t pos, size_t *left,
  *                        UINT32_MAX, the DSI header's 32-bit length
  * @param[in]     err     AFP result code
  * @returns 0, or -1 with errno set: ENOTCONN for a disconnected session, EIO
- *          when the file ends first, or the error of the failed call, which
- *          stays EAGAIN or EINTR when the client ends the stream during a wait
+ *          when the file ends first, ETIMEDOUT or ECONNABORTED when a wait
+ *          for room ends at the session timeout or for a hand-over, or the
+ *          error of the failed call, which stays EAGAIN or EINTR when the
+ *          client ends the stream during a wait
  */
 int dsi_stream_read_file(DSI *dsi, const int fromfd, off_t offset,
                          const size_t length, const int err)
@@ -813,7 +872,7 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
         len = buf_read(dsi, (uint8_t *) data + stored, length - stored);
 
         if (len == -1 && (errno == EINTR || errno == EAGAIN)) {
-            LOG(log_maxdebug, logtype_dsi, "dsi_stream_read: select read loop");
+            LOG(log_maxdebug, logtype_dsi, "dsi_stream_read: read loop");
             continue;
         } else if (len > 0) {
             stored += len;
@@ -849,7 +908,8 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
  * @param[in,out] dsi     DSI session with the header fields set
  * @param[in]     buf     payload bytes
  * @param[in]     length  payload bytes to send, matching dsi_len in the header
- * @returns 1, or 0 for a disconnected session or a failed send
+ * @returns 1, or 0 for a disconnected session, a failed send or a failed
+ *          wait for room
  */
 int dsi_stream_send(DSI *dsi, void *buf, size_t length)
 {

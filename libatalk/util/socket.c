@@ -1,5 +1,6 @@
 /*
    Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
+   Copyright (c) 2026 Andy Lemin (andylemin)
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -14,7 +15,7 @@
 
 /*!
  * @file
- * Netatalk utility functions: socket
+ * @brief Netatalk utility functions: socket
  */
 
 #ifdef HAVE_CONFIG_H
@@ -24,15 +25,15 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <netinet/in.h>
+#include <poll.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/uio.h>
-#include <time.h>
 #include <unistd.h>
 
 #include <atalk/errchk.h>
@@ -74,38 +75,75 @@ int setnonblock(int fd, int cmd)
 }
 
 /*!
- * @brief non-blocking drop-in replacement for read with timeout using select
+ * @brief Wait up to timeout seconds for socket to be ready for events
+ *
+ * A signal leaves the wait going for the rest of the timeout. The time
+ * running out is logged at level, a poll error at log_error.
+ *
+ * @param[in] socket   socket
+ * @param[in] events   POLLIN or POLLOUT
+ * @param[in] timeout  seconds to wait, not negative: 0 to wait without a
+ *                     limit; past INT_MAX milliseconds the wait takes INT_MAX
+ * @param[in] level    log level of the time running out
+ *
+ * @returns 1 when poll() reports the socket, 0 with errno EAGAIN when the
+ *          time runs out, or -1 with the errno of poll
+ */
+static int socket_wait(int socket, short events, int timeout,
+                       enum loglevels level)
+{
+    struct pollfd pfd = { .fd = socket, .events = events };
+    int ms = !timeout ? -1
+             : timeout > INT_MAX / 1000 ? INT_MAX : timeout * 1000;
+    long long end = monotonic_ms() + ms;
+    int ret;
+    int err;
+
+    while ((ret = poll(&pfd, 1, ms)) == -1 && errno == EINTR) {
+        if (timeout) {
+            long long left = end - monotonic_ms();
+            ms = left > 0 ? (int)left : 0;
+        }
+    }
+
+    if (ret == 0) {
+        LOG(level, logtype_afpd, "poll timeout %d s", timeout);
+        errno = EAGAIN;
+    } else if (ret == -1) {
+        err = errno;
+        LOG(log_error, logtype_afpd, "poll: %s", strerror(err));
+        errno = err;
+    }
+
+    return ret;
+}
+
+/*!
+ * @brief Read length bytes from a socket, waiting for data with poll()
  *
  * @param[in] socket          socket, if in blocking mode, pass "setnonblocking" arg as 1
  * @param[in,out] data        buffer for the read data
  * @param[in] length          how many bytes to read
  * @param[in] setnonblocking  when non-zero this func will enable and disable non blocking
  *                            io mode for the socket
- * @param[in] timeout         number of seconds to try reading, 0 means no timeout
+ * @param[in] timeout         seconds each wait for data may take, not
+ *                            negative; 0 means no timeout
  *
- * @returns number of bytes actually read or -1 on timeout or error
+ * @returns the bytes read, fewer than length when the peer closes the
+ *          connection or a wait times out after some arrived; -1 on an error,
+ *          or with errno EAGAIN when a wait times out before any arrived
  */
 ssize_t readt(int socket, void *data, const size_t length, int setnonblocking,
               int timeout)
 {
     size_t stored = 0;
     ssize_t len = 0;
-    struct timeval now, end, tv;
-    fd_set rfds;
     int ret;
-    FD_ZERO(&rfds);
 
     if (setnonblocking) {
         if (setnonblock(socket, 1) != 0) {
             return -1;
         }
-    }
-
-    /* Calculate end time */
-    if (timeout) {
-        (void)gettimeofday(&now, NULL);
-        end = now;
-        end.tv_sec += timeout;
     }
 
     while (stored < length) {
@@ -117,66 +155,17 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking,
                 continue;
 
             case EAGAIN:
-                if (socket >= FD_SETSIZE) {
-                    errno = EINVAL;
-                    goto exit;
+                ret = socket_wait(socket, POLLIN, timeout, log_debug);
+
+                if (ret == 1) {
+                    continue;
                 }
 
-                FD_SET(socket, &rfds);
-
-                if (timeout) {
-                    tv.tv_usec = 0;
-                    tv.tv_sec  = timeout;
+                if (ret == -1) {
+                    stored = -1;
                 }
 
-                while ((ret = select(socket + 1, &rfds, NULL, NULL,
-                                     timeout ? &tv : NULL)) < 1) {
-                    switch (ret) {
-                    case 0:
-                        LOG(log_debug, logtype_dsi, "select timeout %d s", timeout);
-                        errno = EAGAIN;
-                        goto exit;
-
-                    default: /* -1 */
-                        switch (errno) {
-                        case EINTR:
-                            if (timeout) {
-                                (void)gettimeofday(&now, NULL);
-
-                                if (now.tv_sec > end.tv_sec
-                                        ||
-                                        (now.tv_sec == end.tv_sec && now.tv_usec >= end.tv_usec)) {
-                                    LOG(log_debug, logtype_afpd, "select timeout %d s", timeout);
-                                    goto exit;
-                                }
-
-                                if (now.tv_usec > end.tv_usec) {
-                                    tv.tv_usec = 1000000 + end.tv_usec - now.tv_usec;
-                                    tv.tv_sec  = end.tv_sec - now.tv_sec - 1;
-                                } else {
-                                    tv.tv_usec = end.tv_usec - now.tv_usec;
-                                    tv.tv_sec  = end.tv_sec - now.tv_sec;
-                                }
-                            }
-
-                            FD_SET(socket, &rfds);
-                            continue;
-
-                        case EBADF:
-                            /* possibly entered disconnected state, don't spam log here */
-                            LOG(log_debug, logtype_afpd, "select: %s", strerror(errno));
-                            stored = -1;
-                            goto exit;
-
-                        default:
-                            LOG(log_error, logtype_afpd, "select: %s", strerror(errno));
-                            stored = -1;
-                            goto exit;
-                        }
-                    }
-                } /* while (select) */
-
-                continue;
+                goto exit;
             } /* switch (errno) */
 
             LOG(log_error, logtype_afpd, "read: %s", strerror(errno));
@@ -199,7 +188,7 @@ exit:
     }
 
     if (len == -1 && stored == 0)
-        /* last read or select got an error and we haven't got yet anything => return -1*/
+        /* a wait timed out before any byte moved */
     {
         return -1;
     }
@@ -208,24 +197,25 @@ exit:
 }
 
 /*!
- * @brief non-blocking drop-in replacement for read with timeout using select
+ * @brief Write length bytes to a socket, waiting for room with poll()
  *
  * @param[in] socket          socket, if in blocking mode, pass "setnonblocking" arg as 1
- * @param[in,out] data        buffer for the read data
- * @param[in] length          how many bytes to read
+ * @param[in] data            bytes to write
+ * @param[in] length          how many bytes to write
  * @param[in] setnonblocking  when non-zero this func will enable and disable non blocking
  *                            io mode for the socket
- * @param[in] timeout         number of seconds to try reading
+ * @param[in] timeout         seconds each wait for room may take, not
+ *                            negative; 0 means no timeout
  *
- * @returns number of bytes actually read or -1 on fatal error
+ * @returns the bytes written, fewer than length when a wait times out after
+ *          some went out; -1 on an error, or with errno EAGAIN when a wait
+ *          times out before any went out
  */
 ssize_t writet(int socket, void *data, const size_t length, int setnonblocking,
                int timeout)
 {
     size_t stored = 0;
     ssize_t len = 0;
-    struct timeval now, end, tv;
-    fd_set rfds;
     int ret;
 
     if (setnonblocking) {
@@ -233,11 +223,6 @@ ssize_t writet(int socket, void *data, const size_t length, int setnonblocking,
             return -1;
         }
     }
-
-    /* Calculate end time */
-    (void)gettimeofday(&now, NULL);
-    end = now;
-    end.tv_sec += timeout;
 
     while (stored < length) {
         len = write(socket, (char *) data + stored, length - stored);
@@ -248,54 +233,20 @@ ssize_t writet(int socket, void *data, const size_t length, int setnonblocking,
                 continue;
 
             case EAGAIN:
-                if (socket >= FD_SETSIZE) {
-                    errno = EINVAL;
-                    goto exit;
+                ret = socket_wait(socket, POLLOUT, timeout, log_warning);
+
+                if (ret == 1) {
+                    continue;
                 }
 
-                FD_ZERO(&rfds);
-                FD_SET(socket, &rfds);
-                tv.tv_usec = 0;
-                tv.tv_sec  = timeout;
+                if (ret == -1) {
+                    stored = -1;
+                }
 
-                while ((ret = select(socket + 1, &rfds, NULL, NULL, &tv)) < 1) {
-                    switch (ret) {
-                    case 0:
-                        LOG(log_warning, logtype_afpd, "select timeout %d s", timeout);
-                        goto exit;
-
-                    default: /* -1 */
-                        if (errno == EINTR) {
-                            (void)gettimeofday(&now, NULL);
-
-                            if (now.tv_sec >= end.tv_sec && now.tv_usec >= end.tv_usec) {
-                                LOG(log_warning, logtype_afpd, "select timeout %d s", timeout);
-                                goto exit;
-                            }
-
-                            if (now.tv_usec > end.tv_usec) {
-                                tv.tv_usec = 1000000 + end.tv_usec - now.tv_usec;
-                                tv.tv_sec  = end.tv_sec - now.tv_sec - 1;
-                            } else {
-                                tv.tv_usec = end.tv_usec - now.tv_usec;
-                                tv.tv_sec  = end.tv_sec - now.tv_sec;
-                            }
-
-                            FD_ZERO(&rfds);
-                            FD_SET(socket, &rfds);
-                            continue;
-                        }
-
-                        LOG(log_error, logtype_afpd, "select: %s", strerror(errno));
-                        stored = -1;
-                        goto exit;
-                    }
-                } /* while (select) */
-
-                continue;
+                goto exit;
             } /* switch (errno) */
 
-            LOG(log_error, logtype_afpd, "read: %s", strerror(errno));
+            LOG(log_error, logtype_afpd, "write: %s", strerror(errno));
             stored = -1;
             goto exit;
         } /* (len == -1) */
@@ -315,7 +266,7 @@ exit:
     }
 
     if (len == -1 && stored == 0)
-        /* last read or select got an error and we haven't got yet anything => return -1*/
+        /* a wait timed out before any byte moved */
     {
         return -1;
     }
@@ -733,10 +684,12 @@ bool asev_del_fd(struct asev *asev, int fd)
 #endif
 
 /*!
- * @brief Receive a fd on a suitable socket
+ * @brief Receive a descriptor on a PF_UNIX socket
+ *
  * @param[in] fd           PF_UNIX socket to receive on
- * @param[in] nonblocking  0: fd is in blocking mode - 1: fd is nonblocking, poll for 1 sec
- * @returns fd on success, -1 on error
+ * @param[in] nonblocking  0 for a blocking fd; 1 for a non-blocking one, on
+ *                         which the call waits up to 2 seconds for the message
+ * @returns the descriptor, or -1 on error
  */
 int recv_fd(int fd, int nonblocking)
 {
@@ -746,9 +699,6 @@ int recv_fd(int fd, int nonblocking)
     struct cmsghdr *cmsgp = NULL;
     char buf[CMSG_SPACE(sizeof(int))];
     char dbuf[80];
-    struct pollfd pollfds[1];
-    pollfds[0].fd = fd;
-    pollfds[0].events = POLLIN;
     memset(&msgh, 0, sizeof(msgh));
     memset(buf, 0, sizeof(buf));
     msgh.msg_name = NULL;
@@ -761,12 +711,7 @@ int recv_fd(int fd, int nonblocking)
     msgh.msg_controllen = sizeof(buf);
 
     if (nonblocking) {
-        do {
-            /* poll 2 seconds, evtl. multipe times (EINTR) */
-            ret = poll(pollfds, 1, 2000);
-        } while (ret == -1 && errno == EINTR);
-
-        if (ret != 1) {
+        if (socket_wait(fd, POLLIN, 2, log_debug) != 1) {
             return -1;
         }
 

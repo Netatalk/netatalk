@@ -914,8 +914,10 @@ void afp_over_dsi(AFPObj *obj)
     obj->reply = (int (*)(void *, int))dsi_cmdreply;
     obj->attention = (int (*)(void *, AFPUserBytes))dsi_attention;
     dsi->tickle = 0;
-    /* a reconnect's hand-over ends a request's wait on the old connection */
+    /* a reconnect's hand-over ends a wait on the old connection */
     dsi->stop_wait = &transfer_pending;
+    /* a termination cuts a reply's wait to a short grace for its client */
+    dsi->ending = &die_pending;
     afp_over_dsi_sighandlers(obj);
 
     if (dircache_init(obj->options.dircachesize) != 0) {
@@ -1249,6 +1251,8 @@ void afp_over_dsi(AFPObj *obj)
                 LOG(log_note, logtype_afpd, "AFP Replay Cache match: id: %u / cmd: %s",
                     dsi->clientID, AfpNum2name(function));
                 err = replaycache[rc_idx].result;
+                /* the cache holds no reply data */
+                dsi->datalen = 0;
                 /* AFP replay cache end */
             } else if (afp_write_command(function)
                        && afp_switch[function] != NULL) {
@@ -1282,9 +1286,18 @@ void afp_over_dsi(AFPObj *obj)
                     }
 
                     dsi->flags &= ~DSI_RUNNING;
-                    /* Add result to the AFP replay cache */
+                    /* Add result to the AFP replay cache. A streamed read
+                     * takes its slot with command 0, which no request
+                     * matches: its replay reads again, and no older entry of
+                     * the slot outlives it. */
                     replaycache[rc_idx].DSIreqID = dsi->clientID;
-                    replaycache[rc_idx].AFPcommand = function;
+
+                    if (dsi->flags & DSI_NOREPLY) {
+                        replaycache[rc_idx].AFPcommand = 0;
+                    } else {
+                        replaycache[rc_idx].AFPcommand = function;
+                    }
+
                     replaycache[rc_idx].result = err;
                 } else {
                     LOG(log_maxdebug, logtype_afpd, "bad function %X", function);
@@ -1297,8 +1310,9 @@ void afp_over_dsi(AFPObj *obj)
             if (dsi->flags & DSI_NOREPLY) {
                 dsi->flags &= ~DSI_NOREPLY;
 
-                /* a streamed reply that broke off: nothing may follow it */
-                if (dsi->in_write) {
+                /* a streamed reply that broke off: nothing may follow it on
+                 * its connection, which a disconnected session has closed */
+                if (dsi->in_write && !(dsi->flags & DSI_DISCONNECTED)) {
                     afp_dsi_die(EXITERR_CLNT);
                 }
 

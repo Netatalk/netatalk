@@ -12,6 +12,7 @@ test('CNID backend registry', cnid_registry_test)
 socket_helpers_test = executable(
     'socket_helpers_test',
     'test_socket_helpers.c',
+    'high_fd.c',
     include_directories: root_includes,
     dependencies: [bstring, iniparser],
     link_with: libatalk,
@@ -129,6 +130,7 @@ test(
 dsi_getsess_test = executable(
     'dsi_getsess_test',
     'test_dsi_getsess.c',
+    'high_fd.c',
     include_directories: root_includes,
     dependencies: [bstring, iniparser],
     link_with: libatalk,
@@ -136,8 +138,24 @@ dsi_getsess_test = executable(
 )
 
 test(
-    'libatalk dsi session start failures',
+    'libatalk dsi session start',
     dsi_getsess_test,
+    protocol: 'tap',
+)
+
+dsi_stream_test = executable(
+    'dsi_stream_test',
+    'test_dsi_stream.c',
+    'high_fd.c',
+    include_directories: root_includes,
+    dependencies: [bstring, iniparser],
+    link_with: libatalk,
+    install: false,
+)
+
+test(
+    'libatalk dsi reply waits',
+    dsi_stream_test,
     protocol: 'tap',
 )
 
@@ -247,3 +265,35 @@ test(
     env: adouble_convert_env,
     depends: adouble_convert_depends,
 )
+
+sys_ftruncate_test = executable(
+    'sys_ftruncate_test',
+    'test_sys_ftruncate.c',
+    include_directories: root_includes,
+    dependencies: [bstring, iniparser],
+    link_with: libatalk,
+    install: false,
+)
+
+test(
+    'libatalk ftruncate fallback',
+    sys_ftruncate_test,
+    protocol: 'tap',
+)
+
+if enable_appletalk
+    appletalk_waits_test = executable(
+        'appletalk_waits_test',
+        'test_appletalk_waits.c',
+        include_directories: root_includes,
+        dependencies: [bstring, iniparser],
+        link_with: libatalk,
+        install: false,
+    )
+
+    test(
+        'libatalk AppleTalk waits',
+        appletalk_waits_test,
+        protocol: 'tap',
+    )
+endif

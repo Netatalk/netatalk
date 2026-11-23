@@ -54,26 +54,7 @@
  */
 ssize_t adf_pread(struct ad_fd *adf, void *buf, size_t count, off_t offset)
 {
-    ssize_t     cc;
-#ifndef  HAVE_PREAD
-
-    if (adf->adf_off != offset) {
-        if (lseek(adf->adf_fd, offset, SEEK_SET) < 0) {
-            return -1;
-        }
-
-        adf->adf_off = offset;
-    }
-
-    if ((cc = read(adf->adf_fd, buf, count)) < 0) {
-        return -1;
-    }
-
-    adf->adf_off += cc;
-#else
-    cc = pread(adf->adf_fd, buf, count, offset);
-#endif
-    return cc;
+    return pread(adf->adf_fd, buf, count, offset);
 }
 
 /*!

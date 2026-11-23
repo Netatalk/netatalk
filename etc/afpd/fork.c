@@ -2044,7 +2044,8 @@ static int rfork_cache_serve_from_buf(DSI *dsi, struct dir *cached_entry,
  * opened from the cache checks the sidecar under the entry's path and takes
  * its own resource fork for a read the buffer cannot serve. Data goes out
  * through sendfile when available, otherwise in dsi_read chunks. A failure in
- * the middle of the reply ends the session.
+ * the middle of the reply ends a session that is still connected; one that the
+ * reply wait left disconnected waits for a reconnect.
  *
  * @param[in]     obj      session object
  * @param[in]     ibuf     request block
@@ -2384,12 +2385,17 @@ afp_read_exit:
         LOG(log_error, logtype_afpd, "afp_read(%s): %s", of_name(ofork),
             strerror(errno));
 
+        /* in_write stays raised: nothing may follow an unfinished reply on
+         * its connection. A disconnected session waits for a reconnect. */
+        if (dsi->flags & DSI_DISCONNECTED) {
+            break;
+        }
+
         if (obj->options.flags & OPTION_STRICT_LOCKING) {
             ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, savereqcount,
                        ofork->of_refnum);
         }
 
-        /* in_write stays raised: nothing may follow an unfinished reply */
         obj->exit(EXITERR_CLNT);
         break;
     } /* switch */

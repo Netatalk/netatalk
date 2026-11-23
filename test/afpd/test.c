@@ -361,9 +361,168 @@ static int utest_dsi_write_refused_pwdexpired_drained(void)
     return ret;
 }
 
+/* the bytes of the file dsp_replay, the most a dsp_reply compares */
+#define DSP_REPLAY_LEN 16
+static const char dsp_replay_data[DSP_REPLAY_LEN] = "0123456789abcde";
+
+/*!
+ * @brief Build in frame an FPReadExt, request ID id, of count bytes from the
+ *        start of the fork refnum
+ *
+ * @returns the frame's length
+ */
+static size_t dsp_read_frame(uint8_t *frame, uint16_t id, uint16_t refnum,
+                             uint64_t count)
+{
+    const uint64_t n = hton64(count);
+    const size_t len = dsi_test_frame(frame, DSIFUNC_CMD, id, 0, 20,
+                                      AFP_READ_EXT);
+    /* refnum travels raw, as afp_openfork() returns it; the offset stays 0 */
+    memcpy(frame + DSI_BLOCKSIZ + 2, &refnum, sizeof(refnum));
+    memcpy(frame + DSI_BLOCKSIZ + 12, &n, sizeof(n));
+    return len;
+}
+
+/*!
+ * @brief Create the file dsp_replay with the bytes of dsp_replay_data and
+ *        open its data fork for reading
+ *
+ * @returns 0 with the fork in refnum, or -1
+ */
+static int dsp_replay_fork(const struct vol *vol, uint16_t *refnum)
+{
+    char path[MAXPATHLEN + 1];
+    snprintf(path, sizeof(path), "%s/dsp_replay", vol->v_path);
+    return createfile(&obj, vol->v_vid, DIRDID_ROOT, "dsp_replay") == AFP_OK
+           && write_disk_file(path, dsp_replay_data, DSP_REPLAY_LEN) == 0
+           && openfork(&obj, vol->v_vid, DIRDID_ROOT, "dsp_replay",
+                       OPENFORK_DATA, OPENACC_RD, refnum) == AFP_OK ? 0 : -1;
+}
+
+/*!
+ * @brief The replay of an FPReadExt, its request ID and command again, reads
+ *        again, as the replay cache holds no read data
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback
+ */
+static int utest_dsi_replayed_read_reads_again(struct vol *vol)
+{
+    static const struct dsp_reply want[] = {
+        { DSIFUNC_CMD, 1, AFP_OK, dsp_replay_data, DSP_REPLAY_LEN },
+        { DSIFUNC_CMD, 1, AFP_OK, dsp_replay_data, DSP_REPLAY_LEN },
+    };
+    uint8_t frames[2 * (DSI_BLOCKSIZ + 20)];
+    uint16_t refnum;
+    size_t len;
+    int ret = -1;
+
+    if (dsp_replay_fork(vol, &refnum) == 0) {
+        len = dsp_read_frame(frames, 1, refnum, DSP_REPLAY_LEN);
+        len += dsp_read_frame(frames + len, 1, refnum, DSP_REPLAY_LEN);
+        ret = dsp_serve(frames, len, want, 2);
+        closefork(&obj, refnum);
+    }
+
+    delete (&obj, vol->v_vid, DIRDID_ROOT, "dsp_replay");
+    return ret;
+}
+
+/*!
+ * @brief The replay of a refused FPCloseVol after an FPReadExt gets the
+ *        refusal alone, with no bytes of the read's reply
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback
+ */
+static int utest_dsi_replayed_refusal_carries_no_data(struct vol *vol)
+{
+    static const struct dsp_reply want[] = {
+        { DSIFUNC_CMD, 1, AFPERR_PARAM, NULL, 0 },
+        { DSIFUNC_CMD, 2, AFP_OK, dsp_replay_data, DSP_REPLAY_LEN },
+        { DSIFUNC_CMD, 1, AFPERR_PARAM, NULL, 0 },
+    };
+    uint8_t frames[DSI_BLOCKSIZ + 20 + 2 * (DSI_BLOCKSIZ + 4)];
+    uint16_t refnum;
+    size_t len;
+    int ret = -1;
+
+    if (dsp_replay_fork(vol, &refnum) == 0) {
+        /* no volume has the ID 0 */
+        len = dsi_test_frame(frames, DSIFUNC_CMD, 1, 0, 4, AFP_CLOSEVOL);
+        len += dsp_read_frame(frames + len, 2, refnum, DSP_REPLAY_LEN);
+        len += dsi_test_frame(frames + len, DSIFUNC_CMD, 1, 0, 4,
+                              AFP_CLOSEVOL);
+        ret = dsp_serve(frames, len, want, 3);
+        closefork(&obj, refnum);
+    }
+
+    delete (&obj, vol->v_vid, DIRDID_ROOT, "dsp_replay");
+    return ret;
+}
+
+/*!
+ * @brief A streamed FPReadExt takes its replay cache slot: the refusal an
+ *        earlier FPReadExt left there, under request ID 1, does not answer a
+ *        later FPReadExt that reuses the ID after one with ID 129 streamed
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback
+ */
+static int utest_dsi_streamed_read_takes_replay_slot(struct vol *vol)
+{
+    static const struct dsp_reply want[] = {
+        { DSIFUNC_CMD, 1, AFPERR_PARAM, NULL, 0 },
+        { DSIFUNC_CMD, 129, AFP_OK, dsp_replay_data, DSP_REPLAY_LEN },
+        { DSIFUNC_CMD, 1, AFP_OK, dsp_replay_data, DSP_REPLAY_LEN },
+    };
+    uint8_t frames[3 * (DSI_BLOCKSIZ + 20)];
+    uint16_t refnum;
+    size_t len;
+    int ret = -1;
+
+    if (dsp_replay_fork(vol, &refnum) == 0) {
+        /* no fork has the reference number 0; ID 129 shares slot 1 */
+        len = dsp_read_frame(frames, 1, 0, DSP_REPLAY_LEN);
+        len += dsp_read_frame(frames + len, 129, refnum, DSP_REPLAY_LEN);
+        len += dsp_read_frame(frames + len, 1, refnum, DSP_REPLAY_LEN);
+        ret = dsp_serve(frames, len, want, 3);
+        closefork(&obj, refnum);
+    }
+
+    delete (&obj, vol->v_vid, DIRDID_ROOT, "dsp_replay");
+    return ret;
+}
+
 /* an FPWrite's payload, and the part of its frame sent before a pause */
 #define DSP_PAYLOAD (64 * 1024)
 #define DSP_HEAD (DSI_BLOCKSIZ + DSI_WROFF_FPWRITE + 4096)
+
+/*!
+ * @brief dsi_test_serve_as() for a session of uid with ipc_fd that times a
+ *        silent client out after one tickle of seconds, recvfile on as asked;
+ *        the harness's fork refnum, of which the session holds its own copy,
+ *        is closed
+ *
+ * @returns the session's pid, or -1 with errno set
+ */
+static pid_t dsp_fork_session(uid_t uid, int ipc_fd, int seconds,
+                              bool recvfile, uint16_t refnum, int *peer)
+{
+    struct afp_options options = obj.options;
+    pid_t pid;
+    int err;
+    obj.options.timeout = 1;
+    obj.options.tickleval = seconds;
+
+    if (recvfile) {
+        obj.options.flags |= OPTION_RECVFILE;
+    }
+
+    pid = dsi_test_serve_as(&obj, uid, ipc_fd, 0, peer);
+    err = errno;
+    obj.options = options;
+    closefork(&obj, refnum);
+    errno = err;
+    return pid;
+}
 
 /*!
  * @brief A session process of uid with ipc_fd as dsi_test_serve_as() starts
@@ -377,11 +536,8 @@ static pid_t dsp_write_session(struct vol *vol, uid_t uid, int ipc_fd,
                                int seconds, bool recvfile, uint8_t *frame,
                                int *peer)
 {
-    struct afp_options options = obj.options;
     uint32_t count = htonl(DSP_PAYLOAD);
     uint16_t refnum;
-    pid_t pid;
-    int err;
 
     if (createfile(&obj, vol->v_vid, DIRDID_ROOT, "dsp_write") != AFP_OK
             || openfork(&obj, vol->v_vid, DIRDID_ROOT, "dsp_write",
@@ -396,20 +552,7 @@ static pid_t dsp_write_session(struct vol *vol, uid_t uid, int ipc_fd,
     /* refnum travels raw, as afp_openfork() returns it */
     memcpy(frame + DSI_BLOCKSIZ + 2, &refnum, sizeof(refnum));
     memcpy(frame + DSI_BLOCKSIZ + 8, &count, sizeof(count));
-    obj.options.timeout = 1;
-    obj.options.tickleval = seconds;
-
-    if (recvfile) {
-        obj.options.flags |= OPTION_RECVFILE;
-    }
-
-    pid = dsi_test_serve_as(&obj, uid, ipc_fd, 0, peer);
-    err = errno;
-    obj.options = options;
-    /* the session holds its own copy of the fork */
-    closefork(&obj, refnum);
-    errno = err;
-    return pid;
+    return dsp_fork_session(uid, ipc_fd, seconds, recvfile, refnum, peer);
 }
 
 /*!
@@ -513,8 +656,9 @@ static int utest_recvfile_stalled_write_disconnects(struct vol *vol)
  *        arriving lets the write finish and be answered, and the session then
  *        ends as a termination ends it
  *
- * The rest of the payload follows the signal after a pause, so the session
- * waits for it with the termination recorded.
+ * The rest of the payload follows the signal after a pause of 1.5 s, longer
+ * than the second a termination leaves a reply, so the session waits for it
+ * with the termination recorded.
  *
  * @returns 0, -1, or TEST_SKIP without loopback
  */
@@ -522,7 +666,7 @@ static int utest_dsi_term_lets_write_finish(struct vol *vol)
 {
     static uint8_t frame[DSI_BLOCKSIZ + DSI_WROFF_FPWRITE + DSP_PAYLOAD];
     const size_t rest = sizeof(frame) - DSP_HEAD;
-    struct timespec pause = { .tv_nsec = 200 * 1000 * 1000 };
+    struct timespec pause = { .tv_sec = 1, .tv_nsec = 500 * 1000 * 1000 };
     uint32_t written = htonl(DSP_PAYLOAD);
     const struct dsp_reply want = {
         DSIFUNC_WRITE, 1, AFP_OK, &written, sizeof(written)
@@ -1517,6 +1661,186 @@ static int utest_dsi_handoff_keeps_timer(const struct vol *vol)
 static bool dsp_reports(int ipc, uint16_t state)
 {
     return dsp_ipc_sent(ipc, IPC_STATE, &state, sizeof(state));
+}
+
+/* the length of the file dsp_read: far more than loopback buffers hold for a
+ * client that reads nothing */
+#define DSP_READ_LEN (8 * 1024 * 1024)
+
+/*!
+ * @brief A session process of uid with ipc_fd as dsi_test_serve_as() starts
+ *        it, that times a silent client out after one tickle of seconds, with
+ *        in frame an FPReadExt of the whole DSP_READ_LEN bytes of the new file
+ *        dsp_read, and in replay the same request for DSP_REPLAY_LEN bytes
+ *
+ * @returns the session's pid, or -1 with errno set
+ */
+static pid_t dsp_read_session(struct vol *vol, uid_t uid, int ipc_fd,
+                              int seconds, uint8_t *frame, uint8_t *replay,
+                              int *peer)
+{
+    char path[MAXPATHLEN + 1];
+    uint16_t refnum;
+    snprintf(path, sizeof(path), "%s/dsp_read", vol->v_path);
+
+    if (createfile(&obj, vol->v_vid, DIRDID_ROOT, "dsp_read") != AFP_OK
+            || truncate(path, DSP_READ_LEN) != 0
+            || openfork(&obj, vol->v_vid, DIRDID_ROOT, "dsp_read",
+                        OPENFORK_DATA, OPENACC_RD, &refnum) != AFP_OK) {
+        errno = EIO;
+        return -1;
+    }
+
+    dsp_read_frame(frame, 1, refnum, DSP_READ_LEN);
+    dsp_read_frame(replay, 1, refnum, DSP_REPLAY_LEN);
+    return dsp_fork_session(uid, ipc_fd, seconds, false, refnum, peer);
+}
+
+/*!
+ * @brief A logged-in session whose client stopped taking an FPReadExt reply
+ *        part way takes over the connection a reconnect hands it and reads
+ *        again for the client's replay of the read: at once during the stall,
+ *        or in the disconnected state once the stall timed out when timed_out
+ *
+ * The session times a silent client out after a second when timed_out, a
+ * minute otherwise; the old connection ends without the rest of the reply.
+ * The replay keeps the read's request ID, which the replay cache must not
+ * answer, as the client never got the reply.
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback
+ */
+static int dsp_read_reconnect(struct vol *vol, bool timed_out)
+{
+    static const uint8_t zeros[DSP_REPLAY_LEN];
+    static const struct dsp_reply replayed = {
+        DSIFUNC_CMD, 1, AFP_OK, zeros, sizeof(zeros)
+    };
+    struct timespec settle = { .tv_nsec = 200 * 1000 * 1000 };
+    uint8_t frame[DSI_BLOCKSIZ + 20];
+    uint8_t replay[DSI_BLOCKSIZ + 20];
+    uint8_t head[DSI_BLOCKSIZ];
+    int newpeer = -1;
+    int peer = -1;
+    int ipc[2];
+    int ret = -1;
+    pid_t pid;
+
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, ipc) != 0) {
+        return -1;
+    }
+
+    if ((pid = dsp_read_session(vol, DSP_USER, ipc[1], timed_out ? 1 : 60,
+                                frame, replay, &peer)) == -1) {
+        ret = dsi_test_no_loopback(errno) ? TEST_SKIP : -1;
+    } else if (write(peer, frame, sizeof(frame)) == (ssize_t)sizeof(frame)
+               /* the reply has begun, and the client takes no more of it */
+               && readt(peer, head, sizeof(head), 1, 10)
+               == (ssize_t)sizeof(head)
+               /* a stall that timed out has closed the old connection */
+               && (timed_out
+                   ? dsp_reports(ipc[0], DSI_DISCONNECTED) && dsp_drains(peer)
+                   : nanosleep(&settle, NULL) == 0)
+               && dsp_hand_over(pid, ipc[0], &newpeer)
+               && write(newpeer, replay, sizeof(replay))
+               == (ssize_t)sizeof(replay)
+               && dsp_reply_is(newpeer, &replayed)
+               && (timed_out || dsp_drains(peer))) {
+        ret = 0;
+    }
+
+    if (pid != -1) {
+        kill(pid, SIGTERM);
+
+        if (dsi_test_reap(pid, peer) != 0) {
+            ret = -1;
+        }
+    }
+
+    if (newpeer != -1) {
+        close(newpeer);
+    }
+
+    close(ipc[0]);
+    close(ipc[1]);
+    delete (&obj, vol->v_vid, DIRDID_ROOT, "dsp_read");
+    return ret;
+}
+
+/*! @brief A reconnect takes over a session stalled in a file read */
+static int utest_dsi_reconnect_takes_over_stalled_read(struct vol *vol)
+{
+    return dsp_read_reconnect(vol, false);
+}
+
+/*! @brief A reconnect takes over a session whose stalled file read timed out */
+static int utest_dsi_reconnect_after_read_timeout(struct vol *vol)
+{
+    return dsp_read_reconnect(vol, true);
+}
+
+/*!
+ * @brief Send a SIGTERM to a session with a timeout of a minute 200 ms into
+ *        an FPReadExt reply of the 8 MiB file dsp_read, whose client reads up
+ *        to 64 KiB every 10 ms, or with reading false only the header
+ *
+ * @returns 0 when the session exits within the thirty seconds
+ *          dsi_test_reap() gives it, half its timeout, with the whole reply
+ *          at a client that reads; -1, or TEST_SKIP without loopback
+ */
+static int dsp_read_ending(struct vol *vol, bool reading)
+{
+    struct timespec settle = { .tv_nsec = 200 * 1000 * 1000 };
+    struct timespec tick = { .tv_nsec = 10 * 1000 * 1000 };
+    static char buf[65536];
+    uint8_t frame[DSI_BLOCKSIZ + 20];
+    uint8_t replay[DSI_BLOCKSIZ + 20];
+    int peer = -1;
+    int ipc[2];
+    int ret = -1;
+    pid_t pid;
+
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, ipc) != 0) {
+        return -1;
+    }
+
+    if ((pid = dsp_read_session(vol, DSP_USER, ipc[1], 60, frame, replay,
+                                &peer)) == -1) {
+        ret = dsi_test_no_loopback(errno) ? TEST_SKIP : -1;
+    } else if (write(peer, frame, sizeof(frame)) == (ssize_t)sizeof(frame)
+               && readt(peer, buf, DSI_BLOCKSIZ, 1, 10) == DSI_BLOCKSIZ
+               && nanosleep(&settle, NULL) == 0 && kill(pid, SIGTERM) == 0) {
+        size_t got = DSI_BLOCKSIZ;
+        ssize_t n;
+
+        while (reading && (n = read(peer, buf, sizeof(buf))) > 0) {
+            got += (size_t)n;
+            nanosleep(&tick, NULL);
+        }
+
+        /* the client end stays open, so only the termination ends the wait */
+        ret = dsi_test_reap(pid, -1) == 0
+              && (!reading || got >= DSI_BLOCKSIZ + DSP_READ_LEN) ? 0 : -1;
+        close(peer);
+    } else {
+        dsi_test_reap(pid, peer);
+    }
+
+    close(ipc[0]);
+    close(ipc[1]);
+    delete (&obj, vol->v_vid, DIRDID_ROOT, "dsp_read");
+    return ret;
+}
+
+/*! @brief A termination ends a session whose client stopped taking a read */
+static int utest_dsi_term_ends_stalled_read(struct vol *vol)
+{
+    return dsp_read_ending(vol, false);
+}
+
+/*! @brief A termination lets a read whose client takes it finish */
+static int utest_dsi_term_finishes_read(struct vol *vol)
+{
+    return dsp_read_ending(vol, true);
 }
 
 /*!
@@ -5051,6 +5375,12 @@ int main(int argc, char *argv[])
                      "DSI: a spurious command leaves the next request whole");
     TEST_int_or_skip(utest_dsi_write_refused_pwdexpired_drained(), 0,
                      "DSI: an expired password's refusal drains a DSIWrite");
+    TEST_int_or_skip(utest_dsi_replayed_read_reads_again(vol), 0,
+                     "DSI: a replayed read reads again");
+    TEST_int_or_skip(utest_dsi_replayed_refusal_carries_no_data(vol), 0,
+                     "DSI: a replayed refusal carries no read data");
+    TEST_int_or_skip(utest_dsi_streamed_read_takes_replay_slot(vol), 0,
+                     "DSI: a streamed read leaves no older entry in its slot");
     TEST_int_or_skip(utest_dsi_stalled_write_disconnects(vol), 0,
                      "DSI: a write whose client falls silent times out");
     TEST_int_or_skip(utest_recvfile_stalled_write_disconnects(vol), 0,
@@ -5097,6 +5427,14 @@ int main(int argc, char *argv[])
                      "DSI: a reconnect drops a tick its stalled write left");
     TEST_int_or_skip(utest_dsi_reconnect_after_write_timeout(vol), 0,
                      "DSI: a reconnect takes over a session whose write timed out");
+    TEST_int_or_skip(utest_dsi_reconnect_takes_over_stalled_read(vol), 0,
+                     "DSI: a reconnect takes over a session stalled in a read");
+    TEST_int_or_skip(utest_dsi_reconnect_after_read_timeout(vol), 0,
+                     "DSI: a reconnect takes over a read that timed out");
+    TEST_int_or_skip(utest_dsi_term_ends_stalled_read(vol), 0,
+                     "DSI: a termination ends a session stalled in a read");
+    TEST_int_or_skip(utest_dsi_term_finishes_read(vol), 0,
+                     "DSI: a termination lets a read the client takes finish");
     TEST_int_or_skip(utest_dsi_reconnect_counts_ticks_afresh(), 0,
                      "DSI: a reconnect counts the new connection's silence afresh");
     TEST_int_or_skip(utest_dsi_term_served_after_stalled_header(), 0,

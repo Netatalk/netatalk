@@ -5,7 +5,7 @@
 
 /*!
  * @file
- * IPC over socketpair between parent and children.
+ * @brief IPC over socketpair between parent and children
  */
 
 #ifdef HAVE_CONFIG_H
@@ -1119,7 +1119,7 @@ int ipc_send_cache_hint(const AFPObj *obj, uint16_t vid, cnid_t cnid,
         .cnid = cnid,
     };
     /* Build the IPC wire message inline — same format as ipc_child_write()
-     * but we avoid writet() which retries on EAGAIN with select() timeout */
+     * but we avoid writet() which retries on EAGAIN with poll() timeout */
     char block[IPC_MAXMSGSIZE];
     char *p = block;
     uint16_t command = IPC_CACHE_HINT;
