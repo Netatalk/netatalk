@@ -1116,8 +1116,8 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
  * @brief Convert a name on disk into the AFP name a client sees
  *
  * The name converts from the volume charset to UTF8-MAC or the Mac charset. A
- * name too long for the client, or with characters it cannot map, goes
- * through mangle, which needs the CNID. A failed conversion mangles "???"
+ * name too long for the client, or with characters that cannot round-trip,
+ * goes through mangle, which needs the CNID. A failed conversion mangles "???"
  * instead. A reply packs both names of one object, so each encoding has a
  * static buffer of its own.
  *
@@ -1137,7 +1137,7 @@ char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
     size_t       outlen;
     m = mpath[utf8 != 0];
     outlen = strlen(upath);
-    flags = vol->v_utom_flags;
+    flags = vol->v_utom_flags | CONV_MANGLE_LOSSY;
     u = upath;
 
     /* convert charsets */

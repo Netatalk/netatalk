@@ -6277,6 +6277,8 @@ int main(int argc, char *argv[])
              "enumerate: an AFP 2.1 listing holds the Mac charset forms");
     TEST_int(utest_enumerate_decomposed_name_is_mangled(&obj, vol, vid), 0,
              "enumerate: a decomposed unix name lists mangled, and opens");
+    TEST_int(utest_mac_roman_currency_names(&obj, vol, vid), 0,
+             "enumerate: Mac Roman currency and euro names resolve distinctly");
     TEST_int(utest_demangle_unknown_id_resolves_once(&obj, vol, vid), 0,
              "demangle: an unresolvable mangled-looking name costs one lookup");
     TEST_int(utest_demangle_cached_file_checks_its_entry(&obj, vol, vid), 0,

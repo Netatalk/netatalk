@@ -430,6 +430,9 @@ static int cname_mtouname(const struct vol *vol, struct dir *dir,
     cnid_t did = dir->d_did;
 
     if (vol->v_obj->afp_version >= 30) {
+        char *utf8name = ret->m_name;
+        const char *macname = NULL;
+
         if (toUTF8) {
             if (dir->d_did == DIRDID_ROOT_PARENT) {
                 /*
@@ -450,19 +453,25 @@ static int cname_mtouname(const struct vol *vol, struct dir *dir,
                     return -1;
                 }
 
-                strlcpy(ret->m_name, temp, MAXPATHLEN + 1);
+                utf8name = temp;
+                macname = ret->m_name;
             }
         }
 
         /* check for OS X mangled filename :( */
-        t = demangle_osx(vol, ret->m_name, dir->d_did, &fileid);
+        t = demangle_osx(vol, utf8name, dir->d_did, macname, &fileid);
+
+        if (macname != NULL) {
+            strlcpy(ret->m_name, utf8name, MAXPATHLEN + 1);
+        }
+
         /* demangle_osx() includes demangle()'s exact check */
         did = CNID_INVALID;
         LOG(log_maxdebug, logtype_afpd,
             "cname_mtouname('%s',did:%u) {demangled:'%s', fileid:%u}",
             ret->m_name, ntohl(dir->d_did), t, ntohl(fileid));
 
-        if (t != ret->m_name) {
+        if (t != utf8name) {
             ret->u_name = t;
 
             /* a client may send a variant demangle_checks() accepts */

@@ -53,6 +53,7 @@ typedef struct {
 #define CONV_DECOMPOSE      (1<<7) /*!< decompose */
 #define CONV_FORCE          (1<<8) /*!< force convertion */
 #define CONV__EILSEQ        (1<<9) /*!< ignore EILSEQ, replace with IGNORE_CHAR (try USC2) */
+#define CONV_MANGLE_LOSSY   (1<<10) /*!< request mangling for lossy charset aliases */
 
 /* conversion return flags */
 #define CONV_REQMANGLE  (1<<14) /*!< mangling of returned name is required */
