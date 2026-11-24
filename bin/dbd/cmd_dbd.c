@@ -1,16 +1,17 @@
 /*
-   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
-
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
-   (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-*/
+ * Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
+ * Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
 
 /*!
  * @file
@@ -110,7 +111,7 @@ static void set_signal(void)
  */
 static void usage(void)
 {
-    printf("Usage: dbd [-cfFistuvV] <path to netatalk volume>\n\n"
+    printf("Usage: dbd [-cefFistuvV] <path to netatalk volume>\n\n"
            "dbd scans all file and directories of AFP volumes, updating the\n"
            "CNID database of the volume. dbd must be run with appropriate\n"
            "permissions i.e. as root.\n\n"
@@ -118,6 +119,7 @@ static void usage(void)
            "   -s scan volume: treat the volume as read only and don't\n"
            "      perform any filesystem modifications\n"
            "   -c convert from adouble:v2 to adouble:ea\n"
+           "   -e migrate legacy currency signs to euro signs in filenames\n"
            "   -F location of the afp.conf config file\n"
            "   -f delete and recreate CNID database\n"
            "   -i invalidate CNID hints in AppleDouble files\n"
@@ -181,10 +183,14 @@ int main(int argc, char **argv)
     const char *username = NULL;
     int c;
 
-    while ((c = getopt(argc, argv, ":cfF:istu:vV")) != -1) {
+    while ((c = getopt(argc, argv, ":cefF:istu:vV")) != -1) {
         switch (c) {
         case 'c':
             flags |= DBD_FLAGS_V2TOEA;
+            break;
+
+        case 'e':
+            flags |= DBD_FLAGS_EURO;
             break;
 
         case 'f':

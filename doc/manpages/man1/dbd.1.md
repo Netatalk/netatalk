@@ -4,7 +4,7 @@ dbd — CNID database maintenance utility
 
 # Synopsis
 
-**dbd** [-cfistv] [-F *configfile*] [-u *username*] *volumepath*
+**dbd** [-cefistv] [-F *configfile*] [-u *username*] *volumepath*
 
 **dbd** [-V]
 
@@ -33,6 +33,14 @@ have is refused with a message naming the scheme; correct *afp.conf* first.
 **-c**
 
 > convert from *AppleDouble v2* to *Extended Attributes* filesystem metadata
+
+**-e**
+
+> Replace currency signs (¤) with euro signs (€) in filenames and directory
+names, preserving their existing CNIDs. Use this on volumes shared with Mac OS
+8.5 or Mac OS 9 when upgrading from Netatalk 4.6 and earlier to Netatalk 4.7
+and later. Note that this also changes intentional currency signs. Use
+**-s -e** to report the proposed renames without actually performing them.
 
 **-f**
 
