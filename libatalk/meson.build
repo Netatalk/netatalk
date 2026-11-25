@@ -1,3 +1,6 @@
+# bump the library soversion when introducing ABI breaking changes
+libatalk_soversion = 23
+
 subdir('acl')
 subdir('adouble')
 subdir('cnid')
@@ -59,8 +62,8 @@ libatalk = library(
     include_directories: root_includes,
     dependencies: [libatalk_deps, libcnid_deps],
     link_whole: libatalk_libs,
-    version: '23.0.0',
-    soversion: '23',
+    version: '@0@.@1@.@2@'.format(libatalk_soversion, 0, 0),
+    soversion: libatalk_soversion,
     install: true,
     build_rpath: rpath_libdir,
     install_rpath: rpath_libdir,
