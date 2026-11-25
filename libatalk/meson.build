@@ -66,6 +66,10 @@ libatalk = library(
     install_rpath: rpath_libdir,
 )
 
+abi_tool = find_program('abi/libatalk_abi.sh')
+run_target('check-abi', command: [abi_tool, 'check'])
+run_target('abi-fingerprint', command: [abi_tool, 'fingerprint'])
+
 if host_os == 'linux' and install_hooks
     ldconfig = find_program('ldconfig', required: false)
     if ldconfig.found()

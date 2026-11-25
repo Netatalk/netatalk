@@ -1,0 +1,41 @@
+name: ABI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  libatalk:
+    name: libatalk ABI (Linux x86-64)
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Resolve the latest published release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)
+          base=$(git rev-parse --verify "refs/tags/$tag^{commit}")
+          printf 'Using libatalk ABI baseline from %s (%s)\n' "$tag" "$base"
+          printf 'base=%s\n' "$base" >> "$GITHUB_OUTPUT"
+      - name: Check libatalk ABI
+        env:
+          ABI_BASE: ${{ steps.release.outputs.base }}
+        run: ./libatalk/abi/libatalk_abi.sh check "$ABI_BASE" "$RUNNER_TEMP/libatalk-abi"
+      - name: Upload ABI results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: libatalk-abi
+          path: ${{ runner.temp }}/libatalk-abi/
+          if-no-files-found: ignore

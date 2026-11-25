@@ -41,7 +41,94 @@ where shared headers expose related structures. They are not standalone
 libatalk services. Similarly, the built-in VFS and CNID operation tables
 should not be treated as a dynamically loaded plugin interface like UAMs.
 
-## Example: Copying File Metadata and Resource Forks
+## ABI compatibility checks
+
+ABI compatibility must be maintained for the shared library, as indicated
+by the SONAME in the ELF header. The ABI check compares the public API and
+ABI of the shared library against the latest published Netatalk release.
+
+The ABI check uses Docker and the pinned Linux x86-64 toolchain in
+`libatalk/abi/`. It builds the shared library with ACLs, AppleTalk, the MySQL
+CNID backend, LDAP, and CNID-backed Spotlight enabled. The ledger records the
+toolchain profile, ELF SONAME, and SHA-256 digest of the normalized ABIXML.
+
+Commit the source changes you want to check. From the repository root, compare
+`HEAD` with the latest published release, as CI does. Set `ABI_BASE` to the
+release tag reported by CI, or resolve it with the GitHub CLI.
+
+```sh
+ABI_BASE=$(gh api repos/Netatalk/netatalk/releases/latest --jq .tag_name)
+./libatalk/abi/libatalk_abi.sh check "refs/tags/$ABI_BASE"
+```
+
+From a configured Meson build, run the same check with the `check-abi` target.
+
+```sh
+LIBATALK_ABI_BASE="refs/tags/$ABI_BASE" meson compile -C build check-abi
+```
+
+A matching release digest passes after one library build. On a mismatch, the
+check rebuilds the recorded baseline and writes an `abidiff` report to `abi.diff`.
+For a release that predates the ledger, the check builds the tagged source to
+derive the baseline. Export additions can retain the published SONAME. Breaking
+changes to published interfaces require an increase to the library version
+in `libatalk/meson.build`. The new SONAME can continue to evolve until it is
+published. Review the report before accepting an ABI change.
+
+The check writes `candidate.tsv` to `build/abi/` by default. Pass a third
+argument to the script to choose another output directory. The Meson targets
+use the `abi/` directory under the configured build directory. To regenerate
+the digest for `HEAD` directly, either run the script or use the Meson target.
+
+```sh
+./libatalk/abi/libatalk_abi.sh fingerprint HEAD
+meson compile -C build abi-fingerprint
+```
+
+Copy the generated `candidate.tsv` to `libatalk/abi/libatalk-linux-x86_64.tsv`,
+commit the ledger update, and rerun the check against the release tag. This
+updates the rolling digest for `HEAD`. The published release remains the
+compatibility baseline until a newer release is published. The ledger update
+must describe the source in that commit so later checks can rebuild the
+published baseline. For a toolchain or normalization change,
+increment `ABI_PROFILE` in the Dockerfile before regenerating the digest. The
+check rebuilds both revisions with the new profile for the ABI comparison.
+
+### Shared library version history
+
+Below is a record of the library soversion to Netatalk release version mapping.
+This table is updated when the ABI changes, and the soversion is incremented in
+`libatalk/meson.build`.
+
+The soversion is the SONAME of the shared library, which is the major version of
+the library's API. The dynamic linker uses the soversion to determine whether a
+program built against an older version of the library can run with a newer
+version of the library.
+
+| Netatalk release | soversion |
+| --- | --- |
+| 3.0.0-beta1 | `0` |
+| 3.0.0-beta2 | `1` |
+| 3.0.1 | `2` |
+| 3.0.2 | `3` |
+| 3.0.3 | `4` |
+| 3.0.4 | `5` |
+| 3.0.5 | `6` |
+| 3.0.6 | `7` |
+| 3.1.0 | `12` |
+| 3.1.1 | `13` |
+| 3.1.2 | `14` |
+| 3.1.3 | `15` |
+| 3.1.4 | `16` |
+| 3.1.8 | `17` |
+| 3.1.10 | `18` |
+| 4.0.0 | `19` |
+| 4.5.0 | `20` |
+| 4.5.2 | `21` |
+| 4.6.0 | `22` |
+| 4.7.0 | `23` |
+
+## Library implementation example
 
 This example links a small program with the libatalk shared library.
 Assuming Netatalk has been installed to /usr/local/netatalk, compiling backup_demo.c is done like this:
