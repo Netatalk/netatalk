@@ -73,6 +73,7 @@ an operation. Use the chapters below for the state those operations own.
 
 | Topic | Developer guide |
 | --- | --- |
+| C11 conventions, source documentation, and static analysis | [C Coding Standards](c-coding-standards.md) |
 | Service supervision, event libraries, and discovery | [Netatalk Controller Daemon](netatalk.md) |
 | Listener loop, worker state, and open-fork tracking | [AFP Daemon](afpd.md) |
 | Persistent IDs and backend errors | [Persistent File Identity](cnid.md) |

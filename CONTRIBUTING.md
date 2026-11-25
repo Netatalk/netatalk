@@ -162,6 +162,10 @@ For other languages, use the appropriate code comment syntax.
 
 ## C Coding Standards
 
+The developer guide covers Netatalk's C conventions in more detail and maps
+them to the active SonarQube rules.
+See [C Coding Standards](https://netatalk.io/developer/md_developer_2c-coding-standards).
+
 The baseline C language standard revision for the netatalk codebase is C11.
 
 Note that since the netatalk code was originally written in the early 90s,
@@ -246,10 +250,9 @@ This project has adopted a C coding style guide applied across the entire codeba
 The intended outcome is to make the code more readable and maintainable, while enabling seamless collaboration.
 With automated enforcement of the style guide, the manual overhead of fiddling with layout is eliminated.
 
-The style guide is automatically enforced with [astyle](https://gitlab.com/saalen/astyle) v3.6.19 or later.
-and an `.astylerc` options file.
-Before submitting new code, run `astyle --project --recursive '*.h' '*.c' '*.cc'` in the root of the netatalk source tree.
-You can also run `./contrib/scripts/codefmt.sh -s c` from the netatalk repository root to the same effect.
+Use [AStyle](https://gitlab.com/saalen/astyle) v3.6.19 or later
+with the repository's `.astylerc`.
+Before submitting new code, run `./contrib/scripts/codefmt.sh -s c` from the repository root.
 
 #### General rules
 
