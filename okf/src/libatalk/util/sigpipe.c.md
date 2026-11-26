@@ -5,7 +5,7 @@ description: "Self-pipe that wakes a poll loop from signal handlers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/sigpipe.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-09T10:23:20+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T23:02:49+01:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -49,7 +49,7 @@ Return the read end of the self-pipe for the poll set.
 
 Returns: the descriptor, or -1 before atalk_sigpipe_init
 
-Called by: [afp_over_asp](../../etc/afpd/afp_asp.c.md#afp_over_asp), [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [dsi_wait_input](../dsi/dsi_stream.c.md#dsi_wait_input)
+Called by: [afp_over_asp](../../etc/afpd/afp_asp.c.md#afp_over_asp), [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [dsi_wait](../dsi/dsi_stream.c.md#dsi_wait)
 
 Uses file-scope variables: `sigpipe_fd`
 
@@ -83,7 +83,7 @@ EOF must be detected by read(): socket-backed pipes can report only POLLIN when 
 
 Returns: 0 when drained (EAGAIN/EWOULDBLOCK), or -1 with errno set on a read error or EOF (EPIPE). Interrupted reads are retried.
 
-Called by: [afp_over_asp](../../etc/afpd/afp_asp.c.md#afp_over_asp), [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [dsi_wait_input](../dsi/dsi_stream.c.md#dsi_wait_input)
+Called by: [afp_over_asp](../../etc/afpd/afp_asp.c.md#afp_over_asp), [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [dsi_wait](../dsi/dsi_stream.c.md#dsi_wait)
 
 Uses file-scope variables: `sigpipe_fd`
 

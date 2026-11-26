@@ -5,7 +5,7 @@ description: "AppleDouble metadata, fork I/O and locking types and interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/adouble.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T23:02:49+01:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -170,14 +170,6 @@ int fsetrsrcea(struct adouble *ad, int fd, const char *eaname, const void *value
 ```
 
 Declared at include/atalk/adouble.h line 480; no definition in the scanned sources.
-
-### ad_pread
-
-```c
-ssize_t ad_pread(struct ad_fd *, void *, size_t, off_t)
-```
-
-Declared at include/atalk/adouble.h line 538; no definition in the scanned sources.
 
 # Types
 

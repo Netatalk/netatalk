@@ -5,7 +5,7 @@ description: "NBP name removal through atalkd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/nbp/nbp_unrgstr.c"
 tags: ["libatalk/nbp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T23:02:49+01:00 }
 ---
 
 Part of the [libatalk/nbp](../nbp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [libatalk/nbp](../nbp.md) subsystem. Built from the commit recorded 
 int nbp_unrgstr(const char *, const char *, const char *, const struct at_addr *)
 ```
 
-Defined at lines 51 to 179. Declared in [include/atalk/nbp.h](../../include/atalk/nbp.h.md).
+Defined at lines 54 to 192. Declared in [include/atalk/nbp.h](../../include/atalk/nbp.h.md).
 
 Remove an NBP name from atalkd.
 
@@ -38,7 +38,7 @@ Parameters:
 * `zone`: zone name of up to NBPSTRLEN bytes, or NULL for an empty one
 * `addr`: node that holds the name, or NULL
 
-Returns: 0 when atalkd answers NBPOP_OK, or -1 for a name that is too long, no reply with ETIMEDOUT, or another answer
+Returns: 0 when atalkd answers NBPOP_OK, or -1 with errno ENAMETOOLONG for a name part longer than NBPSTRLEN, EINVAL after the request for a socket at or above FD_SETSIZE, ETIMEDOUT for no reply, EADDRNOTAVAIL for another answer, EPROTO for a reply that is not NBP, or the error of a call that fails
 
 Calls: [netddp_close](../../include/atalk/netddp.h.md#netddp_close), [netddp_open](../netddp/netddp_open.c.md#netddp_open), [netddp_recvfrom](../../include/atalk/netddp.h.md#netddp_recvfrom), [netddp_sendto](../../include/atalk/netddp.h.md#netddp_sendto)
 

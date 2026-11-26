@@ -5,7 +5,7 @@ description: "Waiting for an ATP request or response, with retransmission."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/atp/atp_rsel.c"
 tags: ["libatalk/atp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T23:02:49+01:00 }
 ---
 
 Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -68,7 +68,7 @@ Called by: [atp_rsel](atp_rsel.c.md#atp_rsel)
 int atp_rsel(ATP, struct sockaddr_at *, int)
 ```
 
-Defined at lines 126 to 436. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
+Defined at lines 127 to 442. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
 
 Read ATP packets until a new request arrives or the pending response is complete.
 
@@ -79,7 +79,7 @@ Parameters:
 * `faddr`: address to accept, receives the sender
 * `func`: ATP_TREQ, ATP_TRESP, or 0 for both
 
-Returns: ATP_TREQ, ATP_TRESP, 0 for a packet that completes nothing, or -1 for an error, ETIMEDOUT after the last try
+Returns: ATP_TREQ, ATP_TRESP, 0 for a packet that completes nothing, or -1 for an error, ETIMEDOUT after the last try, EINVAL for a pending request on a socket at or above FD_SETSIZE
 
 Calls: [at_addr_eq](atp_packet.c.md#at_addr_eq), [atp_alloc_buf](atp_bufs.c.md#atp_alloc_buf), [atp_free_buf](atp_bufs.c.md#atp_free_buf), [atp_print_bufuse](atp_internals.h.md#atp_print_bufuse), [atp_queue_push](atp_packet.c.md#atp_queue_push), [atp_recv_atp](atp_packet.c.md#atp_recv_atp), [atp_resp_incomplete](atp_rsel.c.md#atp_resp_incomplete), [bprint](../util/bprint.c.md#bprint), [netddp_sendto](../../include/atalk/netddp.h.md#netddp_sendto), [resend_request](atp_rsel.c.md#resend_request)
 

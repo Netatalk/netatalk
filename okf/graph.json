@@ -1,5 +1,5 @@
 {
-"commit": "d31a9650989e15bcd38c6225974eab10d648c55d",
+"commit": "d8c06cc4eef501cfaa90311202a63ff6d33b35d2",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -13489,6 +13489,11 @@
 {
 "from": "etc/afpd/afp_dsi.c#afp_over_dsi",
 "kind": "use",
+"to": "etc/afpd/afp_dsi.c#die_pending"
+},
+{
+"from": "etc/afpd/afp_dsi.c#afp_over_dsi",
+"kind": "use",
 "to": "etc/afpd/afp_dsi.c#misframed_requests"
 },
 {
@@ -24263,6 +24268,11 @@
 "to": "libatalk/util/socket.c#setnonblock"
 },
 {
+"from": "libatalk/dsi/dsi_stream.c#dsi_peek",
+"kind": "call",
+"to": "libatalk/dsi/dsi_stream.c#dsi_wait"
+},
+{
 "from": "libatalk/dsi/dsi_read.c#dsi_read",
 "kind": "call",
 "to": "libatalk/dsi/dsi_stream.c#dsi_stream_write"
@@ -24513,24 +24523,39 @@
 "to": "libatalk/dsi/dsi_stream.c#dsi_stream_write"
 },
 {
-"from": "libatalk/dsi/dsi_stream.c#dsi_wait_input",
+"from": "libatalk/dsi/dsi_stream.c#dsi_wait",
 "kind": "call",
 "to": "libatalk/util/sigpipe.c#atalk_sigpipe_drain"
 },
 {
-"from": "libatalk/dsi/dsi_stream.c#dsi_wait_input",
+"from": "libatalk/dsi/dsi_stream.c#dsi_wait",
 "kind": "call",
 "to": "libatalk/util/sigpipe.c#atalk_sigpipe_readfd"
 },
 {
-"from": "libatalk/dsi/dsi_stream.c#dsi_wait_input",
+"from": "libatalk/dsi/dsi_stream.c#dsi_wait",
 "kind": "call",
 "to": "libatalk/dsi/dsi_stream.c#dsi_disconnect"
 },
 {
+"from": "libatalk/dsi/dsi_stream.c#dsi_wait",
+"kind": "call",
+"to": "libatalk/util/unix.c#monotonic_ms"
+},
+{
+"from": "libatalk/dsi/dsi_stream.c#dsi_peek",
+"kind": "doc",
+"to": "libatalk/dsi/dsi_stream.c#dsi_wait"
+},
+{
+"from": "libatalk/dsi/dsi_stream.c#dsi_wait_input",
+"kind": "doc",
+"to": "libatalk/dsi/dsi_stream.c#dsi_wait"
+},
+{
 "from": "libatalk/dsi/dsi_stream.c#dsi_wait_input",
 "kind": "call",
-"to": "libatalk/dsi/dsi_stream.c#monotonic_ms"
+"to": "libatalk/dsi/dsi_stream.c#dsi_wait"
 },
 {
 "from": "libatalk/dsi/dsi_stream.c#buf_read",
@@ -36524,6 +36549,11 @@
 "to": "libatalk/util/socket.c#setnonblock"
 },
 {
+"from": "libatalk/util/socket.c#readt",
+"kind": "call",
+"to": "libatalk/util/socket.c#socket_wait"
+},
+{
 "from": "libatalk/util/netatalk_conf.c#readvolfile",
 "kind": "call",
 "to": "libatalk/util/netatalk_conf.c#creatvol"
@@ -36562,6 +36592,11 @@
 "from": "libatalk/util/netatalk_conf.c#readvolfile",
 "kind": "use",
 "to": "libatalk/util/netatalk_conf.c#have_uservol"
+},
+{
+"from": "libatalk/util/socket.c#recv_fd",
+"kind": "call",
+"to": "libatalk/util/socket.c#socket_wait"
 },
 {
 "from": "etc/afpd/catsearch.c#reducestack",
@@ -40799,6 +40834,11 @@
 "to": "etc/afpd/spotlight_marshalling.c#sl_put_le64"
 },
 {
+"from": "libatalk/util/socket.c#socket_wait",
+"kind": "call",
+"to": "libatalk/util/unix.c#monotonic_ms"
+},
+{
 "from": "etc/afpd/acls.c#solaris_acl_rights",
 "kind": "call",
 "to": "libatalk/util/unix.c#fullpathname"
@@ -44165,6 +44205,11 @@
 "from": "libatalk/util/socket.c#writet",
 "kind": "call",
 "to": "libatalk/util/socket.c#setnonblock"
+},
+{
+"from": "libatalk/util/socket.c#writet",
+"kind": "call",
+"to": "libatalk/util/socket.c#socket_wait"
 },
 {
 "from": "etc/netatalk/afp_zeroconf.c#zeroconf_deregister",
@@ -48062,7 +48107,7 @@
 "file": "libatalk/adouble/ad_write.c",
 "id": "libatalk/adouble/ad_write.c#ad_dtruncate",
 "kind": "function",
-"line": 263,
+"line": 221,
 "static": false
 },
 {
@@ -48490,14 +48535,6 @@
 "static": false
 },
 {
-"documented": false,
-"file": "include/atalk/adouble.h",
-"id": "include/atalk/adouble.h#ad_pread",
-"kind": "function",
-"line": null,
-"static": false
-},
-{
 "documented": true,
 "file": "bin/nad/nad_ls.c",
 "id": "bin/nad/nad_ls.c#ad_print",
@@ -48510,7 +48547,7 @@
 "file": "libatalk/adouble/ad_read.c",
 "id": "libatalk/adouble/ad_read.c#ad_read",
 "kind": "function",
-"line": 97,
+"line": 78,
 "static": false
 },
 {
@@ -48638,7 +48675,7 @@
 "file": "libatalk/adouble/ad_write.c",
 "id": "libatalk/adouble/ad_write.c#ad_rtruncate",
 "kind": "function",
-"line": 232,
+"line": 190,
 "static": false
 },
 {
@@ -48758,7 +48795,7 @@
 "file": "libatalk/adouble/ad_write.c",
 "id": "libatalk/adouble/ad_write.c#ad_write",
 "kind": "function",
-"line": 84,
+"line": 63,
 "static": false
 },
 {
@@ -49230,7 +49267,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_closefork",
 "kind": "function",
-"line": 2638,
+"line": 2644,
 "static": false
 },
 {
@@ -49462,7 +49499,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_flush",
 "kind": "function",
-"line": 2457,
+"line": 2463,
 "static": false
 },
 {
@@ -49470,7 +49507,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_flushfork",
 "kind": "function",
-"line": 2486,
+"line": 2492,
 "static": false
 },
 {
@@ -49518,7 +49555,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_getforkparams",
 "kind": "function",
-"line": 3053,
+"line": 3059,
 "static": false
 },
 {
@@ -49750,7 +49787,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_read",
 "kind": "function",
-"line": 2422,
+"line": 2428,
 "static": false
 },
 {
@@ -49758,7 +49795,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_read_ext",
 "kind": "function",
-"line": 2439,
+"line": 2445,
 "static": false
 },
 {
@@ -49878,7 +49915,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_syncfork",
 "kind": "function",
-"line": 2529,
+"line": 2535,
 "static": false
 },
 {
@@ -49886,7 +49923,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_write",
 "kind": "function",
-"line": 3010,
+"line": 3016,
 "static": false
 },
 {
@@ -49902,7 +49939,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_write_ext",
 "kind": "function",
-"line": 3030,
+"line": 3036,
 "static": false
 },
 {
@@ -50030,7 +50067,7 @@
 "file": "libatalk/util/socket.c",
 "id": "libatalk/util/socket.c#apply_ip_mask",
 "kind": "function",
-"line": 405,
+"line": 356,
 "static": false
 },
 {
@@ -50214,7 +50251,7 @@
 "file": "libatalk/util/unix.c",
 "id": "libatalk/util/unix.c#ascii_tolower",
 "kind": "function",
-"line": 1161,
+"line": 1173,
 "static": false
 },
 {
@@ -50222,7 +50259,7 @@
 "file": "libatalk/util/socket.c",
 "id": "libatalk/util/socket.c#asev_add_fd",
 "kind": "function",
-"line": 649,
+"line": 600,
 "static": false
 },
 {
@@ -50230,7 +50267,7 @@
 "file": "libatalk/util/socket.c",
 "id": "libatalk/util/socket.c#asev_del_fd",
 "kind": "function",
-"line": 681,
+"line": 632,
 "static": false
 },
 {
@@ -50238,7 +50275,7 @@
 "file": "libatalk/util/socket.c",
 "id": "libatalk/util/socket.c#asev_free",
 "kind": "function",
-"line": 602,
+"line": 553,
 "static": false
 },
 {
@@ -50246,7 +50283,7 @@
 "file": "libatalk/util/socket.c",
 "id": "libatalk/util/socket.c#asev_init",
 "kind": "function",
-"line": 575,
+"line": 526,
 "static": false
 },
 {
@@ -50254,7 +50291,7 @@
 "file": "libatalk/util/socket.c",
 "id": "libatalk/util/socket.c#asev_renew",
 "kind": "function",
-"line": 619,
+"line": 570,
 "static": false
 },
 {
@@ -50630,7 +50667,7 @@
 "file": "include/atalk/compat.h",
 "id": "include/atalk/compat.h#atalk_stat_atime_timespec",
 "kind": "function",
-"line": 99,
+"line": 94,
 "static": true
 },
 {
@@ -50638,7 +50675,7 @@
 "file": "include/atalk/compat.h",
 "id": "include/atalk/compat.h#atalk_stat_ctime_timespec",
 "kind": "function",
-"line": 77,
+"line": 72,
 "static": true
 },
 {
@@ -50646,7 +50683,7 @@
 "file": "include/atalk/compat.h",
 "id": "include/atalk/compat.h#atalk_stat_mtime_timespec",
 "kind": "function",
-"line": 62,
+"line": 57,
 "static": true
 },
 {
@@ -50654,7 +50691,7 @@
 "file": "include/atalk/compat.h",
 "id": "include/atalk/compat.h#atalk_timespec_eq",
 "kind": "function",
-"line": 92,
+"line": 87,
 "static": true
 },
 {
@@ -50662,7 +50699,7 @@
 "file": "include/atalk/compat.h",
 "id": "include/atalk/compat.h#atalk_timespec_to_timeval",
 "kind": "function",
-"line": 114,
+"line": 109,
 "static": true
 },
 {
@@ -50798,7 +50835,7 @@
 "file": "libatalk/atp/atp_rsel.c",
 "id": "libatalk/atp/atp_rsel.c#atp_rsel",
 "kind": "function",
-"line": 126,
+"line": 127,
 "static": false
 },
 {
@@ -50926,7 +50963,7 @@
 "file": "libatalk/util/unix.c",
 "id": "libatalk/util/unix.c#basename_safe",
 "kind": "function",
-"line": 1411,
+"line": 1423,
 "static": false
 },
 {
@@ -51022,7 +51059,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#block_sig",
 "kind": "function",
-"line": 326,
+"line": 311,
 "static": true
 },
 {
@@ -51070,7 +51107,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#buf_read",
 "kind": "function",
-"line": 245,
+"line": 230,
 "static": true
 },
 {
@@ -51494,7 +51531,7 @@
 "file": "libatalk/util/unix.c",
 "id": "libatalk/util/unix.c#chdir_getcwd",
 "kind": "function",
-"line": 883,
+"line": 895,
 "static": true
 },
 {
@@ -52982,7 +53019,7 @@
 "file": "libatalk/util/socket.c",
 "id": "libatalk/util/socket.c#compare_ip",
 "kind": "function",
-"line": 468,
+"line": 419,
 "static": false
 },
 {
@@ -53254,7 +53291,7 @@
 "file": "libatalk/adouble/ad_write.c",
 "id": "libatalk/adouble/ad_write.c#copy_fork",
 "kind": "function",
-"line": 288,
+"line": 246,
 "static": false
 },
 {
@@ -54790,7 +54827,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_buffered_stream_read",
 "kind": "function",
-"line": 283,
+"line": 268,
 "static": true
 },
 {
@@ -54814,7 +54851,7 @@
 "file": "libatalk/dsi/dsi_getsess.c",
 "id": "libatalk/dsi/dsi_getsess.c#dsi_close_spare_fd",
 "kind": "function",
-"line": 62,
+"line": 63,
 "static": false
 },
 {
@@ -54830,7 +54867,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_disconnect",
 "kind": "function",
-"line": 370,
+"line": 343,
 "static": false
 },
 {
@@ -54854,7 +54891,7 @@
 "file": "libatalk/dsi/dsi_getsess.c",
 "id": "libatalk/dsi/dsi_getsess.c#dsi_getsession",
 "kind": "function",
-"line": 168,
+"line": 169,
 "static": false
 },
 {
@@ -54870,7 +54907,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_header_pack_reply",
 "kind": "function",
-"line": 77,
+"line": 80,
 "static": true
 },
 {
@@ -54902,7 +54939,7 @@
 "file": "libatalk/dsi/dsi_getsess.c",
 "id": "libatalk/dsi/dsi_getsess.c#dsi_note_master_fd",
 "kind": "function",
-"line": 147,
+"line": 148,
 "static": true
 },
 {
@@ -54918,7 +54955,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_peek",
 "kind": "function",
-"line": 101,
+"line": 106,
 "static": true
 },
 {
@@ -54950,7 +54987,7 @@
 "file": "libatalk/dsi/dsi_getsess.c",
 "id": "libatalk/dsi/dsi_getsess.c#dsi_refuse_starved",
 "kind": "function",
-"line": 119,
+"line": 120,
 "static": true
 },
 {
@@ -54958,7 +54995,7 @@
 "file": "libatalk/dsi/dsi_getsess.c",
 "id": "libatalk/dsi/dsi_getsess.c#dsi_reject_busy",
 "kind": "function",
-"line": 80,
+"line": 81,
 "static": true
 },
 {
@@ -54966,7 +55003,7 @@
 "file": "libatalk/dsi/dsi_getsess.c",
 "id": "libatalk/dsi/dsi_getsess.c#dsi_reserve_spare_fd",
 "kind": "function",
-"line": 50,
+"line": 51,
 "static": false
 },
 {
@@ -54990,7 +55027,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_stream_copy_file",
 "kind": "function",
-"line": 625,
+"line": 682,
 "static": true
 },
 {
@@ -54998,7 +55035,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_stream_read",
 "kind": "function",
-"line": 800,
+"line": 859,
 "static": false
 },
 {
@@ -55006,7 +55043,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_stream_read_file",
 "kind": "function",
-"line": 685,
+"line": 744,
 "static": false
 },
 {
@@ -55014,7 +55051,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_stream_receive",
 "kind": "function",
-"line": 935,
+"line": 995,
 "static": false
 },
 {
@@ -55022,7 +55059,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_stream_send",
 "kind": "function",
-"line": 854,
+"line": 914,
 "static": false
 },
 {
@@ -55030,7 +55067,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_stream_write",
 "kind": "function",
-"line": 485,
+"line": 541,
 "static": false
 },
 {
@@ -55076,9 +55113,17 @@
 {
 "documented": true,
 "file": "libatalk/dsi/dsi_stream.c",
+"id": "libatalk/dsi/dsi_stream.c#dsi_wait",
+"kind": "function",
+"line": 409,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_wait_input",
 "kind": "function",
-"line": 407,
+"line": 520,
 "static": false
 },
 {
@@ -55638,7 +55683,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#flushfork",
 "kind": "function",
-"line": 2571,
+"line": 2577,
 "static": false
 },
 {
@@ -55790,7 +55835,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#from_buf",
 "kind": "function",
-"line": 203,
+"line": 188,
 "static": true
 },
 {
@@ -56174,7 +56219,7 @@
 "file": "libatalk/util/socket.c",
 "id": "libatalk/util/socket.c#getip_port",
 "kind": "function",
-"line": 381,
+"line": 332,
 "static": false
 },
 {
@@ -56182,7 +56227,7 @@
 "file": "libatalk/util/socket.c",
 "id": "libatalk/util/socket.c#getip_string",
 "kind": "function",
-"line": 335,
+"line": 286,
 "static": false
 },
 {
@@ -56390,7 +56435,7 @@
 "file": "libatalk/util/unix.c",
 "id": "libatalk/util/unix.c#gmem",
 "kind": "function",
-"line": 1344,
+"line": 1356,
 "static": false
 },
 {
@@ -58835,11 +58880,11 @@
 },
 {
 "documented": true,
-"file": "libatalk/dsi/dsi_stream.c",
-"id": "libatalk/dsi/dsi_stream.c#monotonic_ms",
+"file": "libatalk/util/unix.c",
+"id": "libatalk/util/unix.c#monotonic_ms",
 "kind": "function",
-"line": 346,
-"static": true
+"line": 772,
+"static": false
 },
 {
 "documented": true,
@@ -59166,7 +59211,7 @@
 "file": "libatalk/nbp/nbp_lkup.c",
 "id": "libatalk/nbp/nbp_lkup.c#nbp_do_lookup_op",
 "kind": "function",
-"line": 77,
+"line": 79,
 "static": false
 },
 {
@@ -59214,7 +59259,7 @@
 "file": "libatalk/nbp/nbp_rgstr.c",
 "id": "libatalk/nbp/nbp_rgstr.c#nbp_rgstr",
 "kind": "function",
-"line": 53,
+"line": 56,
 "static": false
 },
 {
@@ -59222,7 +59267,7 @@
 "file": "libatalk/nbp/nbp_unrgstr.c",
 "id": "libatalk/nbp/nbp_unrgstr.c#nbp_unrgstr",
 "kind": "function",
-"line": 51,
+"line": 54,
 "static": false
 },
 {
@@ -59438,7 +59483,7 @@
 "file": "libatalk/util/unix.c",
 "id": "libatalk/util/unix.c#ochdir",
 "kind": "function",
-"line": 1134,
+"line": 1146,
 "static": false
 },
 {
@@ -59446,7 +59491,7 @@
 "file": "libatalk/util/unix.c",
 "id": "libatalk/util/unix.c#ochdir_root",
 "kind": "function",
-"line": 1277,
+"line": 1289,
 "static": false
 },
 {
@@ -59462,7 +59507,7 @@
 "file": "libatalk/util/unix.c",
 "id": "libatalk/util/unix.c#ochmod",
 "kind": "function",
-"line": 823,
+"line": 835,
 "static": false
 },
 {
@@ -59470,7 +59515,7 @@
 "file": "libatalk/util/unix.c",
 "id": "libatalk/util/unix.c#ochown",
 "kind": "function",
-"line": 800,
+"line": 812,
 "static": false
 },
 {
@@ -59934,7 +59979,7 @@
 "file": "libatalk/util/unix.c",
 "id": "libatalk/util/unix.c#ostat",
 "kind": "function",
-"line": 782,
+"line": 794,
 "static": false
 },
 {
@@ -59942,7 +59987,7 @@
 "file": "libatalk/util/unix.c",
 "id": "libatalk/util/unix.c#ostatat",
 "kind": "function",
-"line": 861,
+"line": 873,
 "static": false
 },
 {
@@ -60254,7 +60299,7 @@
 "file": "libatalk/util/unix.c",
 "id": "libatalk/util/unix.c#path_at_or_below",
 "kind": "function",
-"line": 1001,
+"line": 1013,
 "static": false
 },
 {
@@ -60302,7 +60347,7 @@
 "file": "libatalk/util/unix.c",
 "id": "libatalk/util/unix.c#path_has_dot_component",
 "kind": "function",
-"line": 973,
+"line": 985,
 "static": false
 },
 {
@@ -60310,7 +60355,7 @@
 "file": "libatalk/util/unix.c",
 "id": "libatalk/util/unix.c#path_ignores_case",
 "kind": "function",
-"line": 1237,
+"line": 1249,
 "static": false
 },
 {
@@ -60342,7 +60387,7 @@
 "file": "libatalk/util/unix.c",
 "id": "libatalk/util/unix.c#path_probe_case",
 "kind": "function",
-"line": 1179,
+"line": 1191,
 "static": false
 },
 {
@@ -60694,7 +60739,7 @@
 "file": "libatalk/util/unix.c",
 "id": "libatalk/util/unix.c#print_groups",
 "kind": "function",
-"line": 1528,
+"line": 1540,
 "static": false
 },
 {
@@ -60855,14 +60900,6 @@
 "id": "etc/papd/magics.c#ps",
 "kind": "function",
 "line": 77,
-"static": false
-},
-{
-"documented": false,
-"file": "include/atalk/compat.h",
-"id": "include/atalk/compat.h#pselect",
-"kind": "function",
-"line": null,
 "static": false
 },
 {
@@ -61086,7 +61123,7 @@
 "file": "libatalk/util/unix.c",
 "id": "libatalk/util/unix.c#randombytes",
 "kind": "function",
-"line": 1307,
+"line": 1319,
 "static": false
 },
 {
@@ -61134,7 +61171,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#read_fork",
 "kind": "function",
-"line": 2059,
+"line": 2060,
 "static": true
 },
 {
@@ -61198,7 +61235,7 @@
 "file": "libatalk/util/socket.c",
 "id": "libatalk/util/socket.c#readt",
 "kind": "function",
-"line": 88,
+"line": 136,
 "static": false
 },
 {
@@ -61222,7 +61259,7 @@
 "file": "libatalk/util/unix.c",
 "id": "libatalk/util/unix.c#realpath_safe",
 "kind": "function",
-"line": 1365,
+"line": 1377,
 "static": false
 },
 {
@@ -61238,7 +61275,7 @@
 "file": "libatalk/util/socket.c",
 "id": "libatalk/util/socket.c#recv_fd",
 "kind": "function",
-"line": 741,
+"line": 694,
 "static": false
 },
 {
@@ -61886,7 +61923,7 @@
 "file": "libatalk/util/socket.c",
 "id": "libatalk/util/socket.c#send_fd",
 "kind": "function",
-"line": 812,
+"line": 757,
 "static": false
 },
 {
@@ -61910,7 +61947,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#sendfile_call",
 "kind": "function",
-"line": 560,
+"line": 616,
 "static": true
 },
 {
@@ -62118,7 +62155,7 @@
 "file": "libatalk/util/unix.c",
 "id": "libatalk/util/unix.c#set_groups",
 "kind": "function",
-"line": 1484,
+"line": 1496,
 "static": false
 },
 {
@@ -62366,7 +62403,7 @@
 "file": "libatalk/util/socket.c",
 "id": "libatalk/util/socket.c#setnonblock",
 "kind": "function",
-"line": 53,
+"line": 54,
 "static": false
 },
 {
@@ -64003,6 +64040,14 @@
 },
 {
 "documented": true,
+"file": "libatalk/util/socket.c",
+"id": "libatalk/util/socket.c#socket_wait",
+"kind": "function",
+"line": 92,
+"static": true
+},
+{
+"documented": true,
 "file": "etc/afpd/acls.c",
 "id": "etc/afpd/acls.c#solaris_acl_rights",
 "kind": "function",
@@ -64582,7 +64627,7 @@
 "file": "libatalk/util/unix.c",
 "id": "libatalk/util/unix.c#strtok_quote",
 "kind": "function",
-"line": 1430,
+"line": 1442,
 "static": false
 },
 {
@@ -64686,7 +64731,7 @@
 "file": "libatalk/adouble/ad_write.c",
 "id": "libatalk/adouble/ad_write.c#sys_ftruncate",
 "kind": "function",
-"line": 163,
+"line": 142,
 "static": false
 },
 {
@@ -64926,7 +64971,7 @@
 "file": "libatalk/util/socket.c",
 "id": "libatalk/util/socket.c#tokenize_ip_port",
 "kind": "function",
-"line": 500,
+"line": 451,
 "static": false
 },
 {
@@ -65350,7 +65395,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#unblock_sig",
 "kind": "function",
-"line": 336,
+"line": 321,
 "static": true
 },
 {
@@ -66262,7 +66307,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#write_file",
 "kind": "function",
-"line": 2685,
+"line": 2691,
 "static": true
 },
 {
@@ -66270,7 +66315,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#write_fits_count",
 "kind": "function",
-"line": 2721,
+"line": 2727,
 "static": true
 },
 {
@@ -66278,7 +66323,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#write_fork",
 "kind": "function",
-"line": 2758,
+"line": 2764,
 "static": true
 },
 {
@@ -66326,7 +66371,7 @@
 "file": "libatalk/util/socket.c",
 "id": "libatalk/util/socket.c#writet",
 "kind": "function",
-"line": 222,
+"line": 214,
 "static": false
 },
 {

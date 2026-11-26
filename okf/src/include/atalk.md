@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "include/atalk"
-description: "46 files, 39 functions."
+description: "46 files, 37 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/include/atalk"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T19:31:53+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T23:02:49+01:00 }
 ---
 
 # Files

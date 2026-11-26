@@ -5,7 +5,7 @@ description: "Netatalk utility functions: socket."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/socket.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T23:02:49+01:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -15,7 +15,7 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 * [atalk/errchk.h](../../include/atalk/errchk.h.md)
 * [atalk/logger.h](../../include/atalk/logger.h.md)
 * [atalk/util.h](../../include/atalk/util.h.md)
-* System headers: `arpa/inet.h`, `errno.h`, `fcntl.h`, `netinet/in.h`, `stdlib.h`, `string.h`, `sys/ioctl.h`, `sys/socket.h`, `sys/time.h`, `sys/types.h`, `sys/uio.h`, `time.h`, `unistd.h`
+* System headers: `arpa/inet.h`, `errno.h`, `fcntl.h`, `limits.h`, `netinet/in.h`, `poll.h`, `stdlib.h`, `string.h`, `sys/ioctl.h`, `sys/socket.h`, `sys/types.h`, `sys/uio.h`, `unistd.h`
 
 # Functions
 
@@ -25,7 +25,7 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 int setnonblock(int fd, int cmd)
 ```
 
-Defined at lines 53 to 74.
+Defined at lines 54 to 75.
 
 set or unset non-blocking IO on a fd
 
@@ -37,26 +37,50 @@ Returns: 0 on success, -1 on failure
 
 Called by: [atalk_sigpipe_init](sigpipe.c.md#atalk_sigpipe_init), [dsi_getsession](../dsi/dsi_getsess.c.md#dsi_getsession), [dsi_opensession](../dsi/dsi_opensess.c.md#dsi_opensession), [readt](socket.c.md#readt), [writet](socket.c.md#writet)
 
+### socket_wait
+
+```c
+static int socket_wait(int socket, short events, int timeout, enum loglevels level)
+```
+
+Defined at lines 92 to 119.
+
+Wait up to timeout seconds for socket to be ready for events.
+
+A signal leaves the wait going for the rest of the timeout. The time running out is logged at level, a poll error at log_error.
+
+Parameters:
+* `socket`: socket
+* `events`: POLLIN or POLLOUT
+* `timeout`: seconds to wait, not negative: 0 to wait without a limit; past INT_MAX milliseconds the wait takes INT_MAX
+* `level`: log level of the time running out
+
+Returns: 1 when poll() reports the socket, 0 with errno EAGAIN when the time runs out, or -1 with the errno of poll
+
+Calls: [monotonic_ms](unix.c.md#monotonic_ms)
+
+Called by: [readt](socket.c.md#readt), [recv_fd](socket.c.md#recv_fd), [writet](socket.c.md#writet)
+
 ### readt
 
 ```c
 ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, int timeout)
 ```
 
-Defined at lines 88 to 208.
+Defined at lines 136 to 197.
 
-non-blocking drop-in replacement for read with timeout using select
+Read length bytes from a socket, waiting for data with poll().
 
 Parameters:
 * `socket`: socket, if in blocking mode, pass "setnonblocking" arg as 1
 * `data`: buffer for the read data
 * `length`: how many bytes to read
 * `setnonblocking`: when non-zero this func will enable and disable non blocking io mode for the socket
-* `timeout`: number of seconds to try reading, 0 means no timeout
+* `timeout`: seconds each wait for data may take, not negative; 0 means no timeout
 
-Returns: number of bytes actually read or -1 on timeout or error
+Returns: the bytes read, fewer than length when the peer closes the connection or a wait times out after some arrived; -1 on an error, or with errno EAGAIN when a wait times out before any arrived
 
-Calls: [setnonblock](socket.c.md#setnonblock)
+Calls: [setnonblock](socket.c.md#setnonblock), [socket_wait](socket.c.md#socket_wait)
 
 Called by: [handle_transfer_session](../../etc/afpd/afp_dsi.c.md#handle_transfer_session), [ipc_server_read](server_ipc.c.md#ipc_server_read)
 
@@ -66,20 +90,20 @@ Called by: [handle_transfer_session](../../etc/afpd/afp_dsi.c.md#handle_transfer
 ssize_t writet(int socket, void *data, const size_t length, int setnonblocking, int timeout)
 ```
 
-Defined at lines 222 to 324.
+Defined at lines 214 to 275.
 
-non-blocking drop-in replacement for read with timeout using select
+Write length bytes to a socket, waiting for room with poll().
 
 Parameters:
 * `socket`: socket, if in blocking mode, pass "setnonblocking" arg as 1
-* `data`: buffer for the read data
-* `length`: how many bytes to read
+* `data`: bytes to write
+* `length`: how many bytes to write
 * `setnonblocking`: when non-zero this func will enable and disable non blocking io mode for the socket
-* `timeout`: number of seconds to try reading
+* `timeout`: seconds each wait for room may take, not negative; 0 means no timeout
 
-Returns: number of bytes actually read or -1 on fatal error
+Returns: the bytes written, fewer than length when a wait times out after some went out; -1 on an error, or with errno EAGAIN when a wait times out before any went out
 
-Calls: [setnonblock](socket.c.md#setnonblock)
+Calls: [setnonblock](socket.c.md#setnonblock), [socket_wait](socket.c.md#socket_wait)
 
 Called by: [afp_disconnect](../../etc/afpd/auth.c.md#afp_disconnect), [ipc_child_write](server_ipc.c.md#ipc_child_write), [server_child_transfer_session](server_child.c.md#server_child_transfer_session)
 
@@ -89,7 +113,7 @@ Called by: [afp_disconnect](../../etc/afpd/auth.c.md#afp_disconnect), [ipc_child
 const char * getip_string(const struct sockaddr *sa)
 ```
 
-Defined at lines 335 to 372.
+Defined at lines 286 to 323.
 
 Convert an IPv4 or IPv6 address to a static string with inet_ntop.
 
@@ -110,7 +134,7 @@ Uses file-scope variables: `ipv4mapprefix`
 unsigned int getip_port(const struct sockaddr *sa)
 ```
 
-Defined at lines 381 to 392.
+Defined at lines 332 to 343.
 
 return port number from struct sockaddr
 
@@ -127,7 +151,7 @@ Called by: [configinit](../../etc/afpd/afp_config.c.md#configinit), [dsi_tcp_ope
 void apply_ip_mask(struct sockaddr *sa, int mask)
 ```
 
-Defined at lines 405 to 455.
+Defined at lines 356 to 406.
 
 apply netmask to IP (v4 or v6)
 
@@ -147,7 +171,7 @@ Uses file-scope variables: `ipv4mapprefix`
 int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2)
 ```
 
-Defined at lines 468 to 478.
+Defined at lines 419 to 429.
 
 compare IP addresses for equality
 
@@ -169,7 +193,7 @@ Called by: [hostaccessvol](netatalk_conf.c.md#hostaccessvol)
 int tokenize_ip_port(const char *ipurl, char **address, char **port)
 ```
 
-Defined at lines 500 to 567.
+Defined at lines 451 to 518.
 
 Tokenize IP(4/6) addresses with an optional port into address and port.
 
@@ -194,7 +218,7 @@ Called by: [dsi_tcp_init](../dsi/dsi_tcp.c.md#dsi_tcp_init)
 struct asev * asev_init(int max)
 ```
 
-Defined at lines 575 to 595.
+Defined at lines 526 to 546.
 
 Allocate an empty poll set with room for max descriptors.
 
@@ -213,7 +237,7 @@ Called by: [asev_renew](socket.c.md#asev_renew)
 void asev_free(struct asev *sev)
 ```
 
-Defined at lines 602 to 609.
+Defined at lines 553 to 560.
 
 Free a poll set.
 
@@ -228,7 +252,7 @@ Called by: [asev_init](socket.c.md#asev_init), [asev_renew](socket.c.md#asev_ren
 struct asev * asev_renew(struct asev *sev, int max)
 ```
 
-Defined at lines 619 to 633.
+Defined at lines 570 to 584.
 
 Replace a poll set by one with room for max descriptors beyond the entries it keeps, in their order.
 
@@ -248,7 +272,7 @@ Called by: [init_listening_sockets](../../etc/afpd/main.c.md#init_listening_sock
 bool asev_add_fd(struct asev *asev, int fd, enum asev_fdtype fdtype, void *private, int protocol)
 ```
 
-Defined at lines 649 to 670.
+Defined at lines 600 to 621.
 
 Append a descriptor to a poll set, watched for POLLIN.
 
@@ -271,7 +295,7 @@ Called by: [init_listening_sockets](../../etc/afpd/main.c.md#init_listening_sock
 bool asev_del_fd(struct asev *asev, int fd)
 ```
 
-Defined at lines 681 to 728.
+Defined at lines 632 to 679.
 
 Remove a descriptor from a poll set, keeping the order of the others.
 
@@ -291,15 +315,17 @@ Called by: [child_handler](../../etc/afpd/main.c.md#child_handler), [main](../..
 int recv_fd(int fd, int nonblocking)
 ```
 
-Defined at lines 741 to 800.
+Defined at lines 694 to 745.
 
-Receive a fd on a suitable socket.
+Receive a descriptor on a PF_UNIX socket.
 
 Parameters:
 * `fd`: PF_UNIX socket to receive on
-* `nonblocking`: 0: fd is in blocking mode - 1: fd is nonblocking, poll for 1 sec
+* `nonblocking`: 0 for a blocking fd; 1 for a non-blocking one, on which the call waits up to 2 seconds for the message
 
-Returns: fd on success, -1 on error
+Returns: the descriptor, or -1 on error
+
+Calls: [socket_wait](socket.c.md#socket_wait)
 
 Called by: [handle_transfer_session](../../etc/afpd/afp_dsi.c.md#handle_transfer_session), [ipc_server_read](server_ipc.c.md#ipc_server_read)
 
@@ -309,7 +335,7 @@ Called by: [handle_transfer_session](../../etc/afpd/afp_dsi.c.md#handle_transfer
 int send_fd(int socket, int fd)
 ```
 
-Defined at lines 812 to 858.
+Defined at lines 757 to 803.
 
 Pass a descriptor over a Unix socket with SCM_RIGHTS.
 

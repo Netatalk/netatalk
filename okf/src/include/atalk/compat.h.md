@@ -5,7 +5,7 @@ description: "Portability declarations for missing system and C library function
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/compat.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T23:02:49+01:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -75,21 +75,13 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 # Functions
 
-### pselect
-
-```c
-int pselect(int, fd_set *, fd_set *, fd_set *, const struct timespec *, const sigset_t *)
-```
-
-Declared at include/atalk/compat.h line 30; no definition in the scanned sources.
-
 ### atalk_stat_mtime_timespec
 
 ```c
 static struct timespec atalk_stat_mtime_timespec(const struct stat *st)
 ```
 
-Defined at lines 62 to 74.
+Defined at lines 57 to 69.
 
 Return the stat mtime as a timespec, with tv_nsec 0 if unavailable.
 
@@ -101,7 +93,7 @@ Called by: [add_filemeta](../../etc/afpd/spotlight.c.md#add_filemeta), [afp_open
 static struct timespec atalk_stat_ctime_timespec(const struct stat *st)
 ```
 
-Defined at lines 77 to 89.
+Defined at lines 72 to 84.
 
 Return the stat ctime as a timespec, with tv_nsec 0 if unavailable.
 
@@ -113,7 +105,7 @@ Called by: [ea_cache_entry](../../etc/afpd/ad_cache.c.md#ea_cache_entry), [renam
 static bool atalk_timespec_eq(const struct timespec *a, const struct timespec *b)
 ```
 
-Defined at lines 92 to 96.
+Defined at lines 87 to 91.
 
 Tell whether two timespecs are the same instant.
 
@@ -125,7 +117,7 @@ Called by: [rename_staged_link](../../etc/afpd/file.c.md#rename_staged_link), [r
 static struct timespec atalk_stat_atime_timespec(const struct stat *st)
 ```
 
-Defined at lines 99 to 111.
+Defined at lines 94 to 106.
 
 Return the stat atime as a timespec, with tv_nsec 0 if unavailable.
 
@@ -137,7 +129,7 @@ Called by: [add_filemeta](../../etc/afpd/spotlight.c.md#add_filemeta), [setfile]
 static void atalk_timespec_to_timeval(struct timeval *tv, const struct timespec *ts)
 ```
 
-Defined at lines 114 to 119.
+Defined at lines 109 to 114.
 
 Store a timespec in a timeval, truncated to microseconds.
 

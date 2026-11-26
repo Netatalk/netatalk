@@ -5,7 +5,7 @@ description: "Netatalk utility functions: unix."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/unix.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T23:02:49+01:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -448,13 +448,27 @@ Called by: [catsearch](../../etc/afpd/catsearch.c.md#catsearch), [catsearch_db](
 
 Mentioned in the documentation of: [catsearch_time_up](../../etc/afpd/catsearch.c.md#catsearch_time_up), [markvol](../../etc/afpd/volume.c.md#markvol)
 
+### monotonic_ms
+
+```c
+long long monotonic_ms(void)
+```
+
+Defined at lines 772 to 777.
+
+Read the monotonic clock.
+
+Returns: milliseconds since an arbitrary start
+
+Called by: [dsi_wait](../dsi/dsi_stream.c.md#dsi_wait), [socket_wait](socket.c.md#socket_wait)
+
 ### ostat
 
 ```c
 int ostat(const char *path, struct stat *buf, int options)
 ```
 
-Defined at lines 782 to 789.
+Defined at lines 794 to 801.
 
 Run lstat with O_NOFOLLOW in options, stat otherwise.
 
@@ -473,7 +487,7 @@ Called by: [accessmode](../../etc/afpd/unix.c.md#accessmode), [ad_addcomment](..
 int ochown(const char *path, uid_t owner, gid_t group, int options)
 ```
 
-Defined at lines 800 to 807.
+Defined at lines 812 to 819.
 
 Run lchown with O_NOFOLLOW in options, chown otherwise.
 
@@ -493,7 +507,7 @@ Called by: [ea_chown](../vfs/ea_ad.c.md#ea_chown), [setdirowner](../../etc/afpd/
 int ochmod(char *path, mode_t mode, const struct stat *st, int options)
 ```
 
-Defined at lines 823 to 849.
+Defined at lines 835 to 861.
 
 Change the mode of a path, with options for symlinks and ACLs.
 
@@ -515,7 +529,7 @@ Called by: [RF_setdirmode_adouble](../vfs/vfs.c.md#rf_setdirmode_adouble), [RF_s
 int ostatat(int dirfd, const char *path, struct stat *st, int options)
 ```
 
-Defined at lines 861 to 869.
+Defined at lines 873 to 881.
 
 Run fstatat relative to a directory descriptor, without following a final symlink for O_NOFOLLOW.
 
@@ -535,7 +549,7 @@ Called by: [RF_renamefile_adouble](../vfs/vfs.c.md#rf_renamefile_adouble), [RF_r
 static int chdir_getcwd(const char *dir)
 ```
 
-Defined at lines 883 to 963.
+Defined at lines 895 to 975.
 
 chdir() to dir, then report a symlink on its path, which a getcwd() that differs from dir shows
 
@@ -556,7 +570,7 @@ Mentioned in the documentation of: [ochdir](unix.c.md#ochdir)
 int path_has_dot_component(const char *path, int dot)
 ```
 
-Defined at lines 973 to 988.
+Defined at lines 985 to 1000.
 
 Whether a component of a slash-separated path is "..", or with dot set also ".".
 
@@ -574,7 +588,7 @@ Called by: [sl_rpc_openQuery](../../etc/afpd/spotlight.c.md#sl_rpc_openquery), [
 int path_at_or_below(const char *path, const char *dir)
 ```
 
-Defined at lines 1001 to 1011.
+Defined at lines 1013 to 1023.
 
 Whether an absolute path is a directory or lies below it.
 
@@ -594,7 +608,7 @@ Called by: [fce_register](../../etc/afpd/fce_api.c.md#fce_register), [ochdir](un
 int ochdir(const char *dir, int options, int rootfd, const char *root)
 ```
 
-Defined at lines 1134 to 1152.
+Defined at lines 1146 to 1164.
 
 Change the current directory and report a symlink on the way for O_NOFOLLOW.
 
@@ -620,7 +634,7 @@ Mentioned in the documentation of: [afp_openvol](../../etc/afpd/volume.c.md#afp_
 int ascii_tolower(int c)
 ```
 
-Defined at lines 1161 to 1164.
+Defined at lines 1173 to 1176.
 
 A character in lower case if it is an ASCII capital, whatever the locale.
 
@@ -639,7 +653,7 @@ Mentioned in the documentation of: [veto_entry_matches](../../etc/afpd/filedir.c
 int path_probe_case(const char *dir)
 ```
 
-Defined at lines 1179 to 1224.
+Defined at lines 1191 to 1236.
 
 Whether a name in dir, looked up with one letter's case swapped, finds the same object.
 
@@ -662,7 +676,7 @@ Mentioned in the documentation of: [path_ignores_case](unix.c.md#path_ignores_ca
 int path_ignores_case(const char *path)
 ```
 
-Defined at lines 1237 to 1264.
+Defined at lines 1249 to 1276.
 
 Whether the filesystem holding path matches names in either case.
 
@@ -683,7 +697,7 @@ Called by: [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [ochdir_root](
 int ochdir_root(const char *root)
 ```
 
-Defined at lines 1277 to 1296.
+Defined at lines 1289 to 1308.
 
 The descriptor [ochdir()](unix.c.md#ochdir) walks from below a volume root.
 
@@ -704,7 +718,7 @@ Called by: [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol)
 void randombytes(void *buf, int n)
 ```
 
-Defined at lines 1307 to 1334.
+Defined at lines 1319 to 1346.
 
 Fill a buffer with random bytes from /dev/urandom.
 
@@ -722,7 +736,7 @@ Called by: [get_vol_uuid](netatalk_conf.c.md#get_vol_uuid), [set_signature](../.
 int gmem(gid_t gid, int ngroups, gid_t *groups)
 ```
 
-Defined at lines 1344 to 1355. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 1356 to 1367. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Tell whether a group ID is in a group list.
 
@@ -741,7 +755,7 @@ Called by: [accessvol](netatalk_conf.c.md#accessvol), [posix_acl_rights](../../e
 char * realpath_safe(const char *path)
 ```
 
-Defined at lines 1365 to 1400.
+Defined at lines 1377 to 1412.
 
 Resolve a path with realpath into a new buffer.
 
@@ -760,7 +774,7 @@ Called by: [dbpath_is_volume_root](netatalk_conf.c.md#dbpath_is_volume_root), [g
 const char * basename_safe(const char *path)
 ```
 
-Defined at lines 1411 to 1416.
+Defined at lines 1423 to 1428.
 
 Return the basename of a path without changing the path.
 
@@ -781,7 +795,7 @@ Called by: [fce_register](../../etc/afpd/fce_api.c.md#fce_register)
 char * strtok_quote(char *s, const char *delim)
 ```
 
-Defined at lines 1430 to 1472.
+Defined at lines 1442 to 1484.
 
 Split a string like strtok, with tokens in double quotes kept whole.
 
@@ -801,7 +815,7 @@ Called by: [accessvol](netatalk_conf.c.md#accessvol)
 int set_groups(AFPObj *obj, struct passwd *pwd)
 ```
 
-Defined at lines 1484 to 1515. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 1496 to 1527. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Load the supplementary groups of a user into the process and into obj.
 
@@ -821,7 +835,7 @@ Called by: [getvolbypath](netatalk_conf.c.md#getvolbypath), [load_afp_conf_vols]
 const char * print_groups(int ngroups, gid_t *groups)
 ```
 
-Defined at lines 1528 to 1543. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 1540 to 1555. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Format a group list for a log message.
 

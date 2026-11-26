@@ -5,7 +5,7 @@ description: "Data Stream Interface packet types, session state and I/O operatio
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/dsi.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-21T17:04:55+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T23:02:49+01:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -63,7 +63,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 void dsi_setstatus(DSI *, char *, const size_t)
 ```
 
-Declared at include/atalk/dsi.h line 154; no definition in the scanned sources.
+Declared at include/atalk/dsi.h line 156; no definition in the scanned sources.
 
 ### dsi_kill
 
@@ -71,7 +71,7 @@ Declared at include/atalk/dsi.h line 154; no definition in the scanned sources.
 void dsi_kill(int)
 ```
 
-Declared at include/atalk/dsi.h line 165; no definition in the scanned sources.
+Declared at include/atalk/dsi.h line 167; no definition in the scanned sources.
 
 # Types
 
@@ -106,7 +106,8 @@ Defined at line 42.
 * `int serversock`: listening socket
 * `int splice_pipe`: recvfile pipe, opened on first use
 * `int splice_size`: recvfile round size, 0 once declined
-* `volatile sig_atomic_t * stop_wait`: points at the flag that ends a wait for input once set, or NULL
+* `volatile sig_atomic_t * stop_wait`: points at the flag that ends a wait on the client once set, or NULL
+* `volatile sig_atomic_t * ending`: points at the flag set once the session is to end, or NULL
 * `size_t dsireadbuf`: size of the [DSI](dsi.h.md#struct-dsi) readahead buffer used in [dsi_peek()](../../libatalk/dsi/dsi_stream.c.md#dsi_peek)
 * `char * buffer`: buffer start
 * `char * start`: current buffer head

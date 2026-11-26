@@ -5,7 +5,7 @@ description: "Writing and truncating the forks of an AppleDouble."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_write.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T23:02:49+01:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,7 @@ Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit r
 ssize_t adf_pwrite(struct ad_fd *ad_fd, const void *buf, size_t count, off_t offset)
 ```
 
-Defined at lines 39 to 64.
+Defined at lines 39 to 43.
 
 Write count bytes that start at offset in an AppleDouble fork.
 
@@ -50,7 +50,7 @@ Called by: [ad_convert_pwrite_full](ad_open.c.md#ad_convert_pwrite_full), [ad_fl
 ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const char *buf, size_t buflen)
 ```
 
-Defined at lines 84 to 147.
+Defined at lines 63 to 126.
 
 Write to the data or resource fork of an AppleDouble.
 
@@ -78,17 +78,17 @@ Mentioned in the documentation of: [ad_recvfile](ad_recvfile.c.md#ad_recvfile)
 int sys_ftruncate(int fd, off_t length)
 ```
 
-Defined at lines 163 to 217.
+Defined at lines 142 to 175.
 
 Truncate or extend an open file to length.
 
-ftruncate does the work. When it fails on a file shorter than length, the function writes one zero byte at length minus one instead. That covers platforms whose ftruncate cannot extend a file. Without HAVE_PWRITE it also restores the file position afterwards. The caller holds any locks the region needs.
+ftruncate does the work. When it fails on a file shorter than length, the function writes one zero byte at length minus one instead. That covers platforms whose ftruncate cannot extend a file. A file that already has the length needs nothing. The caller holds any locks the region needs.
 
 Parameters:
 * `fd`: open file
 * `length`: new length in bytes
 
-Returns: 0, or -1 with the ftruncate errno, or the write errno when the extension failed
+Returns: 0, also when ftruncate fails on a file that has the length; or -1 with the ftruncate errno, or the write errno when the extension failed
 
 Called by: [ad_dtruncate](ad_write.c.md#ad_dtruncate), [ad_rtruncate](ad_write.c.md#ad_rtruncate)
 
@@ -98,7 +98,7 @@ Called by: [ad_dtruncate](ad_write.c.md#ad_dtruncate), [ad_rtruncate](ad_write.c
 int ad_rtruncate(struct adouble *ad, const char *uname, const off_t size)
 ```
 
-Defined at lines 232 to 254.
+Defined at lines 190 to 212.
 
 Truncate the resource fork of an AppleDouble to size.
 
@@ -121,7 +121,7 @@ Called by: [afp_setforkparams](../../etc/afpd/fork.c.md#afp_setforkparams)
 int ad_dtruncate(struct adouble *ad, const off_t size)
 ```
 
-Defined at lines 263 to 272.
+Defined at lines 221 to 230.
 
 Truncate the data fork of an AppleDouble to size.
 
@@ -141,7 +141,7 @@ Called by: [afp_setforkparams](../../etc/afpd/fork.c.md#afp_setforkparams), [cre
 int copy_fork(int eid, struct adouble *add, struct adouble *ads, uint8_t *buf, size_t buflen)
 ```
 
-Defined at lines 288 to 336.
+Defined at lines 246 to 294.
 
 Transfer one fork from the AppleDouble ads into the AppleDouble add.
 

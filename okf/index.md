@@ -12,7 +12,7 @@ Generated from Doxygen XML; see [Build record](build.md) for the commit and coun
 
 # Build
 
-* [Build record](build.md) - Netatalk commit d31a9650989e rendered by process:okf-from-doxygen/1 from Doxygen 1.15.0.
+* [Build record](build.md) - Netatalk commit d8c06cc4eef5 rendered by process:okf-from-doxygen/1 from Doxygen 1.15.0.
 
 # Subsystems
 
@@ -33,7 +33,7 @@ Generated from Doxygen XML; see [Build record](build.md) for the commit and coun
 * [etc/papd](src/etc/papd.md) - 22 files, 119 functions.
 * [etc/spotlight](src/etc/spotlight.md) - 10 files, 64 functions.
 * [etc/uams](src/etc/uams.md) - 10 files, 116 functions.
-* [include/atalk](src/include/atalk.md) - 46 files, 39 functions.
+* [include/atalk](src/include/atalk.md) - 46 files, 37 functions.
 * [libatalk/acl](src/libatalk/acl.md) - 7 files, 26 functions.
 * [libatalk/adouble](src/libatalk/adouble.md) - 10 files, 116 functions.
 * [libatalk/asp](src/libatalk/asp.md) - 10 files, 14 functions.
@@ -45,7 +45,7 @@ Generated from Doxygen XML; see [Build record](build.md) for the commit and coun
 * [libatalk/nbp](src/libatalk/nbp.md) - 5 files, 7 functions.
 * [libatalk/netddp](src/libatalk/netddp.md) - 1 file, 1 function.
 * [libatalk/unicode](src/libatalk/unicode.md) - 31 files, 115 functions.
-* [libatalk/util](src/libatalk/util.md) - 21 files, 264 functions.
+* [libatalk/util](src/libatalk/util.md) - 21 files, 266 functions.
 * [libatalk/vfs](src/libatalk/vfs.md) - 6 files, 119 functions.
 * [sys/netatalk](src/sys/netatalk.md) - 13 files, 35 functions.
 

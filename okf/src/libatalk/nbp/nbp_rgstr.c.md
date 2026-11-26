@@ -5,7 +5,7 @@ description: "NBP name registration through atalkd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/nbp/nbp_rgstr.c"
 tags: ["libatalk/nbp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T23:02:49+01:00 }
 ---
 
 Part of the [libatalk/nbp](../nbp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [libatalk/nbp](../nbp.md) subsystem. Built from the commit recorded 
 int nbp_rgstr(struct sockaddr_at *, const char *, const char *, const char *)
 ```
 
-Defined at lines 53 to 183. Declared in [include/atalk/nbp.h](../../include/atalk/nbp.h.md).
+Defined at lines 56 to 197. Declared in [include/atalk/nbp.h](../../include/atalk/nbp.h.md).
 
 Register an NBP name for a socket with the local atalkd.
 
@@ -38,7 +38,7 @@ Parameters:
 * `type`: type name of up to NBPSTRLEN bytes, or NULL for an empty one
 * `zone`: zone name of up to NBPSTRLEN bytes, or NULL for the default zone `*`
 
-Returns: 0 when atalkd answers NBPOP_OK, or -1 for a name in use or too long, no reply, or another answer
+Returns: 0 when atalkd answers NBPOP_OK, or -1 with errno EADDRINUSE for a name in use, ENAMETOOLONG for a name part longer than NBPSTRLEN, EINVAL for a socket at or above FD_SETSIZE, ETIMEDOUT for no reply, EADDRNOTAVAIL for another answer, EPROTO for a reply that is not NBP, or the error of a call that fails
 
 Calls: [nbp_lookup](nbp_lkup.c.md#nbp_lookup), [netddp_close](../../include/atalk/netddp.h.md#netddp_close), [netddp_open](../netddp/netddp_open.c.md#netddp_open), [netddp_recvfrom](../../include/atalk/netddp.h.md#netddp_recvfrom), [netddp_sendto](../../include/atalk/netddp.h.md#netddp_sendto)
 

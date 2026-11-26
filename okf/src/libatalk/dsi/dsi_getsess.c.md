@@ -5,7 +5,7 @@ description: "The DSI listener: accepting sessions, and refusing them at the ses
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/dsi/dsi_getsess.c"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T23:02:49+01:00 }
 ---
 
 Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -17,7 +17,7 @@ Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded 
 * [atalk/server_child.h](../../include/atalk/server_child.h.md)
 * [atalk/unix.h](../../include/atalk/unix.h.md)
 * [atalk/util.h](../../include/atalk/util.h.md)
-* System headers: `errno.h`, `fcntl.h`, `signal.h`, `stdio.h`, `stdlib.h`, `string.h`, `sys/socket.h`, `sys/time.h`, `sys/types.h`, `sys/wait.h`, `unistd.h`
+* System headers: `errno.h`, `fcntl.h`, `poll.h`, `signal.h`, `stdio.h`, `stdlib.h`, `string.h`, `sys/socket.h`, `sys/time.h`, `sys/types.h`, `sys/wait.h`, `unistd.h`
 
 # Functions
 
@@ -27,7 +27,7 @@ Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded 
 void dsi_reserve_spare_fd(void)
 ```
 
-Defined at lines 50 to 57. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 51 to 58. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Hold one descriptor in reserve for refusing connections.
 
@@ -43,7 +43,7 @@ Uses file-scope variables: `dsi_fdlimit`, `dsi_spare_fd`
 void dsi_close_spare_fd(void)
 ```
 
-Defined at lines 62 to 68. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 63 to 69. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Release the spare descriptor, in a session child or before a refusal.
 
@@ -57,7 +57,7 @@ Uses file-scope variables: `dsi_spare_fd`
 static bool dsi_reject_busy(DSI *dsi)
 ```
 
-Defined at lines 80 to 110.
+Defined at lines 81 to 111.
 
 Accept the waiting connection and reply that the server is busy.
 
@@ -76,7 +76,7 @@ Called by: [dsi_getsession](dsi_getsess.c.md#dsi_getsession), [dsi_refuse_starve
 static void dsi_refuse_starved(DSI *dsi, const server_child_t *children, int err)
 ```
 
-Defined at lines 119 to 136.
+Defined at lines 120 to 137.
 
 Refuse the waiting connection when the master is out of descriptors.
 
@@ -97,7 +97,7 @@ Uses file-scope variables: `dsi_starved_refusals`
 static void dsi_note_master_fd(const server_child_t *children, int fd)
 ```
 
-Defined at lines 147 to 157.
+Defined at lines 148 to 158.
 
 Warn as the master's descriptor use climbs toward its limit.
 
@@ -119,7 +119,7 @@ Uses file-scope variables: `dsi_fd_level`, `dsi_fdlimit`
 int dsi_getsession(DSI *, server_child_t *, const int, afp_child_t **)
 ```
 
-Defined at lines 168 to 365. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 169 to 357. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Start a [DSI](../../include/atalk/dsi.h.md#struct-dsi) session, fork an afpd process.
 

@@ -5,7 +5,7 @@ description: "12 files, 52 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/dsi"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T23:02:49+01:00 }
 ---
 
 # Files
@@ -29,7 +29,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 
 # Calls into
 
-* [libatalk/util](util.md): 23 calls
+* [libatalk/util](util.md): 24 calls
 * [libatalk/compat](compat.md): 1 calls
 
 # Called from

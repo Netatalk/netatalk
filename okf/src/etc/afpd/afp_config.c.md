@@ -5,7 +5,7 @@ description: "Configuration setup of afpd at startup and reload: UAMs, listeners
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/afp_config.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T23:02:49+01:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -63,7 +63,7 @@ Called by: [dsi_start](main.c.md#dsi_start), [main](main.c.md#main)
 int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
 ```
 
-Defined at lines 138 to 425.
+Defined at lines 138 to 426.
 
 Set up the UAMs, the listeners, and the server-wide settings at startup or reload.
 

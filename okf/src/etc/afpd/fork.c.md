@@ -5,7 +5,7 @@ description: "Fork commands: FPOpenFork, FPRead, FPWrite, FPCloseFork, byte rang
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/fork.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T23:02:49+01:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -661,11 +661,11 @@ Uses file-scope variables: `rfork_lru` in [etc/afpd/dircache.c](dircache.c.md)
 static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen, int is64)
 ```
 
-Defined at lines 2059 to 2409.
+Defined at lines 2060 to 2415.
 
 Shared body of FPRead and FPReadExt.
 
-The call reads reqcount bytes from offset, clamped at the fork size with AFPERR_EOF, then cut at UINT32_MAX, the most a [DSI](../../include/atalk/dsi.h.md#struct-dsi) reply frames. It ignores the newline mask and character of the request. Strict locking takes a temporary read lock on the range. Virtual forks serve their in-memory data, and resource fork reads can come from the resource fork cache while the fork's length and stamp agree with it. A fork opened from the cache checks the sidecar under the entry's path and takes its own resource fork for a read the buffer cannot serve. Data goes out through sendfile when available, otherwise in dsi_read chunks. A failure in the middle of the reply ends the session.
+The call reads reqcount bytes from offset, clamped at the fork size with AFPERR_EOF, then cut at UINT32_MAX, the most a [DSI](../../include/atalk/dsi.h.md#struct-dsi) reply frames. It ignores the newline mask and character of the request. Strict locking takes a temporary read lock on the range. Virtual forks serve their in-memory data, and resource fork reads can come from the resource fork cache while the fork's length and stamp agree with it. A fork opened from the cache checks the sidecar under the entry's path and takes its own resource fork for a read the buffer cannot serve. Data goes out through sendfile when available, otherwise in dsi_read chunks. A failure in the middle of the reply ends a session that is still connected; one that the reply wait left disconnected waits for a reconnect.
 
 Parameters:
 * `obj`: session object
@@ -691,7 +691,7 @@ Mentioned in the documentation of: [rfork_cache_serve_from_buf](fork.c.md#rfork_
 int afp_read(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2422 to 2426.
+Defined at lines 2428 to 2432.
 
 FPRead: read from an open fork with 32-bit offset and count.
 
@@ -714,7 +714,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_read_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2439 to 2443.
+Defined at lines 2445 to 2449.
 
 FPReadExt: read from an open fork with 64-bit offset and count.
 
@@ -737,7 +737,7 @@ Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 int afp_flush(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2457 to 2472.
+Defined at lines 2463 to 2478.
 
 FPFlush: flush every open fork of a volume to stable storage.
 
@@ -762,7 +762,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_flushfork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2486 to 2512.
+Defined at lines 2492 to 2518.
 
 FPFlushFork: flush an open fork to stable storage.
 
@@ -787,7 +787,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_syncfork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2529 to 2557.
+Defined at lines 2535 to 2563.
 
 FPSyncFork: flush an open fork to stable storage.
 
@@ -816,7 +816,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int flushfork(struct ofork *ofork)
 ```
 
-Defined at lines 2571 to 2622.
+Defined at lines 2577 to 2628.
 
 Flush the descriptors of an open fork to stable storage.
 
@@ -837,7 +837,7 @@ Called by: [afp_flushfork](fork.c.md#afp_flushfork), [afp_syncfork](fork.c.md#af
 int afp_closefork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2638 to 2669.
+Defined at lines 2644 to 2675.
 
 FPCloseFork: close an open fork.
 
@@ -862,7 +862,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int write_file(struct ofork *ofork, int eid, off_t *offset, char *rbuf, size_t rbuflen)
 ```
 
-Defined at lines 2685 to 2710.
+Defined at lines 2691 to 2716.
 
 Write rbuflen bytes into the fork at offset.
 
@@ -887,7 +887,7 @@ Called by: [write_fork](fork.c.md#write_fork)
 static bool write_fits_count(const struct ofork *ofork, size_t len, off_t reqcount)
 ```
 
-Defined at lines 2721 to 2732.
+Defined at lines 2727 to 2738.
 
 Tell whether an FPWrite's payload of len bytes fits its ReqCount, logging the refusal when not.
 
@@ -906,7 +906,7 @@ Called by: [write_fork](fork.c.md#write_fork)
 static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen, int is64)
 ```
 
-Defined at lines 2758 to 2997.
+Defined at lines 2764 to 3003.
 
 Shared body of FPWrite and FPWriteExt.
 
@@ -932,7 +932,7 @@ Called by: [afp_write](fork.c.md#afp_write), [afp_write_ext](fork.c.md#afp_write
 int afp_write(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 3010 to 3014.
+Defined at lines 3016 to 3020.
 
 FPWrite: write to an open fork with 32-bit offset and count.
 
@@ -955,7 +955,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_write_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 3030 to 3034.
+Defined at lines 3036 to 3040.
 
 FPWriteExt: write to an open fork with 64-bit offset and count.
 
@@ -980,7 +980,7 @@ Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 int afp_getforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 3053 to 3108.
+Defined at lines 3059 to 3114.
 
 FPGetForkParms: return the parameters of an open fork.
 

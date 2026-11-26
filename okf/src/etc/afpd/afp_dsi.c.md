@@ -5,7 +5,7 @@ description: "AFP sessions over DSI: signal handling, session reconnects, and th
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/afp_dsi.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-21T17:04:55+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T23:02:49+01:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -477,7 +477,7 @@ Called by: [afp_over_dsi](afp_dsi.c.md#afp_over_dsi)
 void afp_over_dsi(AFPObj *obj)
 ```
 
-Defined at lines 904 to 1377.
+Defined at lines 904 to 1391.
 
 Serve the AFP requests of a [DSI](../../include/atalk/dsi.h.md#struct-dsi) session until the session ends.
 
@@ -495,7 +495,7 @@ Calls: [AfpErr2name](../../libatalk/util/afp_util.c.md#afperr2name), [AfpNum2nam
 
 Called by: [dsi_start](main.c.md#dsi_start)
 
-Uses file-scope variables: `AFPobj`, `afp_switch` in [etc/afpd/switch.c](switch.c.md), `debug_request`, `misframed_requests`, `reload_request`, `replaycache`, `session_master`, `transfer_pending`
+Uses file-scope variables: `AFPobj`, `afp_switch` in [etc/afpd/switch.c](switch.c.md), `debug_request`, `die_pending`, `misframed_requests`, `reload_request`, `replaycache`, `session_master`, `transfer_pending`
 
 # Types
 

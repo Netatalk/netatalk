@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "libatalk/util"
-description: "21 files, 264 functions."
+description: "21 files, 266 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/util"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T23:02:49+01:00 }
 ---
 
 # Files
@@ -50,7 +50,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 * [etc/afpd](../etc/afpd.md): 286 calls
 * [libatalk/adouble](adouble.md): 29 calls
 * [libatalk/cnid](cnid.md): 26 calls
-* [libatalk/dsi](dsi.md): 23 calls
+* [libatalk/dsi](dsi.md): 24 calls
 * [bin/nad](../bin/nad.md): 22 calls
 * [etc/netatalk](../etc/netatalk.md): 17 calls
 * [libatalk/vfs](vfs.md): 14 calls
