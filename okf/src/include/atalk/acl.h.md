@@ -5,7 +5,7 @@ description: "Portable ACL retrieval, modification and permission helpers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/acl.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T19:31:53+01:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -18,6 +18,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 * [bin/dbd/cmd_dbd_scanvol.c](../../bin/dbd/cmd_dbd_scanvol.c.md)
 * [etc/afpd/acls.c](../../etc/afpd/acls.c.md)
+* [etc/afpd/file.c](../../etc/afpd/file.c.md)
 * [etc/afpd/filedir.c](../../etc/afpd/filedir.c.md)
 * [etc/afpd/unix.c](../../etc/afpd/unix.c.md)
 * [include/atalk/vfs.h](vfs.h.md)

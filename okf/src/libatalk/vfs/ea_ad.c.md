@@ -5,7 +5,7 @@ description: "Store Extended Attributes inside .AppleDouble folders as follows:"
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/vfs/ea_ad.c"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T21:19:58+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T19:31:53+01:00 }
 ---
 
 Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -621,7 +621,7 @@ Returns: AFP_OK, AFPERR_ACCESS on EPERM or EACCES, or AFPERR_MISC on any other f
 
 Calls: [ea_close](ea_ad.c.md#ea_close), [ea_header_mode](ea_ad.c.md#ea_header_mode), [ea_mode](ea_ad.c.md#ea_mode), [ea_open](ea_ad.c.md#ea_open), [ea_path](ea_ad.c.md#ea_path), [setfilmode](unix.c.md#setfilmode)
 
-Called through [`vfs_ops::vfs_setfilmode`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [afp_moveandrename](../../etc/afpd/filedir.c.md#afp_moveandrename), [setfilunixmode](../../etc/afpd/unix.c.md#setfilunixmode), [vfs_setfilmode](vfs.c.md#vfs_setfilmode)
+Called through [`vfs_ops::vfs_setfilmode`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_moveandrename](../../etc/afpd/filedir.c.md#afp_moveandrename), [setfilunixmode](../../etc/afpd/unix.c.md#setfilunixmode), [vfs_setfilmode](vfs.c.md#vfs_setfilmode)
 
 Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 

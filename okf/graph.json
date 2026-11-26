@@ -1,5 +1,5 @@
 {
-"commit": "90be42ce036429562de3744d787e17a3b666e55d",
+"commit": "d31a9650989e15bcd38c6225974eab10d648c55d",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -2460,6 +2460,11 @@
 "from": "etc/afpd/file.c",
 "kind": "include",
 "to": "etc/afpd/ad_cache.h"
+},
+{
+"from": "etc/afpd/file.c",
+"kind": "include",
+"to": "include/atalk/acl.h"
 },
 {
 "from": "etc/afpd/file.c",
@@ -11908,6 +11913,30 @@
 "from": "etc/afpd/file.c#afp_exchangefiles",
 "kind": "use",
 "to": "etc/afpd/directory.c#curdir"
+},
+{
+"from": "etc/afpd/file.c#afp_exchangefiles",
+"kind": "dispatch",
+"to": "libatalk/vfs/vfs.c#RF_setfilmode_adouble",
+"via": "vfs_ops::vfs_setfilmode"
+},
+{
+"from": "etc/afpd/file.c#afp_exchangefiles",
+"kind": "dispatch",
+"to": "libatalk/vfs/vfs.c#RF_setfilmode_ea",
+"via": "vfs_ops::vfs_setfilmode"
+},
+{
+"from": "etc/afpd/file.c#afp_exchangefiles",
+"kind": "dispatch",
+"to": "libatalk/vfs/ea_ad.c#ea_chmod_file",
+"via": "vfs_ops::vfs_setfilmode"
+},
+{
+"from": "etc/afpd/file.c#afp_exchangefiles",
+"kind": "dispatch",
+"to": "libatalk/vfs/vfs.c#vfs_setfilmode",
+"via": "vfs_ops::vfs_setfilmode"
 },
 {
 "from": "etc/afpd/fork.c#afp_flush",
@@ -49233,7 +49262,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_copyfile",
 "kind": "function",
-"line": 2818,
+"line": 2819,
 "static": false
 },
 {
@@ -49249,7 +49278,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_createfile",
 "kind": "function",
-"line": 1730,
+"line": 1731,
 "static": false
 },
 {
@@ -49257,7 +49286,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_createid",
 "kind": "function",
-"line": 3379,
+"line": 3380,
 "static": false
 },
 {
@@ -49273,7 +49302,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_deleteid",
 "kind": "function",
-"line": 3759,
+"line": 3760,
 "static": false
 },
 {
@@ -49417,7 +49446,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_exchangefiles",
 "kind": "function",
-"line": 4053,
+"line": 4054,
 "static": false
 },
 {
@@ -49753,7 +49782,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_resolveid",
 "kind": "function",
-"line": 3592,
+"line": 3593,
 "static": false
 },
 {
@@ -49809,7 +49838,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_setfilparams",
 "kind": "function",
-"line": 2001,
+"line": 2002,
 "static": false
 },
 {
@@ -51529,7 +51558,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#check_delete_inhibit",
 "kind": "function",
-"line": 216,
+"line": 217,
 "static": false
 },
 {
@@ -53233,7 +53262,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#copy_path_name",
 "kind": "function",
-"line": 2735,
+"line": 2736,
 "static": false
 },
 {
@@ -53273,7 +53302,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#copyfile",
 "kind": "function",
-"line": 3030,
+"line": 3031,
 "static": false
 },
 {
@@ -53497,7 +53526,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#createfile_meta",
 "kind": "function",
-"line": 1613,
+"line": 1614,
 "static": true
 },
 {
@@ -53505,7 +53534,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#createfile_truncate",
 "kind": "function",
-"line": 1666,
+"line": 1667,
 "static": true
 },
 {
@@ -53833,7 +53862,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#default_type",
 "kind": "function",
-"line": 609,
+"line": 610,
 "static": true
 },
 {
@@ -53985,7 +54014,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#deletefile",
 "kind": "function",
-"line": 3256,
+"line": 3257,
 "static": false
 },
 {
@@ -55393,7 +55422,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#exchange_meta_open",
 "kind": "function",
-"line": 3901,
+"line": 3902,
 "static": true
 },
 {
@@ -55577,7 +55606,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#find_adouble",
 "kind": "function",
-"line": 3978,
+"line": 3979,
 "static": true
 },
 {
@@ -55961,7 +55990,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#get_finderinfo",
 "kind": "function",
-"line": 635,
+"line": 636,
 "static": false
 },
 {
@@ -55969,7 +55998,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#get_id",
 "kind": "function",
-"line": 795,
+"line": 796,
 "static": false
 },
 {
@@ -56097,7 +56126,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#getfilparams",
 "kind": "function",
-"line": 1454,
+"line": 1455,
 "static": false
 },
 {
@@ -56161,7 +56190,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#getmetadata",
 "kind": "function",
-"line": 914,
+"line": 915,
 "static": false
 },
 {
@@ -57609,7 +57638,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#link_target_in",
 "kind": "function",
-"line": 1530,
+"line": 1531,
 "static": true
 },
 {
@@ -58857,7 +58886,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#mtoUTF8",
 "kind": "function",
-"line": 2710,
+"line": 2711,
 "static": false
 },
 {
@@ -59121,7 +59150,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#name_holds_file",
 "kind": "function",
-"line": 397,
+"line": 398,
 "static": true
 },
 {
@@ -60249,7 +60278,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#path_entry",
 "kind": "function",
-"line": 128,
+"line": 129,
 "static": false
 },
 {
@@ -60321,7 +60350,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#path_resolve_cached_file",
 "kind": "function",
-"line": 101,
+"line": 102,
 "static": false
 },
 {
@@ -61225,7 +61254,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#reenumerate_id",
 "kind": "function",
-"line": 3533,
+"line": 3534,
 "static": true
 },
 {
@@ -61233,7 +61262,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#reenumerate_loop",
 "kind": "function",
-"line": 3486,
+"line": 3487,
 "static": true
 },
 {
@@ -61337,7 +61366,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#rename_staged_link",
 "kind": "function",
-"line": 420,
+"line": 421,
 "static": true
 },
 {
@@ -61353,7 +61382,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#renamefile",
 "kind": "function",
-"line": 2615,
+"line": 2616,
 "static": false
 },
 {
@@ -61361,7 +61390,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#replace_blocked",
 "kind": "function",
-"line": 278,
+"line": 279,
 "static": true
 },
 {
@@ -61369,7 +61398,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#replace_refused",
 "kind": "function",
-"line": 312,
+"line": 313,
 "static": true
 },
 {
@@ -62113,7 +62142,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#set_name",
 "kind": "function",
-"line": 716,
+"line": 717,
 "static": false
 },
 {
@@ -62305,7 +62334,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#setfilparams",
 "kind": "function",
-"line": 2119,
+"line": 2120,
 "static": false
 },
 {
@@ -62513,7 +62542,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#sidecar_locked",
 "kind": "function",
-"line": 1571,
+"line": 1572,
 "static": true
 },
 {
@@ -64217,7 +64246,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#stage_symlink",
 "kind": "function",
-"line": 334,
+"line": 335,
 "static": true
 },
 {
@@ -64577,7 +64606,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#symlink_keeps_cnid",
 "kind": "function",
-"line": 482,
+"line": 483,
 "static": true
 },
 {
@@ -64585,7 +64614,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#symlink_target_safe",
 "kind": "function",
-"line": 148,
+"line": 149,
 "static": true
 },
 {

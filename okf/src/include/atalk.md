@@ -5,7 +5,7 @@ description: "46 files, 39 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/include/atalk"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T19:31:53+01:00 }
 ---
 
 # Files
@@ -63,7 +63,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 
 # Headers included by
 
-* [etc/afpd](../etc/afpd.md): 355 includes
+* [etc/afpd](../etc/afpd.md): 356 includes
 * [bin/nad](../bin/nad.md): 76 includes
 * [libatalk/util](../libatalk/util.md): 72 includes
 * [libatalk/vfs](../libatalk/vfs.md): 52 includes

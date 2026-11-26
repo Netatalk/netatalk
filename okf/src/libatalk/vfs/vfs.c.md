@@ -5,7 +5,7 @@ description: "VFS operation tables for the AppleDouble layouts and the EA and AC
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/vfs/vfs.c"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T19:31:53+01:00 }
 ---
 
 Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -390,7 +390,7 @@ Calls: [adouble_setfilmode](vfs.c.md#adouble_setfilmode)
 
 Calls through [`vol::ad_path`](../../include/atalk/volume.h.md#struct-vol): no table assigns this field
 
-Called through [`vfs_ops::vfs_setfilmode`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [afp_moveandrename](../../etc/afpd/filedir.c.md#afp_moveandrename), [setfilunixmode](../../etc/afpd/unix.c.md#setfilunixmode), [vfs_setfilmode](vfs.c.md#vfs_setfilmode)
+Called through [`vfs_ops::vfs_setfilmode`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_moveandrename](../../etc/afpd/filedir.c.md#afp_moveandrename), [setfilunixmode](../../etc/afpd/unix.c.md#setfilunixmode), [vfs_setfilmode](vfs.c.md#vfs_setfilmode)
 
 Dispatched via: [netatalk_adouble_v2](vfs.c.md#netatalk_adouble_v2)
 
@@ -874,7 +874,7 @@ Calls: [adouble_setfilmode](vfs.c.md#adouble_setfilmode)
 
 Calls through [`vol::ad_path`](../../include/atalk/volume.h.md#struct-vol): no table assigns this field
 
-Called through [`vfs_ops::vfs_setfilmode`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [afp_moveandrename](../../etc/afpd/filedir.c.md#afp_moveandrename), [setfilunixmode](../../etc/afpd/unix.c.md#setfilunixmode), [vfs_setfilmode](vfs.c.md#vfs_setfilmode)
+Called through [`vfs_ops::vfs_setfilmode`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_moveandrename](../../etc/afpd/filedir.c.md#afp_moveandrename), [setfilunixmode](../../etc/afpd/unix.c.md#setfilunixmode), [vfs_setfilmode](vfs.c.md#vfs_setfilmode)
 
 Dispatched via: [netatalk_adouble_ea](vfs.c.md#netatalk_adouble_ea)
 
@@ -1100,7 +1100,7 @@ Returns: AFP_OK, or the result of the last module that failed
 
 Calls through [`vfs_ops::vfs_setfilmode`](../../include/atalk/vfs.h.md#struct-vfs_ops): [RF_setfilmode_adouble](vfs.c.md#rf_setfilmode_adouble), [RF_setfilmode_ea](vfs.c.md#rf_setfilmode_ea), [ea_chmod_file](ea_ad.c.md#ea_chmod_file)
 
-Called through [`vfs_ops::vfs_setfilmode`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [afp_moveandrename](../../etc/afpd/filedir.c.md#afp_moveandrename), [setfilunixmode](../../etc/afpd/unix.c.md#setfilunixmode)
+Called through [`vfs_ops::vfs_setfilmode`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_moveandrename](../../etc/afpd/filedir.c.md#afp_moveandrename), [setfilunixmode](../../etc/afpd/unix.c.md#setfilunixmode)
 
 Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 

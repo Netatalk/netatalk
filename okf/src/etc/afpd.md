@@ -5,7 +5,7 @@ description: "66 files, 710 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/afpd"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T19:31:53+01:00 }
 ---
 
 # Files
@@ -79,7 +79,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 
 # Includes headers from
 
-* [include/atalk](../include/atalk.md): 355 includes
+* [include/atalk](../include/atalk.md): 356 includes
 * [etc/spotlight](spotlight.md): 3 includes
 * [sys/netatalk](../sys/netatalk.md): 1 includes
 
