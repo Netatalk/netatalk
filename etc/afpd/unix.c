@@ -278,12 +278,15 @@ mode_t mtoumode(struct maccess *ma)
  * derive the metadata mode, which needs write access wherever read access
  * exists.
  *
- * @param[in]     vol   volume of the file
- * @param[in,out] path  file, its stat filled when missing
- * @param[in]     mode  new mode
- * @returns 0, or -1 when the stat or a mode change failed
+ * @param[in]     vol     volume of the file
+ * @param[in,out] path    file, its stat filled when missing
+ * @param[in]     mode    new mode
+ * @param[in]     strict  report EPERM from mode changes
+ * @returns AFP_OK on success, -1 if the data file stat or mode change fails,
+ *          or the VFS error from a metadata mode change
  */
-int setfilunixmode(const struct vol *vol, struct path *path, mode_t mode)
+int setfilunixmode(const struct vol *vol, struct path *path, mode_t mode,
+                   bool strict)
 {
     if (!path->st_valid) {
         of_stat(vol, path);
@@ -294,13 +297,15 @@ int setfilunixmode(const struct vol *vol, struct path *path, mode_t mode)
     }
 
     mode |= vol_fperm(vol);
+    vfs_setfilmode_fn set_mode = strict ? &setfilmode_strict : &setfilmode;
 
-    if (setfilmode(vol, path->u_name, mode, &path->st) < 0) {
+    if (set_mode(vol, path->u_name, mode, &path->st) < 0) {
         return -1;
     }
 
     /* we need to set write perm if read set for resource fork */
-    return vol->vfs->vfs_setfilmode(vol, path->u_name, mode, &path->st);
+    set_mode = strict ? vol->vfs->vfs_setfilmode_strict : vol->vfs->vfs_setfilmode;
+    return set_mode(vol, path->u_name, mode, &path->st);
 }
 
 
@@ -351,24 +356,30 @@ int setdirunixmode(const struct vol *vol, char *name, mode_t mode)
 /*!
  * @brief Give a file and its AppleDouble metadata a new owner and group
  *
- * EPERM counts as success for both changes.
+ * Change the data file according to the volume's symlink policy, then run
+ * the VFS ownership hooks for its metadata. In non-strict mode, EPERM from
+ * either step counts as success.
  *
- * @param[in] vol   volume of the file
- * @param[in] uid   new owner
- * @param[in] gid   new group
- * @param[in] path  file
- * @returns 0, or -1 when a change failed with another error
+ * @param[in] vol     volume of the file
+ * @param[in] uid     new owner, or (uid_t)-1 to keep the current owner
+ * @param[in] gid     new group, or (gid_t)-1 to keep the current group
+ * @param[in] path    file
+ * @param[in] strict  report EPERM from ownership changes
+ * @returns 0 on success, including tolerated EPERM, or -1 on a reported
+ *          failure
  */
 int setfilowner(const struct vol *vol, const uid_t uid, const gid_t gid,
-                struct path *path)
+                struct path *path, bool strict)
 {
-    if (ochown(path->u_name, uid, gid, vol_syml_opt(vol)) < 0 && errno != EPERM) {
+    if (ochown(path->u_name, uid, gid, vol_syml_opt(vol)) < 0
+            && (strict || errno != EPERM)) {
         LOG(log_debug, logtype_afpd, "setfilowner: chown %d/%d %s: %s",
             uid, gid, path->u_name, strerror(errno));
         return -1;
     }
 
-    if (vol->vfs->vfs_chown(vol, path->u_name, uid, gid) < 0 && errno != EPERM) {
+    if (vol->vfs->vfs_chown(vol, path->u_name, uid, gid) < 0
+            && (strict || errno != EPERM)) {
         LOG(log_debug, logtype_afpd, "setfilowner: rf_chown %d/%d %s: %s",
             uid, gid, path->u_name, strerror(errno));
         return -1;

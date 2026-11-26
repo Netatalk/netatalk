@@ -60,6 +60,7 @@ extern int nfsv4_chmod(char *name, mode_t mode);
 #define fchmod_acl posix_fchmod
 
 extern int remove_posix_acl_vfs(const char *name);
+extern int copy_posix_acl(int srcfd, int dstfd);
 extern int posix_chmod(const char *name, mode_t mode);
 extern int posix_fchmod(int fd, mode_t mode);
 

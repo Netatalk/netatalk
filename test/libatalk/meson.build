@@ -9,6 +9,23 @@ cnid_registry_test = executable(
 
 test('CNID backend registry', cnid_registry_test)
 
+posix_acl_copy_test = executable(
+    'posix_acl_copy_test',
+    ['test_posix_acl_copy.c', '../afpd/faultinject.c'],
+    include_directories: [root_includes, '../afpd'],
+    dependencies: [bstring, iniparser, acl_deps],
+    link_with: libatalk,
+    export_dynamic: true,
+    install: false,
+)
+
+test(
+    'POSIX access ACL copy',
+    posix_acl_copy_test,
+    env: {'LD_PRELOAD': faultinject_preload.full_path()},
+    depends: faultinject_preload,
+)
+
 socket_helpers_test = executable(
     'socket_helpers_test',
     'test_socket_helpers.c',

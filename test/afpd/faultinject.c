@@ -1196,6 +1196,34 @@ acl_t acl_get_file(const char *path, acl_type_t type)
 }
 #endif /* HAVE_POSIX_ACLS */
 
+typedef int (*chmod_fn)(const char *, mode_t);
+static chmod_fn real_chmod;
+
+/*!
+ * @brief Inject a chmod failure for the selected path
+ *
+ * Only calls whose path matches fi.chmod_path consult the fault injector.
+ * When the fault fires, set the configured errno. Otherwise call chmod
+ * through the real libc symbol.
+ *
+ * @param[in] path  path to change and compare against the configured path
+ * @param[in] mode  requested mode
+ * @returns 0 on success, or -1 with errno set on an injected or libc failure
+ */
+int chmod(const char *path, mode_t mode)
+{
+    if (!real_chmod) {
+        real_chmod = (chmod_fn)dlsym(RTLD_NEXT, "chmod");
+    }
+
+    if (fi.chmod_path != NULL && strcmp(path, fi.chmod_path) == 0
+            && fi_call_fire(&fi.chmod)) {
+        return -1;
+    }
+
+    return real_chmod(path, mode);
+}
+
 typedef int (*renameat_fn)(int, const char *, int, const char *);
 static renameat_fn real_renameat;
 

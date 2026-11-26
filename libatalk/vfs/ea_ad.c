@@ -1,5 +1,6 @@
 /*
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
+  Copyright (c) 2025-2026 Daniel Markstedt <daniel@mindani.net>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -1781,21 +1782,23 @@ exit:
  * @brief Apply a new file mode to the EA header file and every EA file
  *
  * The header gets ea_header_mode, so the owner keeps read and write access.
- * Each EA file gets ea_mode. setfilmode applies the volume umask. A file
- * without an EA header needs nothing and succeeds.
+ * Each EA file gets ea_mode. The mode setter applies the volume umask. A file
+ * without an EA header needs nothing and succeeds. On failure, preserve errno
+ * from the operation if closing the EA handle succeeds.
  *
- * @param[in] vol   volume holding the file
- * @param[in] name  file whose EA files to change
- * @param[in] mode  new file mode
- * @param[in] st    unused
- * @returns AFP_OK, AFPERR_ACCESS on EPERM or EACCES, or AFPERR_MISC on any
- *          other failure
+ * @param[in] vol       volume holding the file
+ * @param[in] name      file whose EA files to change
+ * @param[in] mode      new file mode
+ * @param[in] set_mode  mode setter for the EA header and files
+ * @returns AFP_OK on success, AFPERR_ACCESS when the mode setter reports
+ *          EPERM or EACCES, or AFPERR_MISC on any other failure
  */
-int ea_chmod_file(const struct vol *vol, const char *name, mode_t mode,
-                  struct stat *st _U_)
+static int ea_chmod_file_impl(const struct vol *vol, const char *name,
+                              mode_t mode, vfs_setfilmode_fn set_mode)
 {
     unsigned int count = 0;
     int ret = AFP_OK;
+    int saved_errno;
     const char *eaname;
     struct ea ea;
     LOG(log_debug, logtype_afpd, "ea_chmod_file('%s')", name);
@@ -1812,7 +1815,7 @@ int ea_chmod_file(const struct vol *vol, const char *name, mode_t mode,
     }
 
     /* Set mode on EA header file */
-    if ((setfilmode(vol, ea_path(&ea, NULL, 0), ea_header_mode(mode), NULL)) != 0) {
+    if (set_mode(vol, ea_path(&ea, NULL, 0), ea_header_mode(mode), NULL) != 0) {
         LOG(log_error, logtype_afpd, "ea_chmod_file('%s'): %s", ea_path(&ea, NULL, 0),
             strerror(errno));
 
@@ -1835,7 +1838,7 @@ int ea_chmod_file(const struct vol *vol, const char *name, mode_t mode,
             goto exit;
         }
 
-        if ((setfilmode(vol, eaname, ea_mode(mode), NULL)) != 0) {
+        if (set_mode(vol, eaname, ea_mode(mode), NULL) != 0) {
             LOG(log_error, logtype_afpd, "ea_chmod_file('%s'): %s", eaname,
                 strerror(errno));
 
@@ -1855,6 +1858,7 @@ int ea_chmod_file(const struct vol *vol, const char *name, mode_t mode,
     }
 
 exit:
+    saved_errno = errno;
 
     if ((ea_close(&ea)) != 0) {
         LOG(log_error, logtype_afpd, "ea_chmod_file('%s'): error closing ea handle",
@@ -1862,7 +1866,49 @@ exit:
         return AFPERR_MISC;
     }
 
+    if (ret != AFP_OK) {
+        errno = saved_errno;
+    }
+
     return ret;
+}
+
+/*!
+ * @brief Apply the EA file modes with EPERM tolerance
+ *
+ * Derive modes for the EA header and each EA file from the data file mode.
+ * A missing EA header or EPERM from a mode change counts as success.
+ *
+ * @param[in] vol   volume holding the file
+ * @param[in] name  file whose EA files to change
+ * @param[in] mode  new data file mode
+ * @param[in] st    data file stat, unused
+ * @returns AFP_OK on success, AFPERR_ACCESS when a mode change fails with
+ *          EACCES, or AFPERR_MISC on any other reported failure
+ */
+int ea_chmod_file(const struct vol *vol, const char *name, mode_t mode,
+                  struct stat *st _U_)
+{
+    return ea_chmod_file_impl(vol, name, mode, setfilmode);
+}
+
+/*!
+ * @brief Apply the EA file modes and report EPERM from a mode change
+ *
+ * Derive modes for the EA header and each EA file from the data file mode.
+ * A missing EA header counts as success.
+ *
+ * @param[in] vol   volume holding the file
+ * @param[in] name  file whose EA files to change
+ * @param[in] mode  new data file mode
+ * @param[in] st    data file stat, unused
+ * @returns AFP_OK on success, AFPERR_ACCESS when the mode setter reports
+ *          EPERM or EACCES, or AFPERR_MISC on any other failure
+ */
+int ea_chmod_file_strict(const struct vol *vol, const char *name, mode_t mode,
+                         struct stat *st _U_)
+{
+    return ea_chmod_file_impl(vol, name, mode, setfilmode_strict);
 }
 
 /*!
