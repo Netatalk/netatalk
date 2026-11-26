@@ -2097,6 +2097,7 @@ extern struct path Cur_Path;
  * that the conversion of a held file makes where the fork's or the call's
  * layout is ea, as the fork's metadata then is not the link's: on the ea
  * layout it is the replaced file's, which another name of it may still show.
+ * Ownership and mode changes requested through UNIX privileges are best effort.
  *
  * On a volume that does not follow symlinks, Finder info of type slnk and
  * creator rhap turns a regular file into a symlink. The link target is the
@@ -2290,13 +2291,13 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
             memcpy(&aint, buf, sizeof(aint));
             f_gid = ntohl(aint);
             buf += sizeof(aint);
-            setfilowner(vol, f_uid, f_gid, path);
+            setfilowner(vol, f_uid, f_gid, path, false);
             memcpy(&upriv, buf, sizeof(upriv));
             buf += sizeof(upriv);
             upriv = ntohl(upriv);
 
             if (upriv & S_IWUSR) {
-                setfilunixmode(vol, path, upriv);
+                setfilunixmode(vol, path, upriv, false);
             } else {
                 /* do it later */
                 upriv_bit = 1;
@@ -2475,7 +2476,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
 
         case FILPBIT_UNIXPR :
             if (upriv_bit) {
-                setfilunixmode(vol, path, upriv);
+                setfilunixmode(vol, path, upriv, false);
             }
 
             break;
@@ -3012,20 +3013,22 @@ copy_exit:
  * @brief Duplicate a file with its metadata and resource fork at a new path
  *
  * The AppleDouble layer transfers the data fork. The destination volume's VFS
- * transfers the resource fork and the extended attributes. With newname NULL,
- * as called from directory.c, the caller transfers the resource fork and adp is
- * NULL.
+ * transfers the resource fork and the extended attributes. Flush the
+ * destination metadata before applying the POSIX access ACL, which can
+ * remove write access. On builds with POSIX ACL support, copy the ACL of a
+ * non-symlink source using the already-open data forks to preserve source
+ * locks. A metadata flush or ACL copy failure triggers an attempt to remove
+ * the partial destination.
  *
- * @param[in] s_vol    source volume
- * @param[in] d_vol    destination volume
- * @param[in] d_dir    destination directory
- * @param[in] sfd      directory descriptor src is relative to, or -1
- * @param[in] src      source path
- * @param[in] dst      destination path
- * @param[in] newname  Mac name of the new file, or NULL to leave the resource
- *                     fork alone
- * @param[in] adp      open AppleDouble of the source, or NULL to open it here
- * @param[in] held     adp belongs to an open fork and must stay open afterwards
+ * @param[in]     s_vol    source volume
+ * @param[in]     d_vol    destination volume
+ * @param[in]     d_dir    destination directory
+ * @param[in]     sfd      directory descriptor src is relative to, or -1
+ * @param[in]     src      source path
+ * @param[in]     dst      destination path
+ * @param[in]     newname  Mac name of the new file for logging, or NULL
+ * @param[in,out] adp      source AppleDouble handle, or NULL to open a private one
+ * @param[in]     held     adp belongs to an open fork and must stay open
  * @returns AFP_OK, AFPERR_EXIST when dst exists, or another AFPERR_* code
  */
 int copyfile(struct vol *s_vol,
@@ -3127,15 +3130,14 @@ int copyfile(struct vol *s_vol,
             strerror(errno));
     }
 
-    if (ad_meta_open(&add)) {
-        if (ad_meta_open(adp)) {
-            if (ad_copy_header(&add, adp) != 0) {
-                if (err == 0) {
-                    err = EIO;
-                }
+    if (err != 0) {
+        goto error;
+    }
 
-                goto error;
-            }
+    if (ad_meta_open(&add)) {
+        if (ad_meta_open(adp) && ad_copy_header(&add, adp) != 0) {
+            err = EIO;
+            goto error;
         }
 
         ad_setname(&add, dst);
@@ -3155,16 +3157,33 @@ int copyfile(struct vol *s_vol,
 
         (void)ad_setid(&add, stdest.st_dev, stdest.st_ino, id, d_dir->d_did,
                        d_vol->v_stamp);
-        ad_flush(&add);
+
+        if (ad_flush(&add) != 0) {
+            err = errno;
+            LOG(log_error, logtype_afpd,
+                "copyfile('%s'): flushing metadata: %s", dst, strerror(err));
+            goto error;
+        }
     }
 
+#ifdef HAVE_POSIX_ACLS
+
+    /* The access ACL can remove the write permission needed to flush EAs. */
+    if (ad_data_fileno(adp) != AD_SYMLINK
+            && copy_posix_acl(ad_data_fileno(adp), ad_data_fileno(&add)) < 0) {
+        err = errno;
+        LOG(log_error, logtype_afpd, "copyfile('%s'): copying access ACL: %s",
+            src, strerror(err));
+    }
+
+#endif
 error:
 
     if (!held) {
         ad_close(adp, adflags);
     }
 
-    if (ad_close(&add, adflags) < 0) {
+    if (ad_close(&add, adflags) < 0 && err == 0) {
         err = errno;
     }
 
@@ -4034,13 +4053,19 @@ static struct adouble *find_adouble(const AFPObj *obj, struct vol *vol,
  * directory swap the data and metadata. The metadata headers, the CNID
  * records, the AppleDouble IDs, and the permissions then swap back, so each
  * name keeps its FinderInfo, attributes, header dates, file ID and
- * permissions, and the Finder comment stays with its file; a file without
- * metadata gets a header before the renames to take the other's, and when one
- * side has no header it can write, both headers stay with their files. A
- * failure undoes the renames, and after the CNID rewrite the CNID rows with
- * them; a failed first rename removes the .AppleTemp file, and an undo that
- * fails ends the unwind, as each later one would rename a file onto the name
- * that the other still holds. The user must read both files too, as the AFP
+ * permissions, including the native POSIX access ACL on Linux where supported.
+ * The Finder comment stays with its file. A file without metadata gets a
+ * header before the renames to take the other's. If either header is
+ * unwritable, both headers stay with their files.
+ * Ownership, modes, and access ACLs are applied before the header swap. A
+ * failure before the final flushes triggers an attempt to undo the renames and
+ * restore any rewritten CNID rows. After undoing the renames, the exchange
+ * also tries to restore the saved ownership, modes, and access ACLs if it
+ * reached those updates. A final flush failure returns AFPERR_MISC and leaves
+ * the files exchanged, since metadata writes may already have succeeded.
+ * A failed first rename removes the .AppleTemp file. A failed undo rename
+ * ends the unwind, as each later one would rename a file onto the name that
+ * the other still holds. The user must read both files too, as the AFP
  * specification demands.
  *
  * @param[in]     obj      session object
@@ -4049,7 +4074,8 @@ static struct adouble *find_adouble(const AFPObj *obj, struct vol *vol,
  * @param[out]    rbuf     reply block, unused
  * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
  * @returns AFP_OK, AFPERR_SAMEOBJ, AFPERR_BADTYPE, AFPERR_NOOBJ, AFPERR_ACCESS,
- *          AFPERR_VLOCK, AFPERR_MISC across devices, or another AFPERR_* code
+ *          AFPERR_VLOCK, AFPERR_MISC across devices or on a permission,
+ *          ACL, or metadata failure, or another AFPERR_* code
  */
 int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                       char *rbuf _U_, size_t *rbuflen)
@@ -4392,8 +4418,81 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         goto err_temp_to_dest;
     }
 
+    /* Each name keeps its original owner, mode and native access ACL. */
+    perms_attempted = true;
+    become_root();
+    err = AFP_OK;
+    path->st = srcst;
+    path->st_valid = 1;
+    path->st_errno = 0;
+    path->u_name = upath;
+
+    if (srcst.st_uid != destst.st_uid || srcst.st_gid != destst.st_gid) {
+        if (setfilowner(vol, destst.st_uid, destst.st_gid, path, true) < 0) {
+            err = AFPERR_MISC;
+        }
+    }
+
+    if (((srcst.st_mode ^ destst.st_mode) & 07777)
+            || srcst.st_uid != destst.st_uid || srcst.st_gid != destst.st_gid) {
+        if (setfilunixmode(vol, path, destst.st_mode, true) < 0) {
+            err = AFPERR_MISC;
+        }
+    } else {
+        if (vol->vfs->vfs_setfilmode_strict(vol, path->u_name, destst.st_mode,
+                                            &path->st) < 0) {
+            err = AFPERR_MISC;
+        }
+    }
+
+    path->st = destst;
+    path->st_valid = 1;
+    path->st_errno = 0;
+    path->u_name = p;
+
+    if (srcst.st_uid != destst.st_uid || srcst.st_gid != destst.st_gid) {
+        if (setfilowner(vol, srcst.st_uid, srcst.st_gid, path, true) < 0) {
+            err = AFPERR_MISC;
+        }
+    }
+
+    if (((srcst.st_mode ^ destst.st_mode) & 07777)
+            || srcst.st_uid != destst.st_uid || srcst.st_gid != destst.st_gid) {
+        if (setfilunixmode(vol, path, srcst.st_mode, true) < 0) {
+            err = AFPERR_MISC;
+        }
+    } else {
+        if (vol->vfs->vfs_setfilmode_strict(vol, path->u_name, srcst.st_mode,
+                                            &path->st) < 0) {
+            err = AFPERR_MISC;
+        }
+    }
+
+#if defined(__linux__) && defined(HAVE_POSIX_ACLS)
+
+    if (restore_acls) {
+        if (acl_set_file(upath, ACL_TYPE_ACCESS, dest_acl) != 0) {
+            LOG(log_error, logtype_afpd,
+                "afp_exchangefiles: restoring destination ACL: %s", strerror(errno));
+            err = AFPERR_MISC;
+        }
+
+        if (acl_set_file(p, ACL_TYPE_ACCESS, src_acl) != 0) {
+            LOG(log_error, logtype_afpd,
+                "afp_exchangefiles: restoring source ACL: %s", strerror(errno));
+            err = AFPERR_MISC;
+        }
+    }
+
+#endif
+
+    if (err != AFP_OK) {
+        goto err_exchange_perms;
+    }
+
     /* the headers swap back to the names when both can be written, and
-     * otherwise stay with the files */
+     * otherwise stay with the files. Keep root for the EA writes after
+     * restoring permissions. */
     if (ad_meta_open(adsp) && ad_meta_open(addp)
             && (ad_get_MD_flags(adsp) & O_ACCMODE) == O_RDWR
             && (ad_get_MD_flags(addp) & O_ACCMODE) == O_RDWR) {
@@ -4408,6 +4507,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 
         if (!swapped) {
             err = AFPERR_MISC;
+            unbecome_root();
             goto err_temp_to_dest;
         }
 
@@ -4415,83 +4515,43 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
          * other name */
         ad_setname(adsp, path->m_name);
         ad_setname(addp, spath);
-        ad_flush(adsp);
-        ad_flush(addp);
+
+        if (ad_flush(adsp) != 0) {
+            err = AFPERR_MISC;
+        }
+
+        if (ad_flush(addp) != 0) {
+            err = AFPERR_MISC;
+        }
     }
 
     /* FIXME: we should switch resource fork too */
 
     /* here we need to reopen if crossdev */
     if (sid && ad_setid(addp, destst.st_dev, destst.st_ino,  sid, sdir->d_did,
-                        vol->v_stamp)) {
-        ad_flush(addp);
+                        vol->v_stamp) && ad_flush(addp) != 0) {
+        err = AFPERR_MISC;
     }
 
     if (did && ad_setid(adsp, srcst.st_dev, srcst.st_ino,  did, curdir->d_did,
-                        vol->v_stamp)) {
-        ad_flush(adsp);
-    }
-
-    /* Each name keeps its original owner, mode and native access ACL. */
-    perms_attempted = true;
-    become_root();
-    path->st = srcst;
-    path->st_valid = 1;
-    path->st_errno = 0;
-    path->u_name = upath;
-
-    if (srcst.st_uid != destst.st_uid || srcst.st_gid != destst.st_gid) {
-        (void)setfilowner(vol, destst.st_uid, destst.st_gid, path);
-    }
-
-    if (((srcst.st_mode ^ destst.st_mode) & 07777)
-            || srcst.st_uid != destst.st_uid || srcst.st_gid != destst.st_gid) {
-        (void)setfilunixmode(vol, path, destst.st_mode);
-    } else {
-        (void)vol->vfs->vfs_setfilmode(vol, path->u_name, destst.st_mode,
-                                       &path->st);
-    }
-
-    path->st = destst;
-    path->st_valid = 1;
-    path->st_errno = 0;
-    path->u_name = p;
-
-    if (srcst.st_uid != destst.st_uid || srcst.st_gid != destst.st_gid) {
-        (void)setfilowner(vol, srcst.st_uid, srcst.st_gid, path);
-    }
-
-    if (((srcst.st_mode ^ destst.st_mode) & 07777)
-            || srcst.st_uid != destst.st_uid || srcst.st_gid != destst.st_gid) {
-        (void)setfilunixmode(vol, path, srcst.st_mode);
-    } else {
-        (void)vol->vfs->vfs_setfilmode(vol, path->u_name, srcst.st_mode,
-                                       &path->st);
-    }
-
-#if defined(__linux__) && defined(HAVE_POSIX_ACLS)
-
-    if (restore_acls && (acl_set_file(upath, ACL_TYPE_ACCESS, dest_acl) != 0
-                         || acl_set_file(p, ACL_TYPE_ACCESS, src_acl) != 0)) {
-        LOG(log_error, logtype_afpd,
-            "afp_exchangefiles: restoring access ACL: %s", strerror(errno));
+                        vol->v_stamp) && ad_flush(adsp) != 0) {
         err = AFPERR_MISC;
-        goto err_exchange_perms;
     }
 
-#endif
     unbecome_root();
+
+    if (err != AFP_OK) {
+        LOG(log_error, logtype_afpd,
+            "afp_exchangefiles(\"%s\", \"%s\"): flushing metadata failed", p, upath);
+    }
+
     setvoltime_entry(obj, vol, sdir->d_did == DIRDID_ROOT
                      || curdir->d_did == DIRDID_ROOT);
-    err = AFP_OK;
     goto err_exchangefile;
-#if defined(__linux__) && defined(HAVE_POSIX_ACLS)
 err_exchange_perms:
-    LOG(log_error, logtype_afpd,
-        "afp_exchangefiles: restoring file permissions: %s", strerror(errno));
+    LOG(log_error, logtype_afpd, "afp_exchangefiles: restoring file permissions");
     unbecome_root();
     goto err_temp_to_dest;
-#endif
     /* all this stuff is so that we can unwind a failed operation
      * properly. */
 err_temp_to_dest:
@@ -4536,8 +4596,17 @@ err_src_to_tmp:
             path->st_errno = 0;
             path->u_name = p;
 
-            if (setfilowner(vol, srcst.st_uid, srcst.st_gid, path) < 0
-                    || setfilunixmode(vol, path, srcst.st_mode) < 0) {
+            if (setfilowner(vol, srcst.st_uid, srcst.st_gid, path, true) < 0) {
+                LOG(log_error, logtype_afpd,
+                    "afp_exchangefiles: restoring source ownership after undo: %s",
+                    strerror(errno));
+            }
+
+            /* Restore the saved data mode without applying volume defaults. */
+            if (ochmod(p, srcst.st_mode & 07777, &srcst,
+                       vol_syml_opt(vol) | vol_chmod_opt(vol)) < 0
+                    || vol->vfs->vfs_setfilmode_strict(vol, p, srcst.st_mode,
+                                                       &path->st) < 0) {
                 LOG(log_error, logtype_afpd,
                     "afp_exchangefiles: restoring source permissions after undo: %s",
                     strerror(errno));
@@ -4546,8 +4615,16 @@ err_src_to_tmp:
             path->st = destst;
             path->u_name = upath;
 
-            if (setfilowner(vol, destst.st_uid, destst.st_gid, path) < 0
-                    || setfilunixmode(vol, path, destst.st_mode) < 0) {
+            if (setfilowner(vol, destst.st_uid, destst.st_gid, path, true) < 0) {
+                LOG(log_error, logtype_afpd,
+                    "afp_exchangefiles: restoring destination ownership after undo: %s",
+                    strerror(errno));
+            }
+
+            if (ochmod(upath, destst.st_mode & 07777, &destst,
+                       vol_syml_opt(vol) | vol_chmod_opt(vol)) < 0
+                    || vol->vfs->vfs_setfilmode_strict(vol, upath, destst.st_mode,
+                                                       &path->st) < 0) {
                 LOG(log_error, logtype_afpd,
                     "afp_exchangefiles: restoring destination permissions after undo: %s",
                     strerror(errno));

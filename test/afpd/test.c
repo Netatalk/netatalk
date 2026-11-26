@@ -1,6 +1,7 @@
 /*
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
   Copyright (c) 2026 Andy Lemin (andylemin)
+  Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -4713,8 +4714,10 @@ static int utest_dsi_receive_rejects_write_offset_past_payload(void)
 }
 
 /*!
- * @brief Run the afpd unit tests, as a TAP stream with --tap, and emit the
- *        plan
+ * @brief Run the afpd unit tests
+ *
+ * Load the test volume configuration, run the enabled tests, and report
+ * their results. With --tap, report through a TAP stream and emit its plan.
  *
  * @param[in] argc  argument count
  * @param[in] argv  arguments
@@ -5999,6 +6002,11 @@ int main(int argc, char *argv[])
                      "is refused, not dropped");
     TEST_int_or_skip(utest_copyfile_readonly_source(&obj, vol), 0,
                      "FPCopyFile: a source the user may only read is copied");
+#if defined(__linux__) && defined(HAVE_POSIX_ACLS)
+    TEST_int_or_skip(utest_copyfile_keeps_posix_acl(&obj, vol), 0,
+                     "FPCopyFile: metadata and the native POSIX access ACL "
+                     "are copied and the source lock is retained");
+#endif
     TEST_int_or_skip(utest_openfork_rsrc_beside_readonly(&obj, vol), 0,
                      "FPOpenFork: a read-only resource fork serves reads and "
                      "refuses a write");
@@ -6073,9 +6081,16 @@ int main(int argc, char *argv[])
                      ".AppleTemp file");
     TEST_int(utest_exchange_needs_read_access(&obj, vol), 0,
              "FPExchangeFiles: a file its user may not read is refused");
+#if defined(__linux__) && defined(HAVE_POSIX_ACLS)
+    TEST_int_or_skip(utest_exchange_keeps_posix_acls_chmod_options(&obj, vol), 0,
+                     "FPExchangeFiles: names keep native POSIX access ACLs "
+                     "under both ACL chmod settings");
+#endif
     TEST_int(utest_exchange_v2_names_kept(&obj, vol), 0,
              "FPExchangeFiles: on version 2 each name's header keeps its own "
              "name");
+    TEST_int_or_skip(utest_exchange_chmod_eperm(&obj, vol), 0,
+                     "FPExchangeFiles: chmod EPERM rolls back the exchange");
     TEST_int_or_skip(utest_sidecar_names_refused(&obj, vol), 0,
                      "FPCreateFile, FPCreateDir, FPRename, FPCopyFile: a ._ "
                      "name no file holds is refused");

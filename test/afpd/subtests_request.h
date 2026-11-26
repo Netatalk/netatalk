@@ -87,6 +87,9 @@ extern int utest_setfileparms_cnid_failure_closes(AFPObj *obj,
 extern int utest_setfileparms_readonly_fork_refused(AFPObj *obj,
                                                     struct vol *vol);
 extern int utest_copyfile_readonly_source(AFPObj *obj, struct vol *vol);
+#if defined(__linux__) && defined(HAVE_POSIX_ACLS)
+extern int utest_copyfile_keeps_posix_acl(AFPObj *obj, struct vol *vol);
+#endif
 extern int utest_openfork_rsrc_beside_readonly(AFPObj *obj, struct vol *vol);
 extern int utest_icon_write_inhibited_readonly_lender(AFPObj *obj,
                                                       struct vol *vol);
@@ -123,7 +126,12 @@ extern int utest_exchange_failure_restores_cnids(AFPObj *obj,
 extern int utest_exchange_failed_rename_leaves_no_temp(AFPObj *obj,
                                                        struct vol *vol);
 extern int utest_exchange_needs_read_access(AFPObj *obj, struct vol *vol);
+#if defined(__linux__) && defined(HAVE_POSIX_ACLS)
+extern int utest_exchange_keeps_posix_acls_chmod_options(AFPObj *obj,
+                                                         struct vol *vol);
+#endif
 extern int utest_exchange_v2_names_kept(AFPObj *obj, struct vol *vol);
+extern int utest_exchange_chmod_eperm(AFPObj *obj, struct vol *vol);
 extern int utest_sidecar_names_refused(AFPObj *obj, struct vol *vol);
 extern int utest_listing_keeps_sidecar_locks(AFPObj *obj, struct vol *vol);
 extern int utest_listing_passes_fifo(AFPObj *obj, struct vol *vol);

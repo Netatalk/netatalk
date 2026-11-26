@@ -128,6 +128,8 @@ struct vfs_ops {
     vfs_ea_list_fn vfs_ea_list;
     vfs_ea_set_fn vfs_ea_set;
     vfs_ea_remove_fn vfs_ea_remove;
+
+    vfs_setfilmode_fn vfs_setfilmode_strict;
 };
 
 extern void initvol_vfs(struct vol *vol);

@@ -49,16 +49,17 @@ int dir_rx_set(mode_t mode)
  * The volume umask clears bits from the new mode, and st supplies the file
  * type and special bits. The ochmod call skips a symlink unless the volume
  * follows symlinks. The volume options decide whether it preserves ACLs or
- * skips the change. EPERM counts as success.
+ * skips the change.
  *
- * @param[in] vol   volume holding the file
- * @param[in] name  file to change
- * @param[in] mode  new permission bits
- * @param[in] st    stat whose non-permission bits to keep, or NULL to stat name
- * @returns 0, or -1 with errno set
+ * @param[in] vol     volume holding the file
+ * @param[in] name    file to change
+ * @param[in] mode    requested mode
+ * @param[in] st      stat supplying the non-permission bits, or NULL to lstat name
+ * @param[in] strict  report EPERM from the mode change
+ * @returns 0 on success or a skipped change, or -1 with errno set on failure
  */
-int setfilmode(const struct vol *vol, const char *name, mode_t mode,
-               struct stat *st)
+static int setfilmode_impl(const struct vol *vol, const char *name,
+                           mode_t mode, struct stat *st, bool strict)
 {
     struct stat sb;
     /* rwx for owner group and other, by default */
@@ -79,11 +80,48 @@ int setfilmode(const struct vol *vol, const char *name, mode_t mode,
                mode & ~vol_umask(vol),
                st,
                vol_syml_opt(vol) | vol_chmod_opt(vol)
-              ) < 0 && errno != EPERM) {
+              ) < 0 && (strict || errno != EPERM)) {
         return -1;
     }
 
     return 0;
+}
+
+/*!
+ * @brief Apply a file mode with EPERM tolerance for the mode change
+ *
+ * Keep the file's non-permission bits, apply the volume umask, and honor
+ * the volume's symlink and ACL policies. A failed lstat still fails the call.
+ *
+ * @param[in] vol   volume holding the file
+ * @param[in] name  file to change
+ * @param[in] mode  requested mode
+ * @param[in] st    stat supplying the non-permission bits, or NULL to lstat name
+ * @returns 0 on success, a skipped change, or EPERM from the mode change,
+ *          or -1 with errno set on failure
+ */
+int setfilmode(const struct vol *vol, const char *name, mode_t mode,
+               struct stat *st)
+{
+    return setfilmode_impl(vol, name, mode, st, false);
+}
+
+/*!
+ * @brief Apply a file mode and report EPERM from the mode change
+ *
+ * Keep the file's non-permission bits, apply the volume umask, and honor
+ * the volume's symlink and ACL policies.
+ *
+ * @param[in] vol   volume holding the file
+ * @param[in] name  file to change
+ * @param[in] mode  requested mode
+ * @param[in] st    stat supplying the non-permission bits, or NULL to lstat name
+ * @returns 0 on success or a skipped change, or -1 with errno set on failure
+ */
+int setfilmode_strict(const struct vol *vol, const char *name, mode_t mode,
+                      struct stat *st)
+{
+    return setfilmode_impl(vol, name, mode, st, true);
 }
 
 /*!

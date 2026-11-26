@@ -177,6 +177,8 @@ struct fault_inject {
     int clock_calls;        /*!< wall clock reads clock_fake answered */
     time_t clock_sec;
     struct fi_call unlink;
+    struct fi_call chmod;
+    const char *chmod_path;
     struct fi_call renameat; /*!< an armed renameat() fails */
     const char *renameat_to; /*!< renameat() to other names passes by */
     struct fi_rename_hook rename_hook;

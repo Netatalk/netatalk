@@ -1,6 +1,7 @@
 /*
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
   Copyright (c) 2011 Laura Mueller <laura-mueller@uni-duesseldorf.de>
+  Copyright (c) 2024-2026 Daniel Markstedt <daniel@mindani.net>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -152,9 +153,11 @@ ace_t *concat_aces(ace_t *aces1, int ace1count, ace_t *aces2, int ace2count)
 /*!
  * @brief Drop the owner@, group@, and everyone@ entries from an ACE array
  *
- * The call frees the old array and stores a new one in saces.
+ * On success with a nonempty input, free the old array and store the new
+ * array in saces. The caller owns any remaining entries. An empty input or
+ * an allocation failure leaves saces unchanged.
  *
- * @param[in,out] saces      ACE array, replaced by the remaining entries
+ * @param[in,out] saces      ACE array, replaced by the remaining entries or NULL
  * @param[in]     sacecount  number of entries
  * @returns the number of remaining entries, or -1 when malloc fails
  */
@@ -176,6 +179,12 @@ int strip_trivial_aces(ace_t **saces, int sacecount)
         }
 
         i++;
+    }
+
+    if (nontrivaces == 0) {
+        free(aces);
+        *saces = NULL;
+        return 0;
     }
 
     /* malloc buffer for new ACL */
@@ -256,9 +265,10 @@ int strip_nontrivial_aces(ace_t **saces, int sacecount)
  *
  * The call works in 7 steps:
  *
- * 1. Read the ACL. Without entries, a plain chmod finishes the call.
+ * 1. Read the ACL. A failed read or an empty ACL falls back to plain chmod.
  * 2. Drop the owner@, group@, and everyone@ entries, which the mode replaces.
- * 3. Run chmod with the new mode.
+ * 3. Run chmod with the new mode. If no explicit entries remain, chmod alone
+ *    suffices, including on filesystems that synthesize an ACL from mode bits.
  * 4. Read the ACL again, as root after EACCES. Solaris up to onnv132 keeps the
  *    explicit entries here, and onnv145 and OpenIndiana drop them.
  * 5. Keep only the owner@, group@, and everyone@ entries of the new ACL.
@@ -284,6 +294,10 @@ int nfsv4_chmod(char *name, mode_t mode)
 
     if ((noaces = strip_trivial_aces(&oacl, noaces)) == -1) { /* (2) */
         goto exit;
+    }
+
+    if (noaces == 0) {
+        return chmod(name, mode);
     }
 
     if (chmod(name, mode) != 0) { /* (3) */

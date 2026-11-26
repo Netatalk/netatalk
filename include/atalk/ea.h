@@ -230,6 +230,8 @@ extern int ea_chown(const struct vol *vol, const char *path, uid_t uid,
                     gid_t gid);
 extern int ea_chmod_file(const struct vol *vol, const char *name, mode_t mode,
                          struct stat *st);
+extern int ea_chmod_file_strict(const struct vol *vol, const char *name,
+                                mode_t mode, struct stat *st);
 extern int ea_chmod_dir(const struct vol *vol, const char *name, mode_t mode,
                         struct stat *st);
 

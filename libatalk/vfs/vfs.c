@@ -1,6 +1,7 @@
 /*
     Copyright (c) 2004 Didier Gautheron
     Copyright (c) 2009 Frank Lahm
+    Copyright (c) 2025-2026 Daniel Markstedt <daniel@mindani.net>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -340,23 +341,29 @@ static int RF_deletecurdir_adouble(const struct vol *vol)
 /*!
  * @brief Derive a metadata file mode with ad_hf_mode and apply it to name
  *
- * @param[in] vol   volume holding the file
- * @param[in] name  metadata file
- * @param[in] mode  data file mode
- * @param[in] st    stat whose non-permission bits to keep, or NULL
+ * A missing sidecar counts as success.
+ *
+ * @param[in] vol       volume holding the file
+ * @param[in] name      metadata file
+ * @param[in] mode      data file mode
+ * @param[in] st        stat supplying the non-permission bits, or NULL
+ * @param[in] set_mode  mode setter for the sidecar
  * @returns 0, or -1 with errno set
  */
 static int adouble_setfilmode(const struct vol *vol, const char *name,
-                              mode_t mode, struct stat *st)
+                              mode_t mode, struct stat *st,
+                              vfs_setfilmode_fn set_mode)
 {
-    return setfilmode(vol, name, ad_hf_mode(mode), st);
+    int ret = set_mode(vol, name, ad_hf_mode(mode), st);
+    return ret < 0 && errno == ENOENT ? 0 : ret;
 }
 
 /*!
  * @brief Apply the mode of a data file to its version 2 metadata file
  *
  * ad_hf_mode derives the metadata mode, so read access also grants write
- * access for fcntl locks.
+ * access for fcntl locks. A missing sidecar or EPERM from the mode change
+ * counts as success.
  *
  * @param[in] vol   volume holding the file
  * @param[in] name  data file
@@ -367,7 +374,27 @@ static int adouble_setfilmode(const struct vol *vol, const char *name,
 static int RF_setfilmode_adouble(const struct vol *vol, const char *name,
                                  mode_t mode, struct stat *st)
 {
-    return adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_HF), mode, st);
+    return adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_HF), mode, st,
+                              setfilmode);
+}
+
+/*!
+ * @brief Apply the sidecar mode and report EPERM for an existing sidecar
+ *
+ * Derive the sidecar mode from the data file mode with ad_hf_mode. A missing
+ * sidecar counts as success.
+ *
+ * @param[in] vol   volume holding the file
+ * @param[in] name  data file
+ * @param[in] mode  new data file mode
+ * @param[in] st    stat of the data file, or NULL
+ * @returns 0 on success, or -1 with errno set on failure
+ */
+static int RF_setfilmode_adouble_strict(const struct vol *vol, const char *name,
+                                        mode_t mode, struct stat *st)
+{
+    return adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_HF), mode, st,
+                              setfilmode_strict);
 }
 
 /*!
@@ -376,7 +403,7 @@ static int RF_setfilmode_adouble(const struct vol *vol, const char *name,
  * The .AppleDouble directory gets DIRBITS plus mode, minus the volume umask,
  * and .Parent gets the ad_hf_mode result. A mode that grants the owner read
  * and search access changes the directory first, otherwise last. That ordering
- * keeps .Parent reachable while it changes.
+ * keeps .Parent reachable while it changes. A missing .Parent is an error.
  *
  * @param[in] vol   volume holding the directory
  * @param[in] name  directory
@@ -399,7 +426,8 @@ static int RF_setdirunixmode_adouble(const struct vol *vol, const char *name,
         }
     }
 
-    if (adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_DIR), mode, st) < 0) {
+    if (setfilmode(vol, vol->ad_path(name, ADFLAGS_DIR), ad_hf_mode(mode),
+                   st) < 0) {
         return -1;
     }
 
@@ -866,8 +894,8 @@ static int validupath_ea(const struct vol *vol, const char *name, int fd)
 /*!
  * @brief Give the ._ resource fork sidecar of path a new owner
  *
- * Without HAVE_EAFD chown follows symlinks, and a missing sidecar fails with
- * ENOENT. With HAVE_EAFD the resource fork lives in an EA, so nothing changes.
+ * Without HAVE_EAFD chown follows symlinks, and a missing sidecar counts as
+ * success. With HAVE_EAFD the resource fork lives in an EA.
  *
  * @param[in] vol   volume holding the file
  * @param[in] path  file whose sidecar to change
@@ -879,7 +907,7 @@ static int RF_chown_ea(const struct vol *vol, const char *path, uid_t uid,
                        gid_t gid)
 {
 #ifndef HAVE_EAFD
-    return chown(vol->ad_path(path, ADFLAGS_HF), uid, gid);
+    return RF_chown_adouble(vol, path, uid, gid);
 #else
     (void)vol;
     (void)path;
@@ -1005,8 +1033,9 @@ static int RF_setdirunixmode_ea(const struct vol *vol _U_,
 /*!
  * @brief Apply the mode of a data file to its ._ resource fork sidecar
  *
- * ad_hf_mode derives the sidecar mode. With HAVE_EAFD the resource fork lives
- * in an EA, so nothing changes.
+ * ad_hf_mode derives the sidecar mode. A missing sidecar or EPERM from the
+ * mode change counts as success. With HAVE_EAFD the resource fork lives in
+ * an EA and the call succeeds without a mode change.
  *
  * @param[in] vol   volume holding the file
  * @param[in] name  data file
@@ -1018,7 +1047,7 @@ static int RF_setfilmode_ea(const struct vol *vol, const char *name,
                             mode_t mode, struct stat *st)
 {
 #ifndef HAVE_EAFD
-    return adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_HF), mode, st);
+    return RF_setfilmode_adouble(vol, name, mode, st);
 #else
     (void)vol;
     (void)name;
@@ -1234,7 +1263,8 @@ static int RF_renamefile_ea(const struct vol *vol, int dirfd, const char *src,
  * @brief Run the vfs_chown hook of every VFS module of vol
  *
  * The modules run in order: AppleDouble layout, EA backend, and ACL support.
- * Every module runs even after a failure.
+ * Every available hook runs even after a failure. Preserve errno from the
+ * last failing hook.
  *
  * @param[in] vol   volume
  * @param[in] path  file whose metadata to change
@@ -1246,6 +1276,7 @@ static int vfs_chown(const struct vol *vol, const char *path, uid_t uid,
                      gid_t gid)
 {
     int ret = AFP_OK;
+    int saved_errno = 0;
 
     for (int i = 0; i < VFS_MODULES_MAX; i++) {
         if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_chown) {
@@ -1253,8 +1284,13 @@ static int vfs_chown(const struct vol *vol, const char *path, uid_t uid,
 
             if (curr_ret != AFP_OK) {
                 ret = curr_ret;
+                saved_errno = errno;
             }
         }
+    }
+
+    if (ret != AFP_OK) {
+        errno = saved_errno;
     }
 
     return ret;
@@ -1316,32 +1352,86 @@ static int vfs_deletecurdir(const struct vol *vol)
 }
 
 /*!
- * @brief Run the vfs_setfilmode hook of every VFS module of vol
+ * @brief Run the registered file mode hooks for a volume
  *
- * Every module runs even after a failure.
+ * Select the regular or strict hook for each module. Every available hook
+ * in that mode runs even after a failure. Preserve errno from the last
+ * failing hook.
  *
- * @param[in] vol   volume
- * @param[in] name  data file
- * @param[in] mode  new data file mode
- * @param[in] st    stat of the data file, or NULL
+ * @param[in] vol     volume
+ * @param[in] name    data file
+ * @param[in] mode    new data file mode
+ * @param[in] st      stat of the data file, or NULL
+ * @param[in] strict  select hooks that report EPERM from mode changes
  * @returns AFP_OK, or the result of the last module that failed
  */
-static int vfs_setfilmode(const struct vol *vol, const char *name, mode_t mode,
-                          struct stat *st)
+static int vfs_setfilmode_impl(const struct vol *vol, const char *name,
+                               mode_t mode, struct stat *st, bool strict)
 {
     int ret = AFP_OK;
+    int saved_errno = 0;
 
     for (int i = 0; i < VFS_MODULES_MAX; i++) {
-        if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_setfilmode) {
-            int curr_ret = vol->vfs_modules[i]->vfs_setfilmode(vol, name, mode, st);
+        const struct vfs_ops *ops = vol->vfs_modules[i];
+
+        if (ops == NULL) {
+            continue;
+        }
+
+        vfs_setfilmode_fn set_mode = strict ? ops->vfs_setfilmode_strict
+                                     : ops->vfs_setfilmode;
+
+        if (set_mode != NULL) {
+            int curr_ret = set_mode(vol, name, mode, st);
 
             if (curr_ret != AFP_OK) {
                 ret = curr_ret;
+                saved_errno = errno;
             }
         }
     }
 
+    if (ret != AFP_OK) {
+        errno = saved_errno;
+    }
+
     return ret;
+}
+
+/*!
+ * @brief Apply the regular VFS file mode hooks
+ *
+ * Each registered hook derives its metadata mode from the data file mode
+ * and tolerates EPERM from the mode change. Hooks continue after failures.
+ *
+ * @param[in] vol   volume holding the file
+ * @param[in] name  data file
+ * @param[in] mode  new data file mode
+ * @param[in] st    stat of the data file, or NULL
+ * @returns AFP_OK, or the result of the last failing hook with its errno
+ */
+static int vfs_setfilmode(const struct vol *vol, const char *name, mode_t mode,
+                          struct stat *st)
+{
+    return vfs_setfilmode_impl(vol, name, mode, st, false);
+}
+
+/*!
+ * @brief Apply the strict VFS file mode hooks
+ *
+ * Each registered strict hook derives its metadata mode from the data file
+ * mode and reports EPERM from the mode change. Hooks continue after failures.
+ *
+ * @param[in] vol   volume holding the file
+ * @param[in] name  data file
+ * @param[in] mode  new data file mode
+ * @param[in] st    stat of the data file, or NULL
+ * @returns AFP_OK, or the result of the last failing hook with its errno
+ */
+static int vfs_setfilmode_strict(const struct vol *vol, const char *name,
+                                 mode_t mode, struct stat *st)
+{
+    return vfs_setfilmode_impl(vol, name, mode, st, true);
 }
 
 /*!
@@ -1868,7 +1958,8 @@ static struct vfs_ops vfs_master_funcs = {
     vfs_ea_getcontent,
     vfs_ea_list,
     vfs_ea_set,
-    vfs_ea_remove
+    vfs_ea_remove,
+    vfs_setfilmode_strict
 };
 
 /*
@@ -1900,7 +1991,8 @@ static struct vfs_ops netatalk_adouble_v2 = {
     .vfs_ea_getcontent = NULL,
     .vfs_ea_list = NULL,
     .vfs_ea_set = NULL,
-    .vfs_ea_remove = NULL
+    .vfs_ea_remove = NULL,
+    .vfs_setfilmode_strict = RF_setfilmode_adouble_strict
 };
 
 static struct vfs_ops netatalk_adouble_ea = {
@@ -1928,7 +2020,10 @@ static struct vfs_ops netatalk_adouble_ea = {
     .vfs_ea_getcontent = NULL,
     .vfs_ea_list = NULL,
     .vfs_ea_set = NULL,
-    .vfs_ea_remove = NULL
+    .vfs_ea_remove = NULL,
+#ifndef HAVE_EAFD
+    .vfs_setfilmode_strict = RF_setfilmode_adouble_strict
+#endif
 };
 
 /*
@@ -1960,7 +2055,8 @@ static struct vfs_ops netatalk_ea_adouble = {
     .vfs_ea_getcontent = get_eacontent,
     .vfs_ea_list = list_eas,
     .vfs_ea_set = set_ea,
-    .vfs_ea_remove = remove_ea
+    .vfs_ea_remove = remove_ea,
+    .vfs_setfilmode_strict = ea_chmod_file_strict
 };
 
 static struct vfs_ops netatalk_ea_sys = {

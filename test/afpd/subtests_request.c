@@ -1,5 +1,6 @@
 /*
   Copyright (c) 2026 Andy Lemin (andylemin)
+  Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -2416,6 +2417,115 @@ out:
     return ret;
 }
 
+#if defined(__linux__) && defined(HAVE_POSIX_ACLS)
+/*!
+ * @brief FPCopyFile copies metadata before applying a read-only access ACL
+ *
+ * Check that the copy has the source's FinderInfo, access ACL, and expected
+ * mode while the source retains its deny-write lock. On the EA layout with
+ * fault injection available, also check that a failed metadata flush removes
+ * the partial destination and returns AFPERR_MISC.
+ *
+ * @param[in] obj  session copied for the test fixture
+ * @param[in] vol  test volume holding the source and copies
+ * @returns 0 on success, 1 if a check fails, -1 if setup fails, or TEST_SKIP
+ *          if POSIX ACL testing is unavailable
+ */
+int utest_copyfile_keeps_posix_acl(AFPObj *obj, struct vol *vol)
+{
+    static char source[] = "rq_cpacl";
+    static char copy[] = "rq_cpaclcopy";
+    static char failed_copy[] = "rq_cpaclfail";
+    char finfo[ADEDLEN_FINDERI] = "TYPEcpac";
+    char source_path[MAXPATHLEN + 1];
+    char copy_path[MAXPATHLEN + 1];
+    acl_t wanted = NULL, got = NULL;
+    struct stat st;
+    uint16_t fork = 0;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_ACL_SET, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(source_path, sizeof(source_path), "%s/%s", vol->v_path, source);
+    snprintf(copy_path, sizeof(copy_path), "%s/%s", vol->v_path, copy);
+    wanted = acl_from_text("u::r--,u:12345:rwx,g::rwx,m::r--,o::---");
+
+    if (!wanted || createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, source) != AFP_OK
+            || setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, source,
+                            1 << FILPBIT_FINFO, finfo, sizeof(finfo)) != AFP_OK
+            || openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, source, OPENFORK_DATA,
+                        OPENACC_RD | OPENACC_DWR, &fork) != AFP_OK
+            || peer_try_lock(source_path, F_WRLCK, AD_FILELOCK_DENY_WR, 1) != 0
+            || acl_set_file(source_path, ACL_TYPE_ACCESS, wanted) != 0) {
+        goto out;
+    }
+
+    int rc = copyfileobj(&fio.obj, vol->v_vid, DIRDID_ROOT, source, DIRDID_ROOT,
+                         copy);
+
+    /* The peer opens the source read-write to probe the deny-write lock. */
+    if (chmod(source_path, 0640) != 0) {
+        goto out;
+    }
+
+    int lock = peer_try_lock(source_path, F_WRLCK, AD_FILELOCK_DENY_WR, 1);
+    int metadata = finderinfo_is(vol, copy_path, finfo, sizeof(finfo));
+    got = acl_get_file(copy_path, ACL_TYPE_ACCESS);
+    ret = rc == AFP_OK && lock == 0 && metadata == 1
+          && got && acl_cmp(wanted, got) == 0
+          && stat(copy_path, &st) == 0 && (st.st_mode & 0777) == 0440 ? 0 : 1;
+
+    if (ret != 0) {
+        fprintf(stderr,
+                "FPCopyFile access ACL: AFP result %d, deny-write lock held %d, "
+                "FinderInfo copied %d\n", rc, lock == 0, metadata);
+    }
+
+    if (ret == 0 && vol->v_adouble == AD_VERSION_EA
+            && test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        /* The first write creates the metadata EA and the second finalizes it. */
+        fault_inject_reset();
+        fi.fsetxattr.armed = 1;
+        fi.fsetxattr.fail_after = 1;
+        fi.fsetxattr.errnum = EIO;
+        rc = copyfileobj(&fio.obj, vol->v_vid, DIRDID_ROOT, source, DIRDID_ROOT,
+                         failed_copy);
+        bool fired = fi.fsetxattr.fail_after == -1;
+        fault_inject_reset();
+        snprintf(copy_path, sizeof(copy_path), "%s/%s", vol->v_path, failed_copy);
+
+        if (!fired || rc != AFPERR_MISC || lstat(copy_path, &st) == 0
+                || errno != ENOENT) {
+            fprintf(stderr, "FPCopyFile metadata flush failure: AFP result %d, "
+                            "fault injected %d\n", rc, fired);
+            ret = 1;
+        }
+
+        delete (&fio.obj, vol->v_vid, DIRDID_ROOT, failed_copy);
+    }
+
+out:
+    delete (&fio.obj, vol->v_vid, DIRDID_ROOT, copy);
+    fio_done(vol, fork, source);
+
+    if (wanted) {
+        acl_free(wanted);
+    }
+
+    if (got) {
+        acl_free(got);
+    }
+
+    return ret;
+}
+#endif
+
 /*!
  * @brief Beside a resource fork the session holds on a read-only descriptor,
  *        as for a user who may not write it, a read-only open of the fork
@@ -3683,8 +3793,17 @@ out:
     return ret;
 }
 
-/* A restrictive mask can hide permissions in named entries and ACL_GROUP_OBJ.
- * FPExchangeFiles must keep the complete native ACL with each pathname. */
+/*!
+ * @brief Verify that FPExchangeFiles preserves each name's POSIX access ACL
+ *
+ * Exchange files whose masks hide permissions in named entries and
+ * ACL_GROUP_OBJ. Check that both names keep their complete ACL and mode.
+ *
+ * @param[in,out] obj  session used to exchange and remove the files
+ * @param[in,out] vol  test volume holding the files
+ * @returns 0 on success, 1 if the exchange or comparison fails, -1 if setup
+ *          fails, or TEST_SKIP if POSIX ACL testing is unavailable
+ */
 int utest_exchange_keeps_posix_acls(AFPObj *obj, struct vol *vol)
 {
 #if defined(__linux__) && defined(HAVE_POSIX_ACLS)
@@ -3694,7 +3813,7 @@ int utest_exchange_keeps_posix_acls(AFPObj *obj, struct vol *vol)
     char dest_path[MAXPATHLEN + 1];
     acl_t before_source = NULL, before_dest = NULL;
     acl_t after_source = NULL, after_dest = NULL;
-    struct stat st;
+    struct stat source_stat, dest_stat;
     int rc = -1;
     int ret = -1;
 
@@ -3710,9 +3829,9 @@ int utest_exchange_keeps_posix_acls(AFPObj *obj, struct vol *vol)
     }
 
     before_source = acl_from_text("user::rw-\nuser:65534:rwx\n"
-                                  "group::rwx\nmask::r--\nother::---");
+                                  "group::rwx\nmask::---\nother::---");
     before_dest = acl_from_text("user::rw-\nuser:65534:rwx\n"
-                                "group::r-x\nmask::r--\nother::---");
+                                "group::r-x\nmask::---\nother::---");
 
     if (before_source == NULL || before_dest == NULL
             || acl_set_file(source_path, ACL_TYPE_ACCESS, before_source) != 0
@@ -3728,8 +3847,10 @@ int utest_exchange_keeps_posix_acls(AFPObj *obj, struct vol *vol)
     if (rc == AFP_OK && after_source != NULL && after_dest != NULL
             && acl_cmp(before_source, after_source) == 0
             && acl_cmp(before_dest, after_dest) == 0
-            && stat(source_path, &st) == 0 && (st.st_mode & 0777) == 0640
-            && stat(dest_path, &st) == 0 && (st.st_mode & 0777) == 0640) {
+            && stat(source_path, &source_stat) == 0
+            && (source_stat.st_mode & 0777) == 0600
+            && stat(dest_path, &dest_stat) == 0
+            && (dest_stat.st_mode & 0777) == 0600) {
         ret = 0;
     } else {
         fprintf(stderr, "exchange native ACLs: AFP result %d, source and "
@@ -4609,6 +4730,107 @@ int utest_exchange_needs_read_access(AFPObj *obj, struct vol *vol)
     return 1;
 }
 
+#if defined(__linux__) && defined(HAVE_POSIX_ACLS)
+/*!
+ * @brief FPExchangeFiles keeps each name's native access ACL and mask under
+ * both ACL chmod settings
+ *
+ * The files have different ACL_GROUP_OBJ entries and restrictive masks, so
+ * check the full ACL and mode after each exchange. Restore the volume flags
+ * after testing with ACL preservation disabled and enabled.
+ *
+ * @param[in,out] obj  session used to run the AFP requests
+ * @param[in,out] vol  test volume whose ACL chmod flags are toggled
+ * @returns 0 on success, 1 if the exchange or comparison fails, -1 if setup
+ *          fails, or TEST_SKIP if POSIX ACL testing is unavailable
+ */
+int utest_exchange_keeps_posix_acls_chmod_options(AFPObj *obj, struct vol *vol)
+{
+    char a[] = "rq_xacla0";
+    char b[] = "rq_xaclb0";
+    char apath[MAXPATHLEN + 1];
+    char bpath[MAXPATHLEN + 1];
+    acl_t want_a = NULL, want_b = NULL, got_a = NULL, got_b = NULL;
+    const uint32_t saved_flags = vol->v_flags;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_ACL_SET, vol)) {
+        return TEST_SKIP;
+    }
+
+    want_a = acl_from_text("u::rw-,u:12345:rwx,g::rwx,m::r--,o::---");
+    want_b = acl_from_text("u::rw-,u:12346:rwx,g::---,m::rw-,o::---");
+
+    if (!want_a || !want_b) {
+        goto out;
+    }
+
+    for (int pass = 0; pass < 2; pass++) {
+        struct stat ast, bst;
+        int rc;
+        a[8] = b[8] = (char)('0' + pass);
+        snprintf(apath, sizeof(apath), "%s/%s", vol->v_path, a);
+        snprintf(bpath, sizeof(bpath), "%s/%s", vol->v_path, b);
+        vol->v_flags &= ~(AFPVOL_CHMOD_PRESERVE_ACL | AFPVOL_CHMOD_IGNORE);
+
+        if (pass) {
+            vol->v_flags |= AFPVOL_CHMOD_PRESERVE_ACL;
+        }
+
+        if (createfile(obj, vol->v_vid, DIRDID_ROOT, a) != AFP_OK
+                || createfile(obj, vol->v_vid, DIRDID_ROOT, b) != AFP_OK
+                || acl_set_file(apath, ACL_TYPE_ACCESS, want_a) != 0
+                || acl_set_file(bpath, ACL_TYPE_ACCESS, want_b) != 0) {
+            goto out;
+        }
+
+        rc = exchangefiles(obj, vol->v_vid, DIRDID_ROOT, DIRDID_ROOT, a, b);
+        got_a = acl_get_file(apath, ACL_TYPE_ACCESS);
+        got_b = acl_get_file(bpath, ACL_TYPE_ACCESS);
+
+        if (rc != AFP_OK || !got_a || !got_b
+                || acl_cmp(want_a, got_a) != 0 || acl_cmp(want_b, got_b) != 0
+                || stat(apath, &ast) != 0 || (ast.st_mode & 0777) != 0640
+                || stat(bpath, &bst) != 0 || (bst.st_mode & 0777) != 0660) {
+            fprintf(stderr, "exchange access ACLs: pass %d, AFP result %d\n",
+                    pass, rc);
+            ret = 1;
+            goto out;
+        }
+
+        acl_free(got_a);
+        acl_free(got_b);
+        got_a = got_b = NULL;
+        delete (obj, vol->v_vid, DIRDID_ROOT, a);
+        delete (obj, vol->v_vid, DIRDID_ROOT, b);
+    }
+
+    ret = 0;
+out:
+    vol->v_flags = saved_flags;
+    delete (obj, vol->v_vid, DIRDID_ROOT, a);
+    delete (obj, vol->v_vid, DIRDID_ROOT, b);
+
+    if (got_a) {
+        acl_free(got_a);
+    }
+
+    if (got_b) {
+        acl_free(got_b);
+    }
+
+    if (want_a) {
+        acl_free(want_a);
+    }
+
+    if (want_b) {
+        acl_free(want_b);
+    }
+
+    return ret;
+}
+#endif
+
 /*!
  * @brief Whether the version 2 metadata of path names the file mname
  *
@@ -4687,6 +4909,106 @@ int utest_exchange_v2_names_kept(AFPObj *obj, struct vol *vol)
     vol->v_adouble = saved_adouble;
     initvol_vfs(vol);
     (void)rmdir(adpath);
+    return ret;
+}
+
+/*!
+ * @brief Verify FPExchangeFiles rollback after chmod returns EPERM
+ *
+ * Inject failures on a version 2 AppleDouble sidecar and on a data file.
+ * Require AFPERR_MISC and check that both names retain their data, mode, and
+ * FinderInfo. Restore the original volume settings after the test.
+ *
+ * @param[in,out] obj  session used to run the AFP requests
+ * @param[in,out] vol  test volume temporarily switched to AppleDouble v2
+ * @returns 0 on success, 1 if a check fails, -1 if setup fails, or TEST_SKIP
+ *          if fault injection is unavailable
+ */
+int utest_exchange_chmod_eperm(AFPObj *obj, struct vol *vol)
+{
+    static char a[] = "rq_xperma";
+    static char b[] = "rq_xpermb";
+    static const char adata[] = "AAAA";
+    static const char bdata[] = "BBBB";
+    char ainfo[ADEDLEN_FINDERI] = "TYPEaaaa";
+    char binfo[ADEDLEN_FINDERI] = "TYPEbbbb";
+    char apath[MAXPATHLEN + 1], bpath[MAXPATHLEN + 1];
+    char sidecar[MAXPATHLEN + 1], addir[MAXPATHLEN + 1];
+    const int saved_adouble = vol->v_adouble;
+    const int saved_flags = vol->v_flags;
+    const mode_t saved_fperm = vol->v_fperm;
+    const mode_t saved_umask = vol->v_umask;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    snprintf(apath, sizeof(apath), "%s/%s", vol->v_path, a);
+    snprintf(bpath, sizeof(bpath), "%s/%s", vol->v_path, b);
+    snprintf(addir, sizeof(addir), "%s/.AppleDouble", vol->v_path);
+    vol->v_adouble = AD_VERSION2;
+    vol->v_flags &= ~(AFPVOL_CHMOD_PRESERVE_ACL | AFPVOL_CHMOD_IGNORE);
+    vol->v_flags |= AFPVOL_UNIX_PRIV;
+    vol->v_fperm = 0004;
+    vol->v_umask = 0040;
+    initvol_vfs(vol);
+    strlcpy(sidecar, vol->ad_path(b, ADFLAGS_HF), sizeof(sidecar));
+
+    if (createfile(obj, vol->v_vid, DIRDID_ROOT, a) != AFP_OK
+            || createfile(obj, vol->v_vid, DIRDID_ROOT, b) != AFP_OK
+            || write_disk_file(apath, adata, sizeof(adata)) != 0
+            || write_disk_file(bpath, bdata, sizeof(bdata)) != 0
+            || setfileparms(obj, vol->v_vid, DIRDID_ROOT, a,
+                            1 << FILPBIT_FINFO, ainfo, sizeof(ainfo)) != AFP_OK
+            || setfileparms(obj, vol->v_vid, DIRDID_ROOT, b,
+                            1 << FILPBIT_FINFO, binfo, sizeof(binfo)) != AFP_OK
+            || chmod(apath, 0640) != 0) {
+        goto out;
+    }
+
+    const char *targets[] = { sidecar, b };
+
+    for (size_t i = 0; i < sizeof(targets) / sizeof(targets[0]); i++) {
+        struct stat st;
+        mode_t bmode = i == 0 ? 0640 : 0740;
+
+        if (chmod(bpath, bmode) != 0) {
+            goto out;
+        }
+
+        fault_inject_reset();
+        fi.chmod_path = targets[i];
+        fi.chmod.armed = 1;
+        fi.chmod.errnum = EPERM;
+        int rc = exchangefiles(obj, vol->v_vid, DIRDID_ROOT, DIRDID_ROOT, a, b);
+        bool fired = fi.chmod.fail_after == -1;
+        fault_inject_reset();
+
+        if (!fired || rc != AFPERR_MISC
+                || !disk_file_is(apath, adata, sizeof(adata))
+                || !disk_file_is(bpath, bdata, sizeof(bdata))
+                || stat(apath, &st) != 0 || (st.st_mode & 07777) != 0640
+                || stat(bpath, &st) != 0 || (st.st_mode & 07777) != bmode
+                || finderinfo_is(vol, apath, ainfo, sizeof(ainfo)) != 1
+                || finderinfo_is(vol, bpath, binfo, sizeof(binfo)) != 1) {
+            fprintf(stderr, "exchange with EPERM on chmod('%s'): %d, fired %d\n",
+                    targets[i], rc, fired);
+            ret = 1;
+            goto out;
+        }
+    }
+
+    ret = 0;
+out:
+    delete (obj, vol->v_vid, DIRDID_ROOT, a);
+    delete (obj, vol->v_vid, DIRDID_ROOT, b);
+    vol->v_adouble = saved_adouble;
+    vol->v_flags = saved_flags;
+    vol->v_fperm = saved_fperm;
+    vol->v_umask = saved_umask;
+    initvol_vfs(vol);
+    (void)rmdir(addir);
     return ret;
 }
 

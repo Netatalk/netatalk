@@ -48,6 +48,8 @@ extern int netatalk_rmdir_all_errors(int dirfd, const char *name);
 
 extern int setfilmode(const struct vol *vol, const char *name, mode_t mode,
                       struct stat *st);
+extern int setfilmode_strict(const struct vol *vol, const char *name,
+                             mode_t mode, struct stat *st);
 extern int dir_rx_set(mode_t mode);
 extern int unix_rename(int sfd, const char *oldpath, int dfd,
                        const char *newpath);
