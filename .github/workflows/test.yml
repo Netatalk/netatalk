@@ -120,7 +120,7 @@ jobs:
       - name: Install Doxygen
         run: |
           curl --proto '=https' --location --fail -o /tmp/doxygen.tar.gz \
-            https://www.doxygen.nl/files/doxygen-1.18.0.linux.bin.tar.gz
+            https://github.com/doxygen/doxygen/releases/download/Release_1_18_0/doxygen-1.18.0.linux.bin.tar.gz
           echo '14fa81bdc34171edb5f1f02b1d60e74802f0439b77fa44e592565d517d72df90  /tmp/doxygen.tar.gz' \
             | sha256sum -c -
           mkdir -p /tmp/doxygen
