@@ -82,6 +82,8 @@ char_ucs2_to_mac_roman(unsigned char *r, ucs2_t wc)
         c = 0xb9;
     } else if (wc >= 0x2010 && wc < 0x2048) {
         c = mac_roman_page20[wc - 0x2010];
+    } else if (wc == 0x20ac) {
+        c = 0xdb; /* Mac OS 8.5 euro sign. */
     } else if (wc >= 0x2120 && wc < 0x2128) {
         c = mac_roman_page21[wc - 0x2120];
     } else if (wc >= 0x2200 && wc < 0x2268) {

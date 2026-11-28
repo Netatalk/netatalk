@@ -1,16 +1,17 @@
 /*
-  Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
-
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-*/
+ * Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
+ * Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
 
 /*!
  * @file
@@ -110,8 +111,7 @@ static const char *check_special_dirs(const char *name)
 /*!
  * @brief Move the CNID of a renamed entry from its old name to its new name
  *
- * The scan calls it after it decodes a CAP-encoded name. An entry that the
- * database does not know needs no update.
+ * An entry that the database does not know needs no update.
  *
  * @param[in] did      parent directory ID
  * @param[in] sp       stat result of the entry
@@ -126,10 +126,8 @@ static int update_cnid(cnid_t did, const struct stat *sp, const char *oldname,
 
     /* Query the database */
     if ((id = cnid_lookup(vol->v_cdb, sp, did, (char *)oldname,
-                          strlen(oldname))) == CNID_INVALID)
-        /* not in db, no need to update */
-    {
-        return 0;
+                          strlen(oldname))) == CNID_INVALID) {
+        return errno == 0 || CNID_ERRNO() == CNID_ERR_NOTFOUND ? 0 : -1;
     }
 
     /* Update the database */
@@ -317,9 +315,8 @@ static void remove_eafiles(const char *name, struct ea *ea _U_)
  * @brief Check the extended attribute files of an entry against its EA header
  *
  * An EA whose file is missing, or whose size differs from the header, drops
- * out of the header. The call also deletes a file of the wrong size. Both
- * changes happen even under -s. When the EA header does not open for another
- * reason than a missing file, the call deletes the EA files, except under -s.
+ * out of the header. The call also deletes a file of the wrong size. Under
+ * -s it reports those discrepancies without changing the EA or its header.
  *
  * @param[in] fname  entry name
  * @returns 0, or -1 when the EA header does not open
@@ -331,16 +328,17 @@ static int check_eafiles(const char *fname)
     struct ea ea;
     struct stat st;
     char *eaname;
+    bool scan_only = (dbd_flags & DBD_FLAGS_SCAN) != 0;
 
-    if ((ret = ea_open(vol, fname, EA_RDWR, &ea)) != 0) {
+    if ((ret = ea_open(vol, fname, scan_only ? EA_RDONLY : EA_RDWR, &ea)) != 0) {
         if (errno == ENOENT) {
             return 0;
         }
 
-        dbd_log(LOGSTD, "Error calling ea_open for file: %s/%s, removing EA files",
+        dbd_log(LOGSTD, "Error calling ea_open for file: %s/%s",
                 cwdbuf, fname);
 
-        if (!(dbd_flags & DBD_FLAGS_SCAN)) {
+        if (!scan_only) {
             remove_eafiles(fname, &ea);
         }
 
@@ -362,15 +360,15 @@ static int check_eafiles(const char *fname)
 
             remove = 1;
         } else if (st.st_size != (*ea.ea_entries)[count].ea_size) {
-            dbd_log(LOGSTD, "Bogus EA: %s/%s, removing it...", cwdbuf, eaname);
+            dbd_log(LOGSTD, "Bogus EA: %s/%s", cwdbuf, eaname);
             remove = 1;
 
-            if ((unlink(eaname)) != 0)
+            if (!scan_only && unlink(eaname) != 0)
                 dbd_log(LOGSTD, "Error removing EA file '%s/%s': %s",
                         cwdbuf, eaname, strerror(errno));
         }
 
-        if (remove) {
+        if (remove && !scan_only) {
             /* Be CAREFUL here! This should do what ea_delentry does. ea_close relies on it !*/
             free((*ea.ea_entries)[count].ea_name);
             (*ea.ea_entries)[count].ea_name = NULL;
@@ -396,6 +394,393 @@ static int check_eafiles(const char *fname)
 static bool adouble_dir_unusable(int err)
 {
     return err == ENOTDIR || err == OPEN_NOFOLLOW_ERRNO;
+}
+
+/* A same-directory rename in the scanned directory or .AppleDouble. */
+struct dbd_rename {
+    struct dbd_rename *next;
+    int dirfd;
+    char *oldname;
+    char *newname;
+};
+
+/*!
+ * @brief Check whether a rename destination is available
+ *
+ * Any existing entry occupies the destination, including a dangling symbolic
+ * link. The call sets `errno` to `EEXIST` when it finds an entry.
+ *
+ * @param[in] fd    directory descriptor or `AT_FDCWD`
+ * @param[in] name  destination name relative to that directory
+ * @returns 0 when the lookup reports `ENOENT`, or -1 for an occupied
+ *          destination or any other lookup error
+ */
+static int rename_destination(int fd, const char *name)
+{
+    struct stat st;
+
+    if (fstatat(fd, name, &st, AT_SYMLINK_NOFOLLOW) == 0) {
+        errno = EEXIST;
+        return -1;
+    }
+
+    return errno == ENOENT ? 0 : -1;
+}
+
+/*!
+ * @brief Rename an entry within its directory if the destination is free
+ *
+ * The call uses an exclusive rename where supported. The fallback checks the
+ * destination before calling `renameat()` and relies on the maintenance scan
+ * running with other writers stopped.
+ *
+ * @param[in] fd       directory descriptor or `AT_FDCWD`
+ * @param[in] oldname  source name relative to that directory
+ * @param[in] newname  destination name relative to that directory
+ * @returns 0 when the entry is renamed, or -1 on failure with `errno` set
+ */
+static int rename_unoccupied(int fd, const char *oldname, const char *newname)
+{
+#if defined(__APPLE__) && defined(RENAME_EXCL)
+
+    if (renameatx_np(fd, oldname, fd, newname, RENAME_EXCL) == 0) {
+        return 0;
+    }
+
+    if (errno != ENOTSUP && errno != EINVAL) {
+        return -1;
+    }
+
+#elif defined(__linux__) && defined(RENAME_NOREPLACE)
+
+    if (renameat2(fd, oldname, fd, newname, RENAME_NOREPLACE) == 0) {
+        return 0;
+    }
+
+    if (errno != ENOSYS && errno != ENOTSUP && errno != EINVAL) {
+        return -1;
+    }
+
+#endif
+
+    /* The maintenance scan requires other writers to be stopped. */
+    if (rename_destination(fd, newname) != 0) {
+        return -1;
+    }
+
+    return renameat(fd, oldname, fd, newname);
+}
+
+/*!
+ * @brief Queue a same-directory rename for later execution
+ *
+ * For an optional source, a lookup that reports `ENOENT` or `ENAMETOOLONG`
+ * skips the rename. Otherwise the call checks the destination, copies both
+ * names, and prepends the record. The caller keeps the directory descriptor
+ * open while the record is in use.
+ *
+ * @param[in,out] pending   head of the pending rename list
+ * @param[in]     fd        directory descriptor or `AT_FDCWD`
+ * @param[in]     oldname   source name relative to that directory
+ * @param[in]     newname   destination name relative to that directory
+ * @param[in]     optional  whether to check for an optional metadata source
+ * @returns 0 when queued or skipped, or -1 on failure with `errno` set
+ */
+static int queue_rename(struct dbd_rename **pending, int fd,
+                        const char *oldname,
+                        const char *newname, bool optional)
+{
+    struct stat st;
+    struct dbd_rename *entry;
+
+    if (optional && fstatat(fd, oldname, &st, AT_SYMLINK_NOFOLLOW) != 0) {
+        return errno == ENOENT || errno == ENAMETOOLONG ? 0 : -1;
+    }
+
+    if (rename_destination(fd, newname) != 0) {
+        return -1;
+    }
+
+    entry = malloc(sizeof(*entry));
+
+    if (entry == NULL) {
+        return -1;
+    }
+
+    entry->oldname = strdup(oldname);
+    entry->newname = strdup(newname);
+
+    if (entry->oldname == NULL || entry->newname == NULL) {
+        free(entry->oldname);
+        free(entry->newname);
+        free(entry);
+        return -1;
+    }
+
+    entry->dirfd = fd;
+    entry->next = *pending;
+    *pending = entry;
+    return 0;
+}
+
+/*!
+ * @brief Free a rename list and optionally undo its renames
+ *
+ * For rollback, the caller supplies completed renames in reverse execution
+ * order. Each failed restore is logged and the call keeps processing the
+ * remaining records.
+ *
+ * @param[in] entries   head of the list to free, or NULL
+ * @param[in] rollback  whether to restore the original names before freeing
+ * @returns 0, or -1 if any restore fails
+ */
+static int finish_renames(struct dbd_rename *entries, bool rollback)
+{
+    int ret = 0;
+
+    while (entries != NULL) {
+        struct dbd_rename *entry = entries;
+        entries = entry->next;
+
+        if (rollback && rename_unoccupied(entry->dirfd, entry->newname,
+                                          entry->oldname) != 0) {
+            dbd_log(LOGSTD, "Can't restore '%s/%s' from '%s': %s", cwdbuf,
+                    entry->oldname, entry->newname, strerror(errno));
+            ret = -1;
+        }
+
+        free(entry->oldname);
+        free(entry->newname);
+        free(entry);
+    }
+
+    return ret;
+}
+
+/*!
+ * @brief Queue .AppleDouble renames for a non-directory entry
+ *
+ * The call queues the v2 metadata file if present. With `ea = ad`, it reads
+ * the directory stream and queues the matching `::EA` header and `::EA::`
+ * files, retaining their suffixes. The caller keeps the stream open through
+ * execution and rollback and frees any queued records on failure.
+ *
+ * @param[in,out] pending  head of the pending rename list
+ * @param[in,out] dir      open .AppleDouble directory stream
+ * @param[in]     oldname  current name of the volume entry
+ * @param[in]     newname  desired name of the volume entry
+ * @returns 0 when collection completes, or -1 on failure with `errno` set
+ */
+static int queue_adouble_renames(struct dbd_rename **pending, DIR *dir,
+                                 const char *oldname, const char *newname)
+{
+    size_t oldlen = strlen(oldname);
+    const struct dirent *ep;
+    const int fd = dirfd(dir);
+
+    if (fd < 0) {
+        return -1;
+    }
+
+    if (queue_rename(pending, fd, oldname, newname, true) != 0) {
+        return -1;
+    }
+
+    if (vol->v_vfs_ea != AFPVOL_EA_AD) {
+        return 0;
+    }
+
+    for (;;) {
+        errno = 0;
+        ep = readdir(dir);
+
+        if (ep == NULL) {
+            return errno == 0 ? 0 : -1;
+        }
+
+        if (strncmp(ep->d_name, oldname, oldlen) != 0) {
+            continue;
+        }
+
+        const char *suffix = ep->d_name + oldlen;
+
+        if (strcmp(suffix, "::EA") != 0 && strncmp(suffix, "::EA::", 6) != 0) {
+            continue;
+        }
+
+        char target[MAXPATHLEN + 1];
+        int len = snprintf(target, sizeof(target), "%s%s", newname, suffix);
+
+        if (len < 0 || (size_t)len >= sizeof(target)) {
+            errno = ENAMETOOLONG;
+            return -1;
+        }
+
+        if (queue_rename(pending, fd, ep->d_name, target, false) != 0) {
+            return -1;
+        }
+    }
+}
+
+/*!
+ * @brief Rename an entry and its external metadata, keeping its CNID
+ *
+ * The call queues the renames, moves external metadata before the entry,
+ * and updates the CNID database. Directory-owned .AppleDouble metadata and
+ * native extended attributes travel with the entry. On failure the call
+ * attempts to restore completed renames in reverse order.
+ *
+ * @param[in] did      CNID of the parent directory
+ * @param[in] st       stat result of the entry
+ * @param[in] oldname  current name of the entry
+ * @param[in] newname  desired name of the entry
+ * @returns 1 when renamed, 0 when skipped because a destination is occupied
+ *          or a name is too long, or -1 for a migration or rollback error
+ */
+static int rename_euro(cnid_t did, const struct stat *st, const char *oldname,
+                       const char *newname)
+{
+    struct dbd_rename *pending = NULL, *moved = NULL;
+    DIR *addir = NULL;
+    char oldsidecar[MAXPATHLEN + 3], newsidecar[MAXPATHLEN + 3];
+    int ret = -1;
+    int saved_errno;
+    bool catalog_error = false;
+
+    if (queue_rename(&pending, AT_FDCWD, oldname, newname, false) != 0) {
+        goto done;
+    }
+
+    /* Sidecars go first. Directory-owned .AppleDouble metadata and native
+     * extended attributes travel with the entry. */
+    snprintf(oldsidecar, sizeof(oldsidecar), "._%s", oldname);
+    snprintf(newsidecar, sizeof(newsidecar), "._%s", newname);
+
+    if (queue_rename(&pending, AT_FDCWD, oldsidecar, newsidecar, true) != 0) {
+        goto done;
+    }
+
+    if (!S_ISDIR(st->st_mode)) {
+        int fd = open(ADv2_DIRNAME, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+
+        if (fd >= 0) {
+            addir = fdopendir(fd);
+
+            if (addir == NULL) {
+                saved_errno = errno;
+                close(fd);
+                errno = saved_errno;
+                goto done;
+            }
+
+            if (queue_adouble_renames(&pending, addir, oldname, newname) != 0) {
+                goto done;
+            }
+        } else if (errno != ENOENT && (vol->v_adouble == AD_VERSION2
+                                       || !adouble_dir_unusable(errno))) {
+            goto done;
+        }
+    }
+
+    while (pending != NULL) {
+        struct dbd_rename *entry = pending;
+
+        if (rename_unoccupied(entry->dirfd, entry->oldname, entry->newname) != 0) {
+            goto done;
+        }
+
+        pending = entry->next;
+        entry->next = moved;
+        moved = entry;
+    }
+
+    catalog_error = update_cnid(did, st, oldname, newname) != 0;
+    ret = catalog_error ? -1 : 1;
+done:
+    saved_errno = errno;
+    finish_renames(pending, false);
+
+    if (finish_renames(moved, ret < 0) != 0) {
+        ret = -1;
+    } else if (ret < 0 && !catalog_error
+               && (saved_errno == EEXIST || saved_errno == ENAMETOOLONG)) {
+        ret = 0;
+    }
+
+    if (addir != NULL) {
+        closedir(addir);
+    }
+
+    if (ret < 0) {
+        dbd_log(LOGSTD, "Can't migrate '%s/%s' to '%s': %s", cwdbuf, oldname,
+                newname, catalog_error ? "CNID update failed" : strerror(saved_errno));
+    } else if (ret == 0) {
+        dbd_log(LOGSTD, "Skipping euro migration '%s/%s' to '%s': %s", cwdbuf,
+                oldname, newname, strerror(saved_errno));
+    } else {
+        dbd_log(LOGSTD, "Migrated '%s/%s' to '%s'", cwdbuf, oldname, newname);
+    }
+
+    return ret;
+}
+
+/*!
+ * @brief Migrate UTF-8 currency signs in an entry name to euro signs
+ *
+ * The call replaces every currency sign and skips names whose replacement
+ * exceeds the buffer. Under -s it reports the proposed rename without
+ * changing the entry.
+ *
+ * @param[in]  did     CNID of the parent directory
+ * @param[in]  st      stat result of the entry
+ * @param[in]  name    current name of the entry
+ * @param[out] target  buffer holding the new entry name on a return of 1
+ * @param[in]  size    capacity of the buffer in bytes, including the terminator
+ * @returns 1 when renamed, 0 when no rename takes place, or -1 on failure
+ */
+static int migrate_euro(cnid_t did, const struct stat *st, const char *name,
+                        char *target, size_t size)
+{
+    const char *currency = "\xc2\xa4";
+    const char *euro = "\xe2\x82\xac";
+    const char *pos = strstr(name, currency);
+    const char *src = name;
+    char *dst = target;
+
+    if (pos == NULL) {
+        return 0;
+    }
+
+    do {
+        size_t prefix = (size_t)(pos - src);
+
+        if (prefix + 3 >= size) {
+            goto too_long;
+        }
+
+        memcpy(dst, src, prefix);
+        memcpy(dst + prefix, euro, 3);
+        dst += prefix + 3;
+        size -= prefix + 3;
+        src = pos + 2;
+        pos = strstr(src, currency);
+    } while (pos != NULL);
+
+    if (strlcpy(dst, src, size) >= size) {
+        goto too_long;
+    }
+
+    if (dbd_flags & DBD_FLAGS_SCAN) {
+        dbd_log(LOGSTD, "Euro migration candidate '%s/%s' to '%s'", cwdbuf,
+                name, target);
+        return 0;
+    }
+
+    return rename_euro(did, st, name, target);
+too_long:
+    dbd_log(LOGSTD, "Skipping euro migration '%s/%s': %s", cwdbuf, name,
+            strerror(ENAMETOOLONG));
+    return 0;
 }
 
 /*!
@@ -889,7 +1274,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st,
 /*!
  * @brief Delete a `._name` file whose `name` no longer exists
  *
- * The call deletes the file even under -s.
+ * Under -s the file is only reported.
  *
  * @param[in] name  name that starts with `._`
  * @returns 1 for an orphaned file, or 0
@@ -906,8 +1291,12 @@ static int check_orphaned(const char *name)
     rc = lstat(&name[2], &sb);
 
     if (rc != 0 && errno == ENOENT) {
-        dbd_log(LOGSTD, "Removing orphaned AppleDouble \"%s/%s\"", cwdbuf, name);
-        unlink(name);
+        dbd_log(LOGSTD, "Orphaned AppleDouble \"%s/%s\"", cwdbuf, name);
+
+        if (!(dbd_flags & DBD_FLAGS_SCAN)) {
+            unlink(name);
+        }
+
         return 1;
     }
 
@@ -935,7 +1324,8 @@ static int dbd_readdir(int volroot, cnid_t did)
 {
     int cwd, ret = 0, adfile_ok, addir_ok;
     cnid_t cnid = 0;
-    const char *name;
+    const char *name, *filename;
+    char euro_name[MAXPATHLEN + 1];
     DIR *dp;
     struct dirent *ep;
     static struct stat st;      /* Save some stack space */
@@ -1001,7 +1391,7 @@ static int dbd_readdir(int volroot, cnid_t did)
             continue;
         }
 
-        if ((ret = lstat(ep->d_name, &st)) < 0) {
+        if (lstat(ep->d_name, &st) < 0) {
             dbd_log(LOGSTD, "Lost file while reading dir '%s/%s', probably removed: %s",
                     cwdbuf, ep->d_name, strerror(errno));
             continue;
@@ -1057,19 +1447,35 @@ static int dbd_readdir(int volroot, cnid_t did)
             }
         }
 
-        /* Check for appledouble file, create if missing, but only if we have addir */
+        filename = ep->d_name;
+
+        if (dbd_flags & DBD_FLAGS_EURO) {
+            int migrated = migrate_euro(did, &st, filename, euro_name,
+                                        sizeof(euro_name));
+
+            if (migrated < 0) {
+                closedir(dp);
+                return -1;
+            }
+
+            if (migrated > 0) {
+                filename = euro_name;
+            }
+        }
+
         name = NULL;
         adfile_ok = -1;
 
+        /* Check for appledouble file, create if missing, but only if we have addir */
         if (ADDIR_OK) {
-            adfile_ok = check_adfile(ep->d_name, &st, &name);
+            adfile_ok = check_adfile(filename, &st, &name);
         }
 
         if (!S_ISLNK(st.st_mode)) {
             if (name == NULL) {
-                name = ep->d_name;
+                name = filename;
             } else {
-                update_cnid(did, &st, ep->d_name, name);
+                update_cnid(did, &st, filename, name);
             }
 
             /* Check CNIDs */
@@ -1111,6 +1517,7 @@ static int dbd_readdir(int volroot, cnid_t did)
             *(strrchr(cwdbuf, '/')) = 0;
 
             if (ret < 0) {
+                closedir(dp);
                 return -1;
             }
         }
@@ -1158,7 +1565,7 @@ int cmd_dbd_scanvol(struct vol *vol_in, dbd_flags_t flags)
     mode_t saved_umask = umask(0); //NOSONAR
     /* Make vol accessible for all funcs */
     vol = vol_in;
-    dbd_flags = flags;
+    dbd_flags = (flags & DBD_FLAGS_SCAN) ? flags & ~DBD_FLAGS_V2TOEA : flags;
 
     /* We only support unicode volumes ! */
     if (vol->v_volcharset != CH_UTF8) {

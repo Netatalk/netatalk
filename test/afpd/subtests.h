@@ -87,6 +87,8 @@ extern int utest_enumerate_afp2_lists_the_mac_forms(AFPObj *obj,
 extern int utest_enumerate_decomposed_name_is_mangled(AFPObj *obj,
                                                       struct vol *vol,
                                                       uint16_t vid);
+extern int utest_mac_roman_currency_names(AFPObj *obj, struct vol *vol,
+                                          uint16_t vid);
 extern int utest_demangle_unknown_id_resolves_once(AFPObj *obj,
                                                    struct vol *vol,
                                                    uint16_t vid);

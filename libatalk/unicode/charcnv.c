@@ -1336,6 +1336,7 @@ end:
  * convert_charset pulls the source into UCS-2 and precomposes or decomposes it
  * as the flags and the target charset require. It then folds case for
  * CONV_TOUPPER or CONV_TOLOWER and pushes the result into the target charset.
+ * CONV_MANGLE_LOSSY sets CONV_REQMANGLE for the Mac Roman currency-sign alias.
  *
  * @bug Buffer sizing is fragile and wants malloc/free logic.
  * @note dest_len must include room for the two-byte terminator.
@@ -1436,5 +1437,12 @@ size_t convert_charset(charset_t from_set, charset_t to_set,
     /* null terminate */
     dest[o_len] = 0;
     dest[o_len + 1] = 0;
+
+    if (CHECK_FLAGS(flags, CONV_MANGLE_LOSSY) && charsets[to_set]
+            && strcmp(charsets[to_set]->name, "MAC_ROMAN") == 0
+            && strchr_w(u, 0x00a4)) {
+        *flags |= CONV_REQMANGLE;
+    }
+
     return o_len;
 }

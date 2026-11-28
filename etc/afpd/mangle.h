@@ -31,6 +31,6 @@
 extern char *mangle(const struct vol *, char *, size_t, char *, cnid_t, int);
 extern char *demangle(const struct vol *, char *, cnid_t did);
 extern char *demangle_osx(const struct vol *, char *, cnid_t did,
-                          cnid_t *fileid);
+                          const char *macname, cnid_t *fileid);
 
 #endif /* AFPD_MANGLE_H */

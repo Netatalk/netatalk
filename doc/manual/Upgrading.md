@@ -1,6 +1,6 @@
 # Upgrading from prior Netatalk versions
 
-## Upgrading from Netatalk 4.6
+## Upgrading to Netatalk 4.7
 
 ### Berkeley DB (dbd) CNID backend removal
 
@@ -31,7 +31,35 @@ section of the [Configuration](Configuration.html) chapter has the
 details. If a home does not open, its log line names the command that
 fixes it.
 
-## Upgrading from Netatalk 4.5
+### Mac Roman currency and euro signs
+
+On Unicode volumes, Netatalk 4.7 decodes Mac Roman byte `0xDB` as the euro
+sign (`€`). Earlier Netatalk versions decoded it as the currency sign (`¤`),
+so a file named `My€` on a Mac OS 8.5 or 9 client could be stored as `My¤`
+on the server. AFP 3.x clients see the Unicode name on disk.
+
+When Netatalk encodes a filename for a Mac Roman AFP 2.x client, both signs
+use `0xDB`. Mac OS 8.5 through 9.x display `€`, and earlier versions use
+`¤`. Names stored with `¤` get a `#<CNID>` suffix on these clients so
+they can coexist with each other.
+
+Before migrating an affected volume, disconnect AFP clients, stop other
+volume writers, then preview the proposed renames with **dbd**(1).
+
+    sudo dbd -s -e /path/to/volume
+
+The preview leaves filesystem names and metadata intact. Review the candidates
+before applying the renames because the migration also replaces intentional
+currency signs.
+
+    sudo dbd -e /path/to/volume
+
+The migration preserves existing CNIDs and moves associated AppleDouble
+metadata with the files. If `My€` already exists in the same directory, `dbd`
+skips `My¤`. A name already saved in mangled form, such as `My#3A21`, needs a
+separate rename.
+
+## Upgrading to Netatalk 4.6
 
 Netatalk 4.6 changes how the credential store used by the SRP UAM
 is maintained. Review the following steps before starting
@@ -125,7 +153,7 @@ Randnum remains a legacy, weak UAM intended only for old clients. Managing its
 *afppasswd* file is now root-only: use **afppasswd -r -a** *username* to reset
 or update a Randnum credential.
 
-## Upgrading from Netatalk 3
+## Upgrading Netatalk 4 from Netatalk 3
 
 Upgrading to Netatalk 4 from Netatalk 3 is trivial. Just install the new
 version on top of the old one. The primary difference is that Netatalk 4
@@ -166,7 +194,7 @@ simplicity and portability.
 If you upgrade from a previous version, you may need to manually delete the
 *netatalk-dbus.conf* file which is usually stored in */usr/share/dbus-1/system.d*.
 
-## Upgrading from Netatalk 2
+## Upgrading to Netatalk 3 or later from Netatalk 2
 
 There are three major changes between Netatalk 2 and Netatalk 4:
 

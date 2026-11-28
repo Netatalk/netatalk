@@ -2509,6 +2509,77 @@ out:
 }
 
 /*!
+ * @brief Both signs use 0xDB in AFP 2, and each listed name resolves to its file
+ */
+int utest_mac_roman_currency_names(AFPObj *obj, struct vol *vol, uint16_t vid)
+{
+    char currency[] = "price-\xc2\xa4";
+    char euro[] = "price-\xe2\x82\xac";
+    char *names[] = { currency, euro };
+    char mac[] = "price-\xdb";
+    char listed[2][MACFILELEN + 1] = { "" };
+    char mangled[MACFILELEN + 1];
+    int version = obj->afp_version;
+    cnid_t did = make_folder(obj, vid, "currency");
+    int result = 1;
+
+    if (did == CNID_INVALID) {
+        return 1;
+    }
+
+    if (disk_files(vol, "currency", names, 2) != 0
+            || getfiledirparms(obj, vid, did, currency) != AFP_OK
+            || getfiledirparms(obj, vid, did, euro) != AFP_OK) {
+        goto out;
+    }
+
+    cnid_t id = cnid_get(vol->v_cdb, did, currency, strlen(currency));
+
+    if (id == CNID_INVALID) {
+        goto out;
+    }
+
+    cut_lname(mangled, mac, "", id);
+    char wire[2 + MACFILELEN + 1] = { 2, (char)strlen(mangled) };
+    strlcpy(wire + 2, mangled, sizeof(wire) - 2);
+    char *wire_path = wire;
+    struct dir *dir = dirlookup(vol, did);
+    const struct path *resolved_path = dir == NULL ? NULL : cname(vol, dir,
+        &wire_path);
+
+    if (resolved_path == NULL || resolved_path->u_name == NULL
+            || strcmp(resolved_path->u_name, currency) != 0) {
+        goto out;
+    }
+
+    drop_entry(vol, did, currency);
+    drop_entry(vol, did, euro);
+    obj->afp_version = 21;
+    int count = enumerate_lnames(obj, vid, did, listed, 2);
+
+    if (count != 2
+            || !((strcmp(listed[0], mangled) == 0 && strcmp(listed[1], mac) == 0)
+                 || (strcmp(listed[1], mangled) == 0 && strcmp(listed[0], mac) == 0))) {
+        goto out;
+    }
+
+    const char *resolved = mtoupath(vol, mangled, did, 0);
+
+    if (resolved == NULL || strcmp(resolved, currency) != 0) {
+        goto out;
+    }
+
+    resolved = mtoupath(vol, mac, did, 0);
+    result = resolved == NULL || strcmp(resolved, euro) != 0;
+out:
+    obj->afp_version = version;
+    delete (obj, vid, did, currency);
+    delete (obj, vid, did, euro);
+    delete (obj, vid, DIRDID_ROOT, "currency");
+    return result;
+}
+
+/*!
  * @brief The long name an AFP 2 session lists for a file
  *
  * @param[in]  vol      volume
@@ -2687,7 +2758,7 @@ int utest_demangle_cached_file_checks_its_entry(AFPObj *obj,
     }
 
     /* a caller that renames the object frees the entry's name */
-    answer = demangle_osx(vol, mangled, did, &fileid);
+    answer = demangle_osx(vol, mangled, did, NULL, &fileid);
     entry = dircache_search_by_name(vol, parent, name, strlen(name));
 
     if (entry == NULL || strcmp(answer, name) != 0
@@ -3048,7 +3119,7 @@ int utest_demangle_variant_needs_afp3(AFPObj *obj, struct vol *vol,
     }
 
     snprintf(variant, sizeof(variant), "Track \xe5\x86\x99#%X.mp3", ntohl(id));
-    taken = strcmp(demangle_osx(vol, variant, did, &fileid), name) == 0;
+    taken = strcmp(demangle_osx(vol, variant, did, NULL, &fileid), name) == 0;
     obj->afp_version = 21;
     exact = strcmp(demangle(vol, mangled, did), name) == 0;
     literal = demangle(vol, variant, did) == variant;

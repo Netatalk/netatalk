@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2026 Andy Lemin (andylemin)
+ * Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +37,7 @@
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
 #include <atalk/compat.h>
+#include <atalk/ea.h>
 #include <atalk/logger.h>
 #include <atalk/unicode.h>
 #include <atalk/util.h>
@@ -503,6 +505,178 @@ static void test_metadata_repair(int empty)
            : "ordinary maintenance replaces a stale hint with the database CNID");
 }
 
+/*! @brief Simulate a catalog write failure after the migration's renames */
+static int fail_cnid_update(struct _cnid_db *cdb _U_, cnid_t id _U_,
+                            const struct stat *st _U_, cnid_t did _U_,
+                            const char *name _U_, size_t len _U_)
+{
+    errno = CNID_ERR_DB;
+    return -1;
+}
+
+/*! @brief Migrate a legacy filename and its sidecars without changing CNID */
+static void test_euro_migration(void)
+{
+    char oldname[] = "VC\xc2\xa4\xc2\xa4";
+    char newname[] = "VC\xe2\x82\xac\xe2\x82\xac";
+    char origcwd[MAXPATHLEN], oldad[MAXPATHLEN], newad[MAXPATHLEN];
+    char oldea[MAXPATHLEN], newea[MAXPATHLEN], oldattr[MAXPATHLEN],
+         newattr[MAXPATHLEN];
+    struct dbd_scratch s;
+    struct stat before, after;
+    cnid_t did = htonl(2), id;
+
+    if (scratch_setup(&s) != 0 || scratch_metadata(&s) != 0
+            || getcwd(origcwd, sizeof(origcwd)) == NULL || chdir(s.share) != 0) {
+        printf("Bail out! cannot create migration fixture: %s\n", strerror(errno));
+        scratch_cleanup(&s);
+        exit(1);
+    }
+
+    snprintf(oldad, sizeof(oldad), "%s/%s", ADv2_DIRNAME, oldname);
+    snprintf(newad, sizeof(newad), "%s/%s", ADv2_DIRNAME, newname);
+    snprintf(oldea, sizeof(oldea), "%s::EA", oldad);
+    snprintf(newea, sizeof(newea), "%s::EA", newad);
+    snprintf(oldattr, sizeof(oldattr), "%s::test", oldea);
+    snprintf(newattr, sizeof(newattr), "%s::test", newea);
+
+    if (rename("sample", oldname) != 0
+            || rename(ADv2_DIRNAME "/sample", oldad) != 0
+            || lstat(oldname, &before) != 0
+            || s.vol.vfs->vfs_ea_set(&s.vol, oldname, "test", "data", 4, 0, -1) != 0) {
+        printf("Bail out! cannot prepare legacy file: %s\n", strerror(errno));
+        exit(1);
+    }
+
+    id = cnid_add(s.vol.v_cdb, &before, did, oldname, strlen(oldname), htonl(1000));
+    int passed = id == htonl(1000) && cmd_dbd_scanvol(&s.vol, 0) == 0
+                 && truncate(oldattr, 5) == 0
+                 && cmd_dbd_scanvol(&s.vol, DBD_FLAGS_SCAN | DBD_FLAGS_EURO) == 0
+                 && lstat(oldattr, &after) == 0 && after.st_size == 5
+                 && truncate(oldattr, 4) == 0
+                 && lstat(oldname, &after) == 0 && before.st_ino == after.st_ino
+                 && lstat(newname, &after) != 0 && errno == ENOENT
+                 && cnid_get(s.vol.v_cdb, did, oldname, strlen(oldname)) == id;
+    report(passed, "ordinary and preview scans keep legacy names");
+    int fd = open(newname, O_CREAT | O_EXCL | O_WRONLY, 0600);
+    passed = fd >= 0 && fstat(fd, &before) == 0
+             && cmd_dbd_scanvol(&s.vol, DBD_FLAGS_EURO) == 0
+             && lstat(newname, &after) == 0 && before.st_ino == after.st_ino
+             && lstat(oldname, &after) == 0 && lstat(oldad, &after) == 0
+             && lstat(oldattr, &after) == 0
+             && cnid_get(s.vol.v_cdb, did, oldname, strlen(oldname)) == id;
+    report(passed, "euro migration keeps both files and metadata on a collision");
+
+    if (fd >= 0) {
+        close(fd);
+        unlink(newname);
+        unlink(newad);
+    }
+
+    int (*saved_update)(struct _cnid_db *, cnid_t, const struct stat *, cnid_t,
+                        const char *, size_t) = s.vol.v_cdb->cnid_update;
+    s.vol.v_cdb->cnid_update = fail_cnid_update;
+    passed = cmd_dbd_scanvol(&s.vol, DBD_FLAGS_EURO) == -1
+             && lstat(oldname, &after) == 0 && lstat(oldad, &after) == 0
+             && lstat(oldattr, &after) == 0 && lstat(newname, &after) != 0
+             && errno == ENOENT
+             && cnid_get(s.vol.v_cdb, did, oldname, strlen(oldname)) == id;
+    s.vol.v_cdb->cnid_update = saved_update;
+    report(passed, "euro migration restores names after a CNID update failure");
+    passed = lstat(oldname, &before) == 0
+             && cmd_dbd_scanvol(&s.vol, DBD_FLAGS_EURO) == 0
+             && cmd_dbd_scanvol(&s.vol, DBD_FLAGS_EURO) == 0
+             && lstat(newname, &after) == 0 && before.st_ino == after.st_ino
+             && lstat(oldname, &after) != 0 && errno == ENOENT
+             && lstat(newad, &after) == 0 && lstat(newea, &after) == 0
+             && lstat(newattr, &after) == 0 && after.st_size == 4
+             && cnid_get(s.vol.v_cdb, did, oldname, strlen(oldname)) == CNID_INVALID
+             && cnid_get(s.vol.v_cdb, did, newname, strlen(newname)) == id;
+    report(passed,
+           "euro migration preserves the SQLite CNID and AppleDouble metadata");
+    unlink(oldname);
+    unlink(newname);
+    unlink(oldad);
+    unlink(newad);
+    unlink(oldea);
+    unlink(newea);
+    unlink(oldattr);
+    unlink(newattr);
+
+    if (chdir(origcwd) != 0) {
+        printf("Bail out! cannot restore working directory: %s\n", strerror(errno));
+        exit(1);
+    }
+
+    scratch_cleanup(&s);
+}
+
+/*! @brief Preserve a directory's CNID and scan its children after renaming */
+static void test_euro_directory(void)
+{
+    const char olddir[] = "dir\xc2\xa4";
+    char newdir[] = "dir\xe2\x82\xac";
+    const char oldname[] = "VC\xc2\xa4";
+    char newname[] = "VC\xe2\x82\xac";
+    const char attr[] = "netatalk.dbdtest", value[] = "metadata";
+    char origcwd[MAXPATHLEN], oldpath[MAXPATHLEN], newpath[MAXPATHLEN];
+    char buf[sizeof(value)];
+    struct dbd_scratch s;
+    struct stat st;
+    cnid_t did, id;
+
+    if (scratch_setup(&s) != 0 || getcwd(origcwd, sizeof(origcwd)) == NULL
+            || chdir(s.share) != 0 || mkdir(olddir, 0700) != 0) {
+        printf("Bail out! cannot create legacy directory: %s\n", strerror(errno));
+        exit(1);
+    }
+
+    s.vol.v_adouble = AD_VERSION_EA;
+    s.vol.v_vfs_ea = AFPVOL_EA_SYS;
+    initvol_vfs(&s.vol);
+    snprintf(oldpath, sizeof(oldpath), "%s/%s", olddir, oldname);
+    snprintf(newpath, sizeof(newpath), "%s/%s", newdir, newname);
+    int fd = open(oldpath, O_CREAT | O_EXCL | O_WRONLY, 0600);
+
+    if (fd < 0 || close(fd) != 0 || lstat(olddir, &st) != 0) {
+        printf("Bail out! cannot prepare legacy directory: %s\n", strerror(errno));
+        exit(1);
+    }
+
+    did = cnid_add(s.vol.v_cdb, &st, htonl(2), olddir, strlen(olddir), 0);
+    id = lstat(oldpath, &st) == 0
+         ? cnid_add(s.vol.v_cdb, &st, did, oldname, strlen(oldname), 0) : CNID_INVALID;
+    int have_attr = sys_setxattr(oldpath, attr, value, sizeof(value), 0) == 0;
+    int passed = did != CNID_INVALID && id != CNID_INVALID
+                 && cmd_dbd_scanvol(&s.vol, DBD_FLAGS_EURO) == 0
+                 && lstat(newpath, &st) == 0
+                 && cnid_get(s.vol.v_cdb, htonl(2), newdir, strlen(newdir)) == did
+                 && cnid_get(s.vol.v_cdb, did, newname, strlen(newname)) == id;
+    report(passed,
+           "euro migration preserves the parent and child CNIDs on an EA volume");
+
+    if (have_attr) {
+        report(sys_getxattr(newpath, attr, buf, sizeof(buf)) == sizeof(buf)
+               && memcmp(buf, value, sizeof(buf)) == 0,
+               "euro migration preserves native extended attributes");
+    } else {
+        skip("euro migration preserves native extended attributes",
+             "native extended attributes unavailable");
+    }
+
+    unlink(oldpath);
+    unlink(newpath);
+    rmdir(olddir);
+    rmdir(newdir);
+
+    if (chdir(origcwd) != 0) {
+        printf("Bail out! cannot restore working directory: %s\n", strerror(errno));
+        exit(1);
+    }
+
+    scratch_cleanup(&s);
+}
+
 /*!
  * @brief Run the dbd scan tests and print their TAP results
  *
@@ -535,6 +709,8 @@ int main(void)
                        "-s -i leaves valid read-only v2 metadata unchanged");
     test_metadata_repair(1);
     test_metadata_repair(0);
+    test_euro_migration();
+    test_euro_directory();
     printf("1..%d\n", tests_run);
     return tests_failed == 0 ? 0 : 1;
 }

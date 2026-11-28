@@ -217,12 +217,14 @@ static uint32_t mangled_id(char *hash, char **ext)
  * well, so each MANGLE_CHAR that introduces a CNID gets a turn, the last
  * first. The object must sit in did; a cached object whose name still holds
  * it answers from its dircache entry, any other ID from one CNID lookup. The
- * name must equal the mangled name the server builds; with osx,
- * demangle_checks also accepts the forms that Mac OS X sends.
+ * name must equal the mangled name the server builds. With macname, also
+ * check the original type 2 path against the server's Mac charset form.
+ * With osx, demangle_checks also accepts the forms that Mac OS X sends.
  *
  * @param[in]  vol        volume of the name
  * @param[in]  mfilename  name from the client
  * @param[in]  did        CNID of the directory that holds the object
+ * @param[in]  macname    original type 2 path before conversion, or NULL
  * @param[out] osx        receives the CNID in network order with the name on
  *                        disk returned; NULL asks for the exact match alone
  * @returns the name on disk in a static buffer, or mfilename when it is not a
@@ -230,7 +232,7 @@ static uint32_t mangled_id(char *hash, char **ext)
  */
 static char *
 private_demangle(const struct vol *vol, char *mfilename, cnid_t did,
-                 cnid_t *osx)
+                 const char *macname, cnid_t *osx)
 {
     char *hash = mfilename + strlen(mfilename);
     /* MANGLE_CHAR, the CNID's digits and the extension end a mangled name */
@@ -274,9 +276,11 @@ private_demangle(const struct vol *vol, char *mfilename, cnid_t did,
             continue;
         }
 
-        /* an AFP 3 client (osx) may also send a form Mac OS X builds */
+        /* An AFP 3 client may use a type 2 path or a Mac OS X variant. */
         if (strcmp(utompath(vol, u_name, id, utf8_encoding(vol->v_obj)),
                    mfilename) == 0
+                || (macname != NULL
+                    && strcmp(utompath(vol, u_name, id, 0), macname) == 0)
                 || (osx != NULL
                     && demangle_checks(vol, u_name, mfilename, prefix,
                                        ext) == u_name)) {
@@ -303,24 +307,26 @@ private_demangle(const struct vol *vol, char *mfilename, cnid_t did,
 char *
 demangle(const struct vol *vol, char *mfilename, cnid_t did)
 {
-    return private_demangle(vol, mfilename, did, NULL);
+    return private_demangle(vol, mfilename, did, NULL, NULL);
 }
 
 /*!
- * @brief Resolve a mangled name in a directory, also accepting the forms that
- * Mac OS X sends
+ * @brief Resolve a mangled name on AFP 3, including type 2 names and Mac OS X
+ * variants
  *
  * @param[in]  vol        volume of the name
  * @param[in]  mfilename  name from the client
  * @param[in]  did        CNID of the directory that holds the object
+ * @param[in]  macname    original type 2 path before conversion, or NULL
  * @param[out] fileid     receives the CNID, in network order, with the name
  *                        a mangled form resolves to
  * @returns the name on disk, or mfilename
  */
 char *
-demangle_osx(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *fileid)
+demangle_osx(const struct vol *vol, char *mfilename, cnid_t did,
+             const char *macname, cnid_t *fileid)
 {
-    return private_demangle(vol, mfilename, did, fileid);
+    return private_demangle(vol, mfilename, did, macname, fileid);
 }
 
 /*!
