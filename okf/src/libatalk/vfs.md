@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "libatalk/vfs"
-description: "6 files, 119 functions."
+description: "6 files, 130 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/vfs"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-28T10:52:17+01:00 }
 ---
 
 # Files
@@ -23,7 +23,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 
 # Calls into
 
-* [libatalk/adouble](adouble.md): 17 calls
+* [libatalk/adouble](adouble.md): 18 calls
 * [libatalk/util](util.md): 14 calls
 * [libatalk/compat](compat.md): 7 calls
 * [libatalk/unicode](unicode.md): 3 calls
@@ -31,7 +31,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 
 # Called from
 
-* [etc/afpd](../etc/afpd.md): 22 calls
+* [etc/afpd](../etc/afpd.md): 24 calls
 * [libatalk/adouble](adouble.md): 11 calls
 * [bin/dbd](../bin/dbd.md): 3 calls
 * [libatalk/util](util.md): 3 calls
@@ -43,8 +43,8 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
 * [ea_path](vfs/ea_ad.c.md#ea_path): 11 callers
 * [prefix](vfs/extattr.c.md#prefix): 9 callers
 * [ea_attrname_invalid](vfs/ea_ad.c.md#ea_attrname_invalid): 8 callers
+* [setfilmode](vfs/unix.c.md#setfilmode): 7 callers
 * [netatalk_unlinkat](vfs/unix.c.md#netatalk_unlinkat): 6 callers
-* [setfilmode](vfs/unix.c.md#setfilmode): 6 callers
 * [sys_fgetxattr](vfs/extattr.c.md#sys_fgetxattr): 6 callers
 * [dir_rx_set](vfs/unix.c.md#dir_rx_set): 5 callers
 * [ea_absent](vfs/ea_ad.c.md#ea_absent): 5 callers

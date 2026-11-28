@@ -5,7 +5,7 @@ description: "Netatalk utility functions: unix."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/unix.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T23:02:49+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-28T10:52:17+01:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -521,7 +521,7 @@ Parameters:
 
 Returns: 0 for a skipped change, or the result of chmod_acl, chmod, or a failed lstat
 
-Called by: [RF_setdirmode_adouble](../vfs/vfs.c.md#rf_setdirmode_adouble), [RF_setdirunixmode_adouble](../vfs/vfs.c.md#rf_setdirunixmode_adouble), [setdeskmode](../../etc/afpd/desktop.c.md#setdeskmode), [setdirunixmode](../../etc/afpd/unix.c.md#setdirunixmode), [setfilmode](../vfs/unix.c.md#setfilmode)
+Called by: [RF_setdirmode_adouble](../vfs/vfs.c.md#rf_setdirmode_adouble), [RF_setdirunixmode_adouble](../vfs/vfs.c.md#rf_setdirunixmode_adouble), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [setdeskmode](../../etc/afpd/desktop.c.md#setdeskmode), [setdirunixmode](../../etc/afpd/unix.c.md#setdirunixmode), [setfilmode_impl](../vfs/unix.c.md#setfilmode_impl)
 
 ### ostatat
 

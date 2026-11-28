@@ -12,4 +12,4 @@
 * [netddp](netddp.md) - 1 file, 1 function. Files in [netddp/](netddp/).
 * [unicode](unicode.md) - 31 files, 115 functions. Files in [unicode/](unicode/).
 * [util](util.md) - 21 files, 266 functions. Files in [util/](util/).
-* [vfs](vfs.md) - 6 files, 119 functions. Files in [vfs/](vfs/).
+* [vfs](vfs.md) - 6 files, 130 functions. Files in [vfs/](vfs/).

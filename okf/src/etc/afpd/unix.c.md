@@ -5,7 +5,7 @@ description: "Unix modes, owners, and AFP access rights of files and directories
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/unix.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-30T10:57:24+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-28T10:52:17+01:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -203,10 +203,10 @@ Called by: [setdirparams](directory.c.md#setdirparams)
 ### setfilunixmode
 
 ```c
-int setfilunixmode(const struct vol *vol, struct path *path, mode_t mode)
+int setfilunixmode(const struct vol *vol, struct path *path, mode_t mode, bool strict)
 ```
 
-Defined at lines 286 to 304.
+Defined at lines 288 to 309.
 
 Apply a Unix mode to a file and to its AppleDouble metadata.
 
@@ -216,14 +216,13 @@ Parameters:
 * `vol`: volume of the file
 * `path`: file, its stat filled when missing
 * `mode`: new mode
+* `strict`: report EPERM from mode changes
 
-Returns: 0, or -1 when the stat or a mode change failed
+Returns: AFP_OK on success, -1 if the data file stat or mode change fails, or the VFS error from a metadata mode change
 
-Calls: [of_stat](ofork.c.md#of_stat), [setfilmode](../../libatalk/vfs/unix.c.md#setfilmode)
+Calls: [of_stat](ofork.c.md#of_stat), [setfilmode](../../libatalk/vfs/unix.c.md#setfilmode), [setfilmode_strict](../../libatalk/vfs/unix.c.md#setfilmode_strict)
 
 Called by: [afp_exchangefiles](file.c.md#afp_exchangefiles), [setfilparams](file.c.md#setfilparams)
-
-Calls through [`vfs_ops::vfs_setfilmode`](../../include/atalk/vfs.h.md#struct-vfs_ops): [RF_setfilmode_adouble](../../libatalk/vfs/vfs.c.md#rf_setfilmode_adouble), [RF_setfilmode_ea](../../libatalk/vfs/vfs.c.md#rf_setfilmode_ea), [ea_chmod_file](../../libatalk/vfs/ea_ad.c.md#ea_chmod_file), [vfs_setfilmode](../../libatalk/vfs/vfs.c.md#vfs_setfilmode)
 
 ### setdirunixmode
 
@@ -231,7 +230,7 @@ Calls through [`vfs_ops::vfs_setfilmode`](../../include/atalk/vfs.h.md#struct-vf
 int setdirunixmode(const struct vol *vol, char *name, mode_t mode)
 ```
 
-Defined at lines 320 to 349.
+Defined at lines 325 to 354.
 
 Apply a Unix mode to a directory and to its AppleDouble metadata.
 
@@ -253,22 +252,23 @@ Calls through [`vfs_ops::vfs_setdirunixmode`](../../include/atalk/vfs.h.md#struc
 ### setfilowner
 
 ```c
-int setfilowner(const struct vol *vol, const uid_t uid, const gid_t gid, struct path *path)
+int setfilowner(const struct vol *vol, const uid_t uid, const gid_t gid, struct path *path, bool strict)
 ```
 
-Defined at lines 362 to 378.
+Defined at lines 371 to 389.
 
 Give a file and its AppleDouble metadata a new owner and group.
 
-EPERM counts as success for both changes.
+Change the data file according to the volume's symlink policy, then run the VFS ownership hooks for its metadata. In non-strict mode, EPERM from either step counts as success.
 
 Parameters:
 * `vol`: volume of the file
-* `uid`: new owner
-* `gid`: new group
+* `uid`: new owner, or (uid_t)-1 to keep the current owner
+* `gid`: new group, or (gid_t)-1 to keep the current group
 * `path`: file
+* `strict`: report EPERM from ownership changes
 
-Returns: 0, or -1 when a change failed with another error
+Returns: 0 on success, including tolerated EPERM, or -1 on a reported failure
 
 Calls: [ochown](../../libatalk/util/unix.c.md#ochown)
 
@@ -282,7 +282,7 @@ Calls through [`vfs_ops::vfs_chown`](../../include/atalk/vfs.h.md#struct-vfs_ops
 int setdirowner(const struct vol *vol, const char *name, const uid_t uid, const gid_t gid)
 ```
 
-Defined at lines 393 to 406.
+Defined at lines 404 to 417.
 
 Give a directory and its AppleDouble metadata a new owner and group.
 

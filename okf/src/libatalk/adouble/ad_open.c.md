@@ -5,7 +5,7 @@ description: "Opening and creating AppleDouble forks and reading metadata header
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_open.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-28T10:52:17+01:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -1342,7 +1342,7 @@ Parameters:
 
 Returns: the metadata file mode
 
-Called by: [RF_setdirmode_adouble](../vfs/vfs.c.md#rf_setdirmode_adouble), [ad_open_hf_v2](ad_open.c.md#ad_open_hf_v2), [adouble_setfilmode](../vfs/vfs.c.md#adouble_setfilmode), [nad_open](../../bin/nad/nad_adouble.c.md#nad_open)
+Called by: [RF_setdirmode_adouble](../vfs/vfs.c.md#rf_setdirmode_adouble), [RF_setdirunixmode_adouble](../vfs/vfs.c.md#rf_setdirunixmode_adouble), [ad_open_hf_v2](ad_open.c.md#ad_open_hf_v2), [adouble_setfilmode](../vfs/vfs.c.md#adouble_setfilmode), [nad_open](../../bin/nad/nad_adouble.c.md#nad_open)
 
 # Types
 

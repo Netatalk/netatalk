@@ -5,7 +5,7 @@ description: "Unix file operations of the VFS layer: modes, duplication, deletio
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/vfs/unix.c"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-23T02:29:08+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-28T10:52:17+01:00 }
 ---
 
 Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -43,29 +43,78 @@ Returns: 1 when mode carries both S_IRUSR and S_IXUSR, 0 otherwise
 
 Called by: [RF_setdirmode_adouble](vfs.c.md#rf_setdirmode_adouble), [RF_setdirunixmode_adouble](vfs.c.md#rf_setdirunixmode_adouble), [setdeskmode](../../etc/afpd/desktop.c.md#setdeskmode), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setdirunixmode](../../etc/afpd/unix.c.md#setdirunixmode)
 
+### setfilmode_impl
+
+```c
+static int setfilmode_impl(const struct vol *vol, const char *name, mode_t mode, struct stat *st, bool strict)
+```
+
+Defined at lines 61 to 88.
+
+Set the permission bits of name and keep its other mode bits.
+
+The volume umask clears bits from the new mode, and st supplies the file type and special bits. The ochmod call skips a symlink unless the volume follows symlinks. The volume options decide whether it preserves ACLs or skips the change.
+
+Parameters:
+* `vol`: volume holding the file
+* `name`: file to change
+* `mode`: requested mode
+* `st`: stat supplying the non-permission bits, or NULL to lstat name
+* `strict`: report EPERM from the mode change
+
+Returns: 0 on success or a skipped change, or -1 with errno set on failure
+
+Calls: [ochmod](../util/unix.c.md#ochmod)
+
+Called by: [setfilmode](unix.c.md#setfilmode), [setfilmode_strict](unix.c.md#setfilmode_strict)
+
 ### setfilmode
 
 ```c
 int setfilmode(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
 ```
 
-Defined at lines 60 to 87. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 103 to 107. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
-Set the permission bits of name and keep its other mode bits.
+Apply a file mode with EPERM tolerance for the mode change.
 
-The volume umask clears bits from the new mode, and st supplies the file type and special bits. The ochmod call skips a symlink unless the volume follows symlinks. The volume options decide whether it preserves ACLs or skips the change. EPERM counts as success.
+Keep the file's non-permission bits, apply the volume umask, and honor the volume's symlink and ACL policies. A failed lstat still fails the call.
 
 Parameters:
 * `vol`: volume holding the file
 * `name`: file to change
-* `mode`: new permission bits
-* `st`: stat whose non-permission bits to keep, or NULL to stat name
+* `mode`: requested mode
+* `st`: stat supplying the non-permission bits, or NULL to lstat name
 
-Returns: 0, or -1 with errno set
+Returns: 0 on success, a skipped change, or EPERM from the mode change, or -1 with errno set on failure
 
-Calls: [ochmod](../util/unix.c.md#ochmod)
+Calls: [setfilmode_impl](unix.c.md#setfilmode_impl)
 
-Called by: [adouble_setfilmode](vfs.c.md#adouble_setfilmode), [afp_moveandrename](../../etc/afpd/filedir.c.md#afp_moveandrename), [ea_chmod_dir](ea_ad.c.md#ea_chmod_dir), [ea_chmod_file](ea_ad.c.md#ea_chmod_file), [setdirmode_adouble_loop](vfs.c.md#setdirmode_adouble_loop), [setfilunixmode](../../etc/afpd/unix.c.md#setfilunixmode)
+Called by: [RF_setdirunixmode_adouble](vfs.c.md#rf_setdirunixmode_adouble), [RF_setfilmode_adouble](vfs.c.md#rf_setfilmode_adouble), [afp_moveandrename](../../etc/afpd/filedir.c.md#afp_moveandrename), [ea_chmod_dir](ea_ad.c.md#ea_chmod_dir), [ea_chmod_file](ea_ad.c.md#ea_chmod_file), [setdirmode_adouble_loop](vfs.c.md#setdirmode_adouble_loop), [setfilunixmode](../../etc/afpd/unix.c.md#setfilunixmode)
+
+### setfilmode_strict
+
+```c
+int setfilmode_strict(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
+```
+
+Defined at lines 121 to 125. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+
+Apply a file mode and report EPERM from the mode change.
+
+Keep the file's non-permission bits, apply the volume umask, and honor the volume's symlink and ACL policies.
+
+Parameters:
+* `vol`: volume holding the file
+* `name`: file to change
+* `mode`: requested mode
+* `st`: stat supplying the non-permission bits, or NULL to lstat name
+
+Returns: 0 on success or a skipped change, or -1 with errno set on failure
+
+Calls: [setfilmode_impl](unix.c.md#setfilmode_impl)
+
+Called by: [RF_setfilmode_adouble_strict](vfs.c.md#rf_setfilmode_adouble_strict), [ea_chmod_file_strict](ea_ad.c.md#ea_chmod_file_strict), [setfilunixmode](../../etc/afpd/unix.c.md#setfilunixmode)
 
 ### netatalk_rmdir_all_errors
 
@@ -73,7 +122,7 @@ Called by: [adouble_setfilmode](vfs.c.md#adouble_setfilmode), [afp_moveandrename
 int netatalk_rmdir_all_errors(int dirfd, const char *name)
 ```
 
-Defined at lines 100 to 132. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 138 to 170. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Delete an empty directory and map the error to an AFP result code.
 
@@ -93,7 +142,7 @@ Called by: [deletecurdir](../../etc/afpd/directory.c.md#deletecurdir), [netatalk
 int netatalk_rmdir(int dirfd, const char *name)
 ```
 
-Defined at lines 146 to 155. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 184 to 193. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Delete an empty directory and treat a missing one as success.
 
@@ -115,7 +164,7 @@ Called by: [RF_deletecurdir_adouble](vfs.c.md#rf_deletecurdir_adouble), [deleted
 int netatalk_unlink(const char *name)
 ```
 
-Defined at lines 166 to 186. Declared in [etc/afpd/directory.h](../../etc/afpd/directory.h.md).
+Defined at lines 204 to 224. Declared in [etc/afpd/directory.h](../../etc/afpd/directory.h.md).
 
 Delete a file and map the error to an AFP result code.
 
@@ -134,7 +183,7 @@ Called by: [afp_createfile](../../etc/afpd/file.c.md#afp_createfile), [deletecur
 int copy_file_fd(int sfd, int dfd)
 ```
 
-Defined at lines 202 to 237. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 240 to 275. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Transfer all remaining data from one descriptor to another.
 
@@ -154,7 +203,7 @@ Called by: [copy_file](unix.c.md#copy_file)
 int copy_file(int sfd, const char *src, const char *dst, mode_t mode)
 ```
 
-Defined at lines 253 to 302. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 291 to 340. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Duplicate the data of file src into dst.
 
@@ -178,7 +227,7 @@ Called by: [RF_copyfile_adouble](vfs.c.md#rf_copyfile_adouble), [RF_copyfile_ea]
 int copy_ea(const char *ea, int sfd, const char *src, const char *dst, mode_t mode)
 ```
 
-Defined at lines 317 to 351. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 355 to 389. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Transfer one EA from src to an existing dst.
 
@@ -201,7 +250,7 @@ Calls: [sys_fgetxattr](extattr.c.md#sys_fgetxattr), [sys_fsetxattr](extattr.c.md
 int netatalk_unlinkat(int dirfd, const char *name)
 ```
 
-Defined at lines 365 to 389. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 403 to 427. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Delete a file relative to a directory descriptor and map the error to an AFP result code.
 
@@ -221,7 +270,7 @@ Called by: [RF_deletefile_adouble](vfs.c.md#rf_deletefile_adouble), [RF_deletefi
 int unix_rename(int sfd, const char *oldpath, int dfd, const char *newpath)
 ```
 
-Defined at lines 402 to 417. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 440 to 455. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Rename oldpath to newpath through renameat.
 
@@ -241,7 +290,7 @@ Called by: [RF_renamefile_adouble](vfs.c.md#rf_renamefile_adouble), [RF_renamefi
 int statat(int dirfd, const char *path, struct stat *st)
 ```
 
-Defined at lines 428 to 435. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 466 to 473. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Stat path relative to a directory descriptor, following symlinks.
 
@@ -260,7 +309,7 @@ Called by: [ea_close](ea_ad.c.md#ea_close)
 DIR * opendirat(int dirfd, const char *path)
 ```
 
-Defined at lines 449 to 475. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 487 to 513. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Open a directory stream relative to a directory descriptor.
 

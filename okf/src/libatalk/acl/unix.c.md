@@ -5,7 +5,7 @@ description: "chmod wrappers that keep explicit NFSv4 ACEs and set the POSIX ACL
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/acl/unix.c"
 tags: ["libatalk/acl"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-28T10:52:17+01:00 }
 ---
 
 Part of the [libatalk/acl](../acl.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [libatalk/acl](../acl.md) subsystem. Built from the commit recorded 
 int get_nfsv4_acl(const char *name, ace_t **retAces)
 ```
 
-Defined at lines 56 to 112. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
+Defined at lines 57 to 113. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
 
 Read the NFSv4 ACL of a file or directory.
 
@@ -49,7 +49,7 @@ Called by: [check_vol_acl_support](../util/netatalk_conf.c.md#check_vol_acl_supp
 ace_t * concat_aces(ace_t *aces1, int ace1count, ace_t *aces2, int ace2count)
 ```
 
-Defined at lines 123 to 150. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
+Defined at lines 124 to 151. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
 
 Join two ACE arrays into a newly allocated array.
 
@@ -69,14 +69,14 @@ Called by: [nfsv4_chmod](unix.c.md#nfsv4_chmod)
 int strip_trivial_aces(ace_t **saces, int sacecount)
 ```
 
-Defined at lines 161 to 202. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
+Defined at lines 164 to 211. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
 
 Drop the owner@, group@, and everyone@ entries from an ACE array.
 
-The call frees the old array and stores a new one in saces.
+On success with a nonempty input, free the old array and store the new array in saces. The caller owns any remaining entries. An empty input or an allocation failure leaves saces unchanged.
 
 Parameters:
-* `saces`: ACE array, replaced by the remaining entries
+* `saces`: ACE array, replaced by the remaining entries or NULL
 * `sacecount`: number of entries
 
 Returns: the number of remaining entries, or -1 when malloc fails
@@ -89,7 +89,7 @@ Called by: [nfsv4_chmod](unix.c.md#nfsv4_chmod)
 int strip_nontrivial_aces(ace_t **saces, int sacecount)
 ```
 
-Defined at lines 213 to 252. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
+Defined at lines 222 to 261. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
 
 Keep only the owner@, group@, and everyone@ entries of an ACE array.
 
@@ -109,15 +109,15 @@ Called by: [nfsv4_chmod](unix.c.md#nfsv4_chmod)
 int nfsv4_chmod(char *name, mode_t mode)
 ```
 
-Defined at lines 273 to 350. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
+Defined at lines 283 to 364. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
 
 Change the mode of a file and keep its explicit NFSv4 ACEs.
 
 The call works in 7 steps:
 
-1. Read the ACL. Without entries, a plain chmod finishes the call.
+1. Read the ACL. A failed read or an empty ACL falls back to plain chmod.
 1. Drop the owner@, group@, and everyone@ entries, which the mode replaces.
-1. Run chmod with the new mode.
+1. Run chmod with the new mode. If no explicit entries remain, chmod alone suffices, including on filesystems that synthesize an ACL from mode bits.
 1. Read the ACL again, as root after EACCES. Solaris up to onnv132 keeps the explicit entries here, and onnv145 and OpenIndiana drop them.
 1. Keep only the owner@, group@, and everyone@ entries of the new ACL.
 1. Join the explicit entries of the old ACL with the mode entries of the new one.
@@ -137,7 +137,7 @@ Calls: [become_root](../util/unix.c.md#become_root), [concat_aces](unix.c.md#con
 int posix_chmod(const char *name, mode_t mode)
 ```
 
-Defined at lines 373 to 493. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
+Defined at lines 387 to 507. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
 
 Change the mode of a file and keep its POSIX ACL group entry in step.
 
@@ -157,7 +157,7 @@ Calls: [fullpathname](../util/unix.c.md#fullpathname)
 int posix_fchmod(int fd, mode_t mode)
 ```
 
-Defined at lines 505 to 613. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
+Defined at lines 519 to 627. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
 
 Change the mode of an open file and keep its POSIX ACL group entry in step.
 

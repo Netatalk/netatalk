@@ -1,5 +1,5 @@
 {
-"commit": "d8c06cc4eef501cfaa90311202a63ff6d33b35d2",
+"commit": "ce77944b797535598694168344b407c915632c2e",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -7747,6 +7747,11 @@
 "to": "etc/uams/uams_pam.c#PAM_oldpassword"
 },
 {
+"from": "libatalk/vfs/vfs.c#RF_chown_ea",
+"kind": "call",
+"to": "libatalk/vfs/vfs.c#RF_chown_adouble"
+},
+{
 "from": "libatalk/vfs/vfs.c#RF_copyfile_adouble",
 "kind": "call",
 "to": "libatalk/vfs/unix.c#copy_file"
@@ -7884,7 +7889,7 @@
 {
 "from": "libatalk/vfs/vfs.c#RF_setdirunixmode_adouble",
 "kind": "call",
-"to": "libatalk/vfs/vfs.c#adouble_setfilmode"
+"to": "libatalk/adouble/ad_open.c#ad_hf_mode"
 },
 {
 "from": "libatalk/vfs/vfs.c#RF_setdirunixmode_adouble",
@@ -7897,14 +7902,34 @@
 "to": "libatalk/util/unix.c#ochmod"
 },
 {
+"from": "libatalk/vfs/vfs.c#RF_setdirunixmode_adouble",
+"kind": "call",
+"to": "libatalk/vfs/unix.c#setfilmode"
+},
+{
 "from": "libatalk/vfs/vfs.c#RF_setfilmode_adouble",
 "kind": "call",
 "to": "libatalk/vfs/vfs.c#adouble_setfilmode"
 },
 {
-"from": "libatalk/vfs/vfs.c#RF_setfilmode_ea",
+"from": "libatalk/vfs/vfs.c#RF_setfilmode_adouble",
+"kind": "call",
+"to": "libatalk/vfs/unix.c#setfilmode"
+},
+{
+"from": "libatalk/vfs/vfs.c#RF_setfilmode_adouble_strict",
 "kind": "call",
 "to": "libatalk/vfs/vfs.c#adouble_setfilmode"
+},
+{
+"from": "libatalk/vfs/vfs.c#RF_setfilmode_adouble_strict",
+"kind": "call",
+"to": "libatalk/vfs/unix.c#setfilmode_strict"
+},
+{
+"from": "libatalk/vfs/vfs.c#RF_setfilmode_ea",
+"kind": "call",
+"to": "libatalk/vfs/vfs.c#RF_setfilmode_adouble"
 },
 {
 "from": "libatalk/vfs/vfs.c#RF_solaris_remove_acl",
@@ -10285,11 +10310,6 @@
 "to": "libatalk/adouble/ad_open.c#ad_hf_mode"
 },
 {
-"from": "libatalk/vfs/vfs.c#adouble_setfilmode",
-"kind": "call",
-"to": "libatalk/vfs/unix.c#setfilmode"
-},
-{
 "from": "bin/aecho/aecho.c#aep_send",
 "kind": "call",
 "to": "bin/aecho/aecho.c#done"
@@ -11857,6 +11877,11 @@
 {
 "from": "etc/afpd/file.c#afp_exchangefiles",
 "kind": "call",
+"to": "libatalk/util/unix.c#ochmod"
+},
+{
+"from": "etc/afpd/file.c#afp_exchangefiles",
+"kind": "call",
 "to": "etc/afpd/ofork.c#of_rename"
 },
 {
@@ -11917,26 +11942,20 @@
 {
 "from": "etc/afpd/file.c#afp_exchangefiles",
 "kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#RF_setfilmode_adouble",
-"via": "vfs_ops::vfs_setfilmode"
+"to": "libatalk/vfs/vfs.c#RF_setfilmode_adouble_strict",
+"via": "vfs_ops::vfs_setfilmode_strict"
 },
 {
 "from": "etc/afpd/file.c#afp_exchangefiles",
 "kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#RF_setfilmode_ea",
-"via": "vfs_ops::vfs_setfilmode"
+"to": "libatalk/vfs/ea_ad.c#ea_chmod_file_strict",
+"via": "vfs_ops::vfs_setfilmode_strict"
 },
 {
 "from": "etc/afpd/file.c#afp_exchangefiles",
 "kind": "dispatch",
-"to": "libatalk/vfs/ea_ad.c#ea_chmod_file",
-"via": "vfs_ops::vfs_setfilmode"
-},
-{
-"from": "etc/afpd/file.c#afp_exchangefiles",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#vfs_setfilmode",
-"via": "vfs_ops::vfs_setfilmode"
+"to": "libatalk/vfs/vfs.c#vfs_setfilmode_strict",
+"via": "vfs_ops::vfs_setfilmode_strict"
 },
 {
 "from": "etc/afpd/fork.c#afp_flush",
@@ -20241,6 +20260,16 @@
 "to": "etc/afpd/file.c#mtoUTF8"
 },
 {
+"from": "libatalk/vfs/acl.c#copy_posix_acl",
+"kind": "call",
+"to": "libatalk/vfs/acl.c#apply_basic_posix_acl_mode"
+},
+{
+"from": "libatalk/vfs/acl.c#copy_posix_acl",
+"kind": "call",
+"to": "libatalk/vfs/acl.c#limit_posix_acl"
+},
+{
 "from": "bin/nad/nad_cp.c#copy_source_header",
 "kind": "call",
 "to": "libatalk/adouble/ad_flush.c#ad_close"
@@ -20344,6 +20373,11 @@
 "from": "etc/afpd/file.c#copyfile",
 "kind": "call",
 "to": "libatalk/adouble/ad_write.c#copy_fork"
+},
+{
+"from": "etc/afpd/file.c#copyfile",
+"kind": "call",
+"to": "libatalk/vfs/acl.c#copy_posix_acl"
 },
 {
 "from": "etc/afpd/file.c#copyfile",
@@ -24760,32 +24794,47 @@
 {
 "from": "libatalk/vfs/ea_ad.c#ea_chmod_file",
 "kind": "call",
-"to": "libatalk/vfs/ea_ad.c#ea_close"
-},
-{
-"from": "libatalk/vfs/ea_ad.c#ea_chmod_file",
-"kind": "call",
-"to": "libatalk/vfs/ea_ad.c#ea_header_mode"
-},
-{
-"from": "libatalk/vfs/ea_ad.c#ea_chmod_file",
-"kind": "call",
-"to": "libatalk/vfs/ea_ad.c#ea_mode"
-},
-{
-"from": "libatalk/vfs/ea_ad.c#ea_chmod_file",
-"kind": "call",
-"to": "libatalk/vfs/ea_ad.c#ea_open"
-},
-{
-"from": "libatalk/vfs/ea_ad.c#ea_chmod_file",
-"kind": "call",
-"to": "libatalk/vfs/ea_ad.c#ea_path"
+"to": "libatalk/vfs/ea_ad.c#ea_chmod_file_impl"
 },
 {
 "from": "libatalk/vfs/ea_ad.c#ea_chmod_file",
 "kind": "call",
 "to": "libatalk/vfs/unix.c#setfilmode"
+},
+{
+"from": "libatalk/vfs/ea_ad.c#ea_chmod_file_impl",
+"kind": "call",
+"to": "libatalk/vfs/ea_ad.c#ea_close"
+},
+{
+"from": "libatalk/vfs/ea_ad.c#ea_chmod_file_impl",
+"kind": "call",
+"to": "libatalk/vfs/ea_ad.c#ea_header_mode"
+},
+{
+"from": "libatalk/vfs/ea_ad.c#ea_chmod_file_impl",
+"kind": "call",
+"to": "libatalk/vfs/ea_ad.c#ea_mode"
+},
+{
+"from": "libatalk/vfs/ea_ad.c#ea_chmod_file_impl",
+"kind": "call",
+"to": "libatalk/vfs/ea_ad.c#ea_open"
+},
+{
+"from": "libatalk/vfs/ea_ad.c#ea_chmod_file_impl",
+"kind": "call",
+"to": "libatalk/vfs/ea_ad.c#ea_path"
+},
+{
+"from": "libatalk/vfs/ea_ad.c#ea_chmod_file_strict",
+"kind": "call",
+"to": "libatalk/vfs/ea_ad.c#ea_chmod_file_impl"
+},
+{
+"from": "libatalk/vfs/ea_ad.c#ea_chmod_file_strict",
+"kind": "call",
+"to": "libatalk/vfs/unix.c#setfilmode_strict"
 },
 {
 "from": "libatalk/vfs/ea_ad.c#ea_chown",
@@ -29083,6 +29132,11 @@
 "from": "etc/netatalk/netatalk.c#libev_syserr_cb",
 "kind": "call",
 "to": "etc/netatalk/netatalk.c#netatalk_exit"
+},
+{
+"from": "libatalk/vfs/acl.c#limit_posix_acl",
+"kind": "call",
+"to": "libatalk/vfs/acl.c#limit_posix_acl_entry"
 },
 {
 "from": "etc/afpd/file.c#link_target_in",
@@ -38670,7 +38724,17 @@
 {
 "from": "libatalk/vfs/unix.c#setfilmode",
 "kind": "call",
+"to": "libatalk/vfs/unix.c#setfilmode_impl"
+},
+{
+"from": "libatalk/vfs/unix.c#setfilmode_impl",
+"kind": "call",
 "to": "libatalk/util/unix.c#ochmod"
+},
+{
+"from": "libatalk/vfs/unix.c#setfilmode_strict",
+"kind": "call",
+"to": "libatalk/vfs/unix.c#setfilmode_impl"
 },
 {
 "from": "etc/afpd/unix.c#setfilowner",
@@ -38888,27 +38952,8 @@
 },
 {
 "from": "etc/afpd/unix.c#setfilunixmode",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#RF_setfilmode_adouble",
-"via": "vfs_ops::vfs_setfilmode"
-},
-{
-"from": "etc/afpd/unix.c#setfilunixmode",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#RF_setfilmode_ea",
-"via": "vfs_ops::vfs_setfilmode"
-},
-{
-"from": "etc/afpd/unix.c#setfilunixmode",
-"kind": "dispatch",
-"to": "libatalk/vfs/ea_ad.c#ea_chmod_file",
-"via": "vfs_ops::vfs_setfilmode"
-},
-{
-"from": "etc/afpd/unix.c#setfilunixmode",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#vfs_setfilmode",
-"via": "vfs_ops::vfs_setfilmode"
+"kind": "call",
+"to": "libatalk/vfs/unix.c#setfilmode_strict"
 },
 {
 "from": "etc/afpd/main.c#setlimits",
@@ -43837,21 +43882,13 @@
 },
 {
 "from": "libatalk/vfs/vfs.c#vfs_setfilmode",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#RF_setfilmode_adouble",
-"via": "vfs_ops::vfs_setfilmode"
+"kind": "call",
+"to": "libatalk/vfs/vfs.c#vfs_setfilmode_impl"
 },
 {
-"from": "libatalk/vfs/vfs.c#vfs_setfilmode",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#RF_setfilmode_ea",
-"via": "vfs_ops::vfs_setfilmode"
-},
-{
-"from": "libatalk/vfs/vfs.c#vfs_setfilmode",
-"kind": "dispatch",
-"to": "libatalk/vfs/ea_ad.c#ea_chmod_file",
-"via": "vfs_ops::vfs_setfilmode"
+"from": "libatalk/vfs/vfs.c#vfs_setfilmode_strict",
+"kind": "call",
+"to": "libatalk/vfs/vfs.c#vfs_setfilmode_impl"
 },
 {
 "from": "libatalk/vfs/vfs.c#vfs_solaris_acl",
@@ -44732,6 +44769,12 @@
 "to": "libatalk/vfs/vfs.c#RF_setdirunixmode_ea"
 },
 {
+"field": "vfs_setfilmode_strict",
+"from": "libatalk/vfs/vfs.c#netatalk_adouble_ea",
+"kind": "table",
+"to": "libatalk/vfs/vfs.c#RF_setfilmode_adouble_strict"
+},
+{
 "field": "vfs_setfilmode",
 "from": "libatalk/vfs/vfs.c#netatalk_adouble_ea",
 "kind": "table",
@@ -44804,6 +44847,12 @@
 "to": "libatalk/vfs/vfs.c#RF_setfilmode_adouble"
 },
 {
+"field": "vfs_setfilmode_strict",
+"from": "libatalk/vfs/vfs.c#netatalk_adouble_v2",
+"kind": "table",
+"to": "libatalk/vfs/vfs.c#RF_setfilmode_adouble_strict"
+},
+{
 "field": "vfs_validupath",
 "from": "libatalk/vfs/vfs.c#netatalk_adouble_v2",
 "kind": "table",
@@ -44820,6 +44869,12 @@
 "from": "libatalk/vfs/vfs.c#netatalk_ea_adouble",
 "kind": "table",
 "to": "libatalk/vfs/ea_ad.c#ea_chmod_file"
+},
+{
+"field": "vfs_setfilmode_strict",
+"from": "libatalk/vfs/vfs.c#netatalk_ea_adouble",
+"kind": "table",
+"to": "libatalk/vfs/ea_ad.c#ea_chmod_file_strict"
 },
 {
 "field": "vfs_chown",
@@ -45694,6 +45749,12 @@
 "from": "libatalk/vfs/vfs.c#vfs_master_funcs",
 "kind": "table",
 "to": "libatalk/vfs/vfs.c#vfs_setfilmode"
+},
+{
+"field": "vfs_setfilmode_strict",
+"from": "libatalk/vfs/vfs.c#vfs_master_funcs",
+"kind": "table",
+"to": "libatalk/vfs/vfs.c#vfs_setfilmode_strict"
 },
 {
 "field": "vfs_solaris_acl",
@@ -47547,7 +47608,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_chown_adouble",
 "kind": "function",
-"line": 245,
+"line": 246,
 "static": true
 },
 {
@@ -47555,7 +47616,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_chown_ea",
 "kind": "function",
-"line": 878,
+"line": 906,
 "static": true
 },
 {
@@ -47563,7 +47624,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_copyfile_adouble",
 "kind": "function",
-"line": 628,
+"line": 656,
 "static": true
 },
 {
@@ -47571,7 +47632,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_copyfile_ea",
 "kind": "function",
-"line": 1105,
+"line": 1134,
 "static": true
 },
 {
@@ -47579,7 +47640,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_deletecurdir_adouble",
 "kind": "function",
-"line": 326,
+"line": 327,
 "static": true
 },
 {
@@ -47587,7 +47648,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_deletecurdir_ea",
 "kind": "function",
-"line": 970,
+"line": 998,
 "static": true
 },
 {
@@ -47595,7 +47656,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_deletefile_adouble",
 "kind": "function",
-"line": 540,
+"line": 568,
 "static": true
 },
 {
@@ -47603,7 +47664,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_deletefile_ea",
 "kind": "function",
-"line": 1080,
+"line": 1109,
 "static": true
 },
 {
@@ -47611,7 +47672,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_posix_acl",
 "kind": "function",
-"line": 773,
+"line": 801,
 "static": true
 },
 {
@@ -47619,7 +47680,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_posix_remove_acl",
 "kind": "function",
-"line": 810,
+"line": 838,
 "static": true
 },
 {
@@ -47627,7 +47688,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_renamedir_adouble",
 "kind": "function",
-"line": 272,
+"line": 273,
 "static": true
 },
 {
@@ -47635,7 +47696,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_renamedir_ea",
 "kind": "function",
-"line": 902,
+"line": 930,
 "static": true
 },
 {
@@ -47643,7 +47704,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_renamefile_adouble",
 "kind": "function",
-"line": 562,
+"line": 590,
 "static": true
 },
 {
@@ -47651,7 +47712,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_renamefile_ea",
 "kind": "function",
-"line": 1183,
+"line": 1212,
 "static": true
 },
 {
@@ -47659,7 +47720,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_setdirmode_adouble",
 "kind": "function",
-"line": 469,
+"line": 497,
 "static": true
 },
 {
@@ -47667,7 +47728,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_setdirmode_ea",
 "kind": "function",
-"line": 1041,
+"line": 1070,
 "static": true
 },
 {
@@ -47675,7 +47736,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_setdirowner_adouble",
 "kind": "function",
-"line": 516,
+"line": 544,
 "static": true
 },
 {
@@ -47683,7 +47744,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_setdirowner_ea",
 "kind": "function",
-"line": 1059,
+"line": 1088,
 "static": true
 },
 {
@@ -47691,7 +47752,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_setdirunixmode_adouble",
 "kind": "function",
-"line": 387,
+"line": 414,
 "static": true
 },
 {
@@ -47699,7 +47760,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_setdirunixmode_ea",
 "kind": "function",
-"line": 996,
+"line": 1024,
 "static": true
 },
 {
@@ -47707,7 +47768,15 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_setfilmode_adouble",
 "kind": "function",
-"line": 367,
+"line": 374,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/vfs/vfs.c",
+"id": "libatalk/vfs/vfs.c#RF_setfilmode_adouble_strict",
+"kind": "function",
+"line": 393,
 "static": true
 },
 {
@@ -47715,7 +47784,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_setfilmode_ea",
 "kind": "function",
-"line": 1017,
+"line": 1046,
 "static": true
 },
 {
@@ -47723,7 +47792,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_solaris_acl",
 "kind": "function",
-"line": 696,
+"line": 724,
 "static": true
 },
 {
@@ -47731,7 +47800,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#RF_solaris_remove_acl",
 "kind": "function",
-"line": 733,
+"line": 761,
 "static": true
 },
 {
@@ -49091,7 +49160,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#adouble_setfilmode",
 "kind": "function",
-"line": 349,
+"line": 353,
 "static": true
 },
 {
@@ -49299,7 +49368,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_copyfile",
 "kind": "function",
-"line": 2819,
+"line": 2820,
 "static": false
 },
 {
@@ -49323,7 +49392,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_createid",
 "kind": "function",
-"line": 3380,
+"line": 3399,
 "static": false
 },
 {
@@ -49339,7 +49408,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_deleteid",
 "kind": "function",
-"line": 3760,
+"line": 3779,
 "static": false
 },
 {
@@ -49483,7 +49552,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_exchangefiles",
 "kind": "function",
-"line": 4054,
+"line": 4080,
 "static": false
 },
 {
@@ -49819,7 +49888,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_resolveid",
 "kind": "function",
-"line": 3593,
+"line": 3612,
 "static": false
 },
 {
@@ -50060,6 +50129,14 @@
 "id": "etc/afpd/appl.c#applopen",
 "kind": "function",
 "line": 69,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/vfs/acl.c",
+"id": "libatalk/vfs/acl.c#apply_basic_posix_acl_mode",
+"kind": "function",
+"line": 208,
 "static": true
 },
 {
@@ -53075,7 +53152,7 @@
 "file": "libatalk/acl/unix.c",
 "id": "libatalk/acl/unix.c#concat_aces",
 "kind": "function",
-"line": 123,
+"line": 124,
 "static": false
 },
 {
@@ -53267,7 +53344,7 @@
 "file": "libatalk/vfs/unix.c",
 "id": "libatalk/vfs/unix.c#copy_ea",
 "kind": "function",
-"line": 317,
+"line": 355,
 "static": false
 },
 {
@@ -53275,7 +53352,7 @@
 "file": "libatalk/vfs/unix.c",
 "id": "libatalk/vfs/unix.c#copy_file",
 "kind": "function",
-"line": 253,
+"line": 291,
 "static": false
 },
 {
@@ -53283,7 +53360,7 @@
 "file": "libatalk/vfs/unix.c",
 "id": "libatalk/vfs/unix.c#copy_file_fd",
 "kind": "function",
-"line": 202,
+"line": 240,
 "static": false
 },
 {
@@ -53299,7 +53376,15 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#copy_path_name",
 "kind": "function",
-"line": 2736,
+"line": 2737,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/vfs/acl.c",
+"id": "libatalk/vfs/acl.c#copy_posix_acl",
+"kind": "function",
+"line": 274,
 "static": false
 },
 {
@@ -53339,7 +53424,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#copyfile",
 "kind": "function",
-"line": 3031,
+"line": 3034,
 "static": false
 },
 {
@@ -53987,7 +54072,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#delete_ea_file",
 "kind": "function",
-"line": 545,
+"line": 546,
 "static": true
 },
 {
@@ -54019,7 +54104,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#deletecurdir_adouble_loop",
 "kind": "function",
-"line": 295,
+"line": 296,
 "static": true
 },
 {
@@ -54027,7 +54112,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#deletecurdir_ea_osx_chkifempty_loop",
 "kind": "function",
-"line": 918,
+"line": 946,
 "static": true
 },
 {
@@ -54035,7 +54120,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#deletecurdir_ea_osx_loop",
 "kind": "function",
-"line": 939,
+"line": 967,
 "static": true
 },
 {
@@ -54051,7 +54136,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#deletefile",
 "kind": "function",
-"line": 3257,
+"line": 3276,
 "static": false
 },
 {
@@ -55187,7 +55272,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#ea_absent",
 "kind": "function",
-"line": 980,
+"line": 981,
 "static": false
 },
 {
@@ -55195,7 +55280,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#ea_addentry",
 "kind": "function",
-"line": 340,
+"line": 341,
 "static": true
 },
 {
@@ -55203,7 +55288,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#ea_attrname_invalid",
 "kind": "function",
-"line": 137,
+"line": 138,
 "static": true
 },
 {
@@ -55267,7 +55352,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#ea_chmod_dir",
 "kind": "function",
-"line": 1883,
+"line": 1929,
 "static": false
 },
 {
@@ -55275,7 +55360,23 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#ea_chmod_file",
 "kind": "function",
-"line": 1794,
+"line": 1889,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/vfs/ea_ad.c",
+"id": "libatalk/vfs/ea_ad.c#ea_chmod_file_impl",
+"kind": "function",
+"line": 1796,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/vfs/ea_ad.c",
+"id": "libatalk/vfs/ea_ad.c#ea_chmod_file_strict",
+"kind": "function",
+"line": 1908,
 "static": false
 },
 {
@@ -55283,7 +55384,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#ea_chown",
 "kind": "function",
-"line": 1715,
+"line": 1716,
 "static": false
 },
 {
@@ -55291,7 +55392,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#ea_close",
 "kind": "function",
-"line": 864,
+"line": 865,
 "static": false
 },
 {
@@ -55299,7 +55400,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#ea_copyfile",
 "kind": "function",
-"line": 1606,
+"line": 1607,
 "static": false
 },
 {
@@ -55307,7 +55408,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#ea_delentry",
 "kind": "function",
-"line": 503,
+"line": 504,
 "static": true
 },
 {
@@ -55315,7 +55416,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#ea_deletefile",
 "kind": "function",
-"line": 1408,
+"line": 1409,
 "static": false
 },
 {
@@ -55323,7 +55424,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#ea_header_mode",
 "kind": "function",
-"line": 61,
+"line": 62,
 "static": true
 },
 {
@@ -55331,7 +55432,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#ea_mode",
 "kind": "function",
-"line": 78,
+"line": 79,
 "static": true
 },
 {
@@ -55339,7 +55440,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#ea_open",
 "kind": "function",
-"line": 645,
+"line": 646,
 "static": false
 },
 {
@@ -55347,7 +55448,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#ea_openat",
 "kind": "function",
-"line": 819,
+"line": 820,
 "static": false
 },
 {
@@ -55355,7 +55456,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#ea_path",
 "kind": "function",
-"line": 592,
+"line": 593,
 "static": false
 },
 {
@@ -55363,7 +55464,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#ea_renamefile",
 "kind": "function",
-"line": 1488,
+"line": 1489,
 "static": false
 },
 {
@@ -55467,7 +55568,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#exchange_meta_open",
 "kind": "function",
-"line": 3902,
+"line": 3921,
 "static": true
 },
 {
@@ -55651,7 +55752,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#find_adouble",
 "kind": "function",
-"line": 3979,
+"line": 3998,
 "static": true
 },
 {
@@ -55699,7 +55800,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#for_each_adouble",
 "kind": "function",
-"line": 78,
+"line": 79,
 "static": true
 },
 {
@@ -56011,7 +56112,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#get_eacontent",
 "kind": "function",
-"line": 1069,
+"line": 1070,
 "static": false
 },
 {
@@ -56019,7 +56120,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#get_easize",
 "kind": "function",
-"line": 1002,
+"line": 1003,
 "static": false
 },
 {
@@ -56059,7 +56160,7 @@
 "file": "libatalk/acl/unix.c",
 "id": "libatalk/acl/unix.c#get_nfsv4_acl",
 "kind": "function",
-"line": 56,
+"line": 57,
 "static": false
 },
 {
@@ -57307,7 +57408,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#initvol_vfs",
 "kind": "function",
-"line": 2054,
+"line": 2150,
 "static": false
 },
 {
@@ -57672,6 +57773,22 @@
 },
 {
 "documented": true,
+"file": "libatalk/vfs/acl.c",
+"id": "libatalk/vfs/acl.c#limit_posix_acl",
+"kind": "function",
+"line": 147,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/vfs/acl.c",
+"id": "libatalk/vfs/acl.c#limit_posix_acl_entry",
+"kind": "function",
+"line": 123,
+"static": true
+},
+{
+"documented": true,
 "file": "bin/afppasswd/afppasswd_migrate.c",
 "id": "bin/afppasswd/afppasswd_migrate.c#link_backup",
 "kind": "function",
@@ -57691,7 +57808,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#list_eas",
 "kind": "function",
-"line": 1194,
+"line": 1195,
 "static": false
 },
 {
@@ -58931,7 +59048,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#mtoUTF8",
 "kind": "function",
-"line": 2711,
+"line": 2712,
 "static": false
 },
 {
@@ -58963,7 +59080,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#mtoupath",
 "kind": "function",
-"line": 96,
+"line": 97,
 "static": true
 },
 {
@@ -59307,7 +59424,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#netatalk_name",
 "kind": "function",
-"line": 199,
+"line": 200,
 "static": true
 },
 {
@@ -59331,7 +59448,7 @@
 "file": "libatalk/vfs/unix.c",
 "id": "libatalk/vfs/unix.c#netatalk_rmdir",
 "kind": "function",
-"line": 146,
+"line": 184,
 "static": false
 },
 {
@@ -59339,7 +59456,7 @@
 "file": "libatalk/vfs/unix.c",
 "id": "libatalk/vfs/unix.c#netatalk_rmdir_all_errors",
 "kind": "function",
-"line": 100,
+"line": 138,
 "static": false
 },
 {
@@ -59347,7 +59464,7 @@
 "file": "libatalk/vfs/unix.c",
 "id": "libatalk/vfs/unix.c#netatalk_unlink",
 "kind": "function",
-"line": 166,
+"line": 204,
 "static": false
 },
 {
@@ -59355,7 +59472,7 @@
 "file": "libatalk/vfs/unix.c",
 "id": "libatalk/vfs/unix.c#netatalk_unlinkat",
 "kind": "function",
-"line": 365,
+"line": 403,
 "static": false
 },
 {
@@ -59427,7 +59544,7 @@
 "file": "libatalk/acl/unix.c",
 "id": "libatalk/acl/unix.c#nfsv4_chmod",
 "kind": "function",
-"line": 273,
+"line": 283,
 "static": false
 },
 {
@@ -59939,7 +60056,7 @@
 "file": "libatalk/vfs/unix.c",
 "id": "libatalk/vfs/unix.c#opendirat",
 "kind": "function",
-"line": 449,
+"line": 487,
 "static": false
 },
 {
@@ -59995,7 +60112,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#other_name",
 "kind": "function",
-"line": 130,
+"line": 131,
 "static": true
 },
 {
@@ -60011,7 +60128,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#pack_header",
 "kind": "function",
-"line": 249,
+"line": 250,
 "static": true
 },
 {
@@ -60603,7 +60720,7 @@
 "file": "libatalk/acl/unix.c",
 "id": "libatalk/acl/unix.c#posix_chmod",
 "kind": "function",
-"line": 373,
+"line": 387,
 "static": false
 },
 {
@@ -60611,7 +60728,7 @@
 "file": "libatalk/acl/unix.c",
 "id": "libatalk/acl/unix.c#posix_fchmod",
 "kind": "function",
-"line": 505,
+"line": 519,
 "static": false
 },
 {
@@ -61291,7 +61408,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#reenumerate_id",
 "kind": "function",
-"line": 3534,
+"line": 3553,
 "static": true
 },
 {
@@ -61299,7 +61416,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#reenumerate_loop",
 "kind": "function",
-"line": 3487,
+"line": 3506,
 "static": true
 },
 {
@@ -61347,7 +61464,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#remove_ea",
 "kind": "function",
-"line": 1350,
+"line": 1351,
 "static": false
 },
 {
@@ -61363,7 +61480,7 @@
 "file": "libatalk/vfs/acl.c",
 "id": "libatalk/vfs/acl.c#remove_nfsv4_acl_vfs",
 "kind": "function",
-"line": 48,
+"line": 52,
 "static": false
 },
 {
@@ -61379,7 +61496,7 @@
 "file": "libatalk/vfs/acl.c",
 "id": "libatalk/vfs/acl.c#remove_posix_acl_vfs",
 "kind": "function",
-"line": 117,
+"line": 311,
 "static": false
 },
 {
@@ -61419,7 +61536,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#renamefile",
 "kind": "function",
-"line": 2616,
+"line": 2617,
 "static": false
 },
 {
@@ -62139,7 +62256,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#set_ea",
 "kind": "function",
-"line": 1273,
+"line": 1274,
 "static": false
 },
 {
@@ -62299,7 +62416,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#setdirmode_adouble_loop",
 "kind": "function",
-"line": 433,
+"line": 461,
 "static": true
 },
 {
@@ -62315,7 +62432,7 @@
 "file": "etc/afpd/unix.c",
 "id": "etc/afpd/unix.c#setdirowner",
 "kind": "function",
-"line": 393,
+"line": 404,
 "static": false
 },
 {
@@ -62331,7 +62448,7 @@
 "file": "etc/afpd/unix.c",
 "id": "etc/afpd/unix.c#setdirunixmode",
 "kind": "function",
-"line": 320,
+"line": 325,
 "static": false
 },
 {
@@ -62355,7 +62472,23 @@
 "file": "libatalk/vfs/unix.c",
 "id": "libatalk/vfs/unix.c#setfilmode",
 "kind": "function",
-"line": 60,
+"line": 103,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/vfs/unix.c",
+"id": "libatalk/vfs/unix.c#setfilmode_impl",
+"kind": "function",
+"line": 61,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/vfs/unix.c",
+"id": "libatalk/vfs/unix.c#setfilmode_strict",
+"kind": "function",
+"line": 121,
 "static": false
 },
 {
@@ -62363,7 +62496,7 @@
 "file": "etc/afpd/unix.c",
 "id": "etc/afpd/unix.c#setfilowner",
 "kind": "function",
-"line": 362,
+"line": 371,
 "static": false
 },
 {
@@ -62371,7 +62504,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#setfilparams",
 "kind": "function",
-"line": 2120,
+"line": 2121,
 "static": false
 },
 {
@@ -62379,7 +62512,7 @@
 "file": "etc/afpd/unix.c",
 "id": "etc/afpd/unix.c#setfilunixmode",
 "kind": "function",
-"line": 286,
+"line": 288,
 "static": false
 },
 {
@@ -64299,7 +64432,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#staged_link_name",
 "kind": "function",
-"line": 158,
+"line": 159,
 "static": true
 },
 {
@@ -64323,7 +64456,7 @@
 "file": "libatalk/vfs/unix.c",
 "id": "libatalk/vfs/unix.c#statat",
 "kind": "function",
-"line": 428,
+"line": 466,
 "static": false
 },
 {
@@ -64507,7 +64640,7 @@
 "file": "libatalk/acl/unix.c",
 "id": "libatalk/acl/unix.c#strip_nontrivial_aces",
 "kind": "function",
-"line": 213,
+"line": 222,
 "static": false
 },
 {
@@ -64523,7 +64656,7 @@
 "file": "libatalk/acl/unix.c",
 "id": "libatalk/acl/unix.c#strip_trivial_aces",
 "kind": "function",
-"line": 161,
+"line": 164,
 "static": false
 },
 {
@@ -65427,7 +65560,7 @@
 "file": "libatalk/vfs/unix.c",
 "id": "libatalk/vfs/unix.c#unix_rename",
 "kind": "function",
-"line": 402,
+"line": 440,
 "static": false
 },
 {
@@ -65467,7 +65600,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#unpack_header",
 "kind": "function",
-"line": 157,
+"line": 158,
 "static": true
 },
 {
@@ -65947,7 +66080,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#validupath_adouble",
 "kind": "function",
-"line": 223,
+"line": 224,
 "static": true
 },
 {
@@ -65955,7 +66088,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#validupath_ea",
 "kind": "function",
-"line": 848,
+"line": 876,
 "static": true
 },
 {
@@ -66003,7 +66136,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_chown",
 "kind": "function",
-"line": 1245,
+"line": 1275,
 "static": true
 },
 {
@@ -66011,7 +66144,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_copyfile",
 "kind": "function",
-"line": 1504,
+"line": 1594,
 "static": true
 },
 {
@@ -66019,7 +66152,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_deletecurdir",
 "kind": "function",
-"line": 1301,
+"line": 1337,
 "static": true
 },
 {
@@ -66027,7 +66160,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_deletefile",
 "kind": "function",
-"line": 1445,
+"line": 1535,
 "static": true
 },
 {
@@ -66035,7 +66168,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_ea_attrname_invalid",
 "kind": "function",
-"line": 1623,
+"line": 1713,
 "static": true
 },
 {
@@ -66043,7 +66176,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_ea_getcontent",
 "kind": "function",
-"line": 1690,
+"line": 1780,
 "static": true
 },
 {
@@ -66051,7 +66184,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_ea_getsize",
 "kind": "function",
-"line": 1649,
+"line": 1739,
 "static": true
 },
 {
@@ -66059,7 +66192,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_ea_list",
 "kind": "function",
-"line": 1729,
+"line": 1819,
 "static": true
 },
 {
@@ -66067,7 +66200,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_ea_remove",
 "kind": "function",
-"line": 1804,
+"line": 1894,
 "static": true
 },
 {
@@ -66075,7 +66208,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_ea_set",
 "kind": "function",
-"line": 1766,
+"line": 1856,
 "static": true
 },
 {
@@ -66083,7 +66216,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_posix_acl",
 "kind": "function",
-"line": 1568,
+"line": 1658,
 "static": true
 },
 {
@@ -66091,7 +66224,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_remove_acl",
 "kind": "function",
-"line": 1597,
+"line": 1687,
 "static": true
 },
 {
@@ -66099,7 +66232,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_renamedir",
 "kind": "function",
-"line": 1275,
+"line": 1311,
 "static": true
 },
 {
@@ -66107,7 +66240,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_renamefile",
 "kind": "function",
-"line": 1474,
+"line": 1564,
 "static": true
 },
 {
@@ -66115,7 +66248,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_setdirmode",
 "kind": "function",
-"line": 1358,
+"line": 1448,
 "static": true
 },
 {
@@ -66123,7 +66256,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_setdirowner",
 "kind": "function",
-"line": 1416,
+"line": 1506,
 "static": true
 },
 {
@@ -66131,7 +66264,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_setdirunixmode",
 "kind": "function",
-"line": 1387,
+"line": 1477,
 "static": true
 },
 {
@@ -66139,7 +66272,23 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_setfilmode",
 "kind": "function",
-"line": 1329,
+"line": 1413,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/vfs/vfs.c",
+"id": "libatalk/vfs/vfs.c#vfs_setfilmode_impl",
+"kind": "function",
+"line": 1368,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/vfs/vfs.c",
+"id": "libatalk/vfs/vfs.c#vfs_setfilmode_strict",
+"kind": "function",
+"line": 1431,
 "static": true
 },
 {
@@ -66147,7 +66296,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_solaris_acl",
 "kind": "function",
-"line": 1536,
+"line": 1626,
 "static": true
 },
 {
@@ -66155,7 +66304,7 @@
 "file": "libatalk/vfs/vfs.c",
 "id": "libatalk/vfs/vfs.c#vfs_validupath",
 "kind": "function",
-"line": 1838,
+"line": 1928,
 "static": true
 },
 {
@@ -66299,7 +66448,7 @@
 "file": "libatalk/vfs/ea_ad.c",
 "id": "libatalk/vfs/ea_ad.c#write_ea",
 "kind": "function",
-"line": 437,
+"line": 438,
 "static": true
 },
 {

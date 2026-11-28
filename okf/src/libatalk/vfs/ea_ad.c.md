@@ -5,7 +5,7 @@ description: "Store Extended Attributes inside .AppleDouble folders as follows:"
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/vfs/ea_ad.c"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-26T19:31:53+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-28T10:52:17+01:00 }
 ---
 
 Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -31,7 +31,7 @@ Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded 
 static mode_t ea_header_mode(mode_t mode)
 ```
 
-Defined at lines 61 to 68.
+Defined at lines 62 to 69.
 
 Mode of the EA header file derived from the file mode.
 
@@ -42,7 +42,7 @@ Parameters:
 
 Returns: the header file mode
 
-Called by: [ea_chmod_dir](ea_ad.c.md#ea_chmod_dir), [ea_chmod_file](ea_ad.c.md#ea_chmod_file)
+Called by: [ea_chmod_dir](ea_ad.c.md#ea_chmod_dir), [ea_chmod_file_impl](ea_ad.c.md#ea_chmod_file_impl)
 
 ### ea_mode
 
@@ -50,7 +50,7 @@ Called by: [ea_chmod_dir](ea_ad.c.md#ea_chmod_dir), [ea_chmod_file](ea_ad.c.md#e
 static mode_t ea_mode(mode_t mode)
 ```
 
-Defined at lines 78 to 83.
+Defined at lines 79 to 84.
 
 Mode of an EA data file derived from the file mode.
 
@@ -61,7 +61,7 @@ Parameters:
 
 Returns: the EA file mode
 
-Called by: [ea_chmod_dir](ea_ad.c.md#ea_chmod_dir), [ea_chmod_file](ea_ad.c.md#ea_chmod_file)
+Called by: [ea_chmod_dir](ea_ad.c.md#ea_chmod_dir), [ea_chmod_file_impl](ea_ad.c.md#ea_chmod_file_impl)
 
 ### mtoupath
 
@@ -69,7 +69,7 @@ Called by: [ea_chmod_dir](ea_ad.c.md#ea_chmod_dir), [ea_chmod_file](ea_ad.c.md#e
 static char * mtoupath(const struct vol *vol, const char *mpath)
 ```
 
-Defined at lines 96 to 127.
+Defined at lines 97 to 128.
 
 Convert a Mac name to the volume encoding with hex escapes.
 
@@ -91,7 +91,7 @@ Called by: [ea_path](ea_ad.c.md#ea_path)
 static int ea_attrname_invalid(const char *func, const char *attruname)
 ```
 
-Defined at lines 137 to 145.
+Defined at lines 138 to 146.
 
 Reject a missing EA name with a log line that names the calling function.
 
@@ -109,7 +109,7 @@ Called by: [delete_ea_file](ea_ad.c.md#delete_ea_file), [ea_addentry](ea_ad.c.md
 static int unpack_header(struct ea *ea)
 ```
 
-Defined at lines 157 to 238.
+Defined at lines 158 to 239.
 
 unpack and verify header file data buffer at ea->ea_data into struct ea
 
@@ -128,7 +128,7 @@ Called by: [ea_open](ea_ad.c.md#ea_open)
 static int pack_header(struct ea *ea)
 ```
 
-Defined at lines 249 to 322.
+Defined at lines 250 to 323.
 
 pack everything from struct ea into buffer at ea->ea_data
 
@@ -147,7 +147,7 @@ Called by: [ea_close](ea_ad.c.md#ea_close)
 static int ea_addentry(struct ea *ea, const char *attruname, size_t attrsize, int bitmap)
 ```
 
-Defined at lines 340 to 423.
+Defined at lines 341 to 424.
 
 add one EA into ea->ea_entries[]
 
@@ -171,7 +171,7 @@ Called by: [ea_copyfile](ea_ad.c.md#ea_copyfile), [ea_renamefile](ea_ad.c.md#ea_
 static int write_ea(const struct ea *ea, const char *attruname, const char *ibuf, size_t attrsize)
 ```
 
-Defined at lines 437 to 489.
+Defined at lines 438 to 490.
 
 write an EA to disk
 
@@ -195,7 +195,7 @@ Called by: [set_ea](ea_ad.c.md#set_ea)
 static int ea_delentry(struct ea *ea, const char *attruname)
 ```
 
-Defined at lines 503 to 534.
+Defined at lines 504 to 535.
 
 delete one EA from ea->ea_entries[]
 
@@ -217,7 +217,7 @@ Called by: [ea_renamefile](ea_ad.c.md#ea_renamefile), [remove_ea](ea_ad.c.md#rem
 static int delete_ea_file(const struct ea *ea, const char *eaname)
 ```
 
-Defined at lines 545 to 572.
+Defined at lines 546 to 573.
 
 delete EA file from disk
 
@@ -237,7 +237,7 @@ Called by: [ea_deletefile](ea_ad.c.md#ea_deletefile), [remove_ea](ea_ad.c.md#rem
 char * ea_path(const struct ea *ea, const char *eaname, int macname)
 ```
 
-Defined at lines 592 to 622. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 593 to 623. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 return name of ea header filename
 
@@ -254,7 +254,7 @@ Note: - Calls ad_open, copies buffer, appends "::EA" and if supplied append eanm
 
 Calls: [mtoupath](ea_ad.c.md#mtoupath), [strlcat](../compat/strlcpy.c.md#strlcat), [strlcpy](../compat/strlcpy.c.md#strlcpy)
 
-Called by: [check_eafiles](../../bin/dbd/cmd_dbd_scanvol.c.md#check_eafiles), [delete_ea_file](ea_ad.c.md#delete_ea_file), [ea_chmod_dir](ea_ad.c.md#ea_chmod_dir), [ea_chmod_file](ea_ad.c.md#ea_chmod_file), [ea_chown](ea_ad.c.md#ea_chown), [ea_close](ea_ad.c.md#ea_close), [ea_copyfile](ea_ad.c.md#ea_copyfile), [ea_open](ea_ad.c.md#ea_open), [ea_renamefile](ea_ad.c.md#ea_renamefile), [get_eacontent](ea_ad.c.md#get_eacontent), [write_ea](ea_ad.c.md#write_ea)
+Called by: [check_eafiles](../../bin/dbd/cmd_dbd_scanvol.c.md#check_eafiles), [delete_ea_file](ea_ad.c.md#delete_ea_file), [ea_chmod_dir](ea_ad.c.md#ea_chmod_dir), [ea_chmod_file_impl](ea_ad.c.md#ea_chmod_file_impl), [ea_chown](ea_ad.c.md#ea_chown), [ea_close](ea_ad.c.md#ea_close), [ea_copyfile](ea_ad.c.md#ea_copyfile), [ea_open](ea_ad.c.md#ea_open), [ea_renamefile](ea_ad.c.md#ea_renamefile), [get_eacontent](ea_ad.c.md#get_eacontent), [write_ea](ea_ad.c.md#write_ea)
 
 Calls through [`vol::ad_path`](../../include/atalk/volume.h.md#struct-vol): no table assigns this field
 
@@ -264,7 +264,7 @@ Calls through [`vol::ad_path`](../../include/atalk/volume.h.md#struct-vol): no t
 int ea_open(const struct vol *vol, const char *uname, eaflags_t eaflags, struct ea *ea)
 ```
 
-Defined at lines 645 to 795. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 646 to 796. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 open EA header file, create if it doesnt exits and called with O_CREATE
 
@@ -283,7 +283,7 @@ Note: opens header file and stores fd in ea->ea_fd. Size of file is put into ea-
 
 Calls: [ea_path](ea_ad.c.md#ea_path), [unpack_header](ea_ad.c.md#unpack_header)
 
-Called by: [check_eafiles](../../bin/dbd/cmd_dbd_scanvol.c.md#check_eafiles), [ea_chmod_dir](ea_ad.c.md#ea_chmod_dir), [ea_chmod_file](ea_ad.c.md#ea_chmod_file), [ea_chown](ea_ad.c.md#ea_chown), [ea_copyfile](ea_ad.c.md#ea_copyfile), [ea_openat](ea_ad.c.md#ea_openat), [ea_renamefile](ea_ad.c.md#ea_renamefile), [get_eacontent](ea_ad.c.md#get_eacontent), [get_easize](ea_ad.c.md#get_easize), [list_eas](ea_ad.c.md#list_eas), [remove_ea](ea_ad.c.md#remove_ea), [set_ea](ea_ad.c.md#set_ea)
+Called by: [check_eafiles](../../bin/dbd/cmd_dbd_scanvol.c.md#check_eafiles), [ea_chmod_dir](ea_ad.c.md#ea_chmod_dir), [ea_chmod_file_impl](ea_ad.c.md#ea_chmod_file_impl), [ea_chown](ea_ad.c.md#ea_chown), [ea_copyfile](ea_ad.c.md#ea_copyfile), [ea_openat](ea_ad.c.md#ea_openat), [ea_renamefile](ea_ad.c.md#ea_renamefile), [get_eacontent](ea_ad.c.md#get_eacontent), [get_easize](ea_ad.c.md#get_easize), [list_eas](ea_ad.c.md#list_eas), [remove_ea](ea_ad.c.md#remove_ea), [set_ea](ea_ad.c.md#set_ea)
 
 ### ea_openat
 
@@ -291,7 +291,7 @@ Called by: [check_eafiles](../../bin/dbd/cmd_dbd_scanvol.c.md#check_eafiles), [e
 int ea_openat(const struct vol *vol, int dirfd, const char *uname, eaflags_t eaflags, struct ea *ea)
 ```
 
-Defined at lines 819 to 852. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 820 to 853. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 openat like wrapper for ea_open, takes a additional file descriptor
 
@@ -319,7 +319,7 @@ Called by: [ea_copyfile](ea_ad.c.md#ea_copyfile), [ea_deletefile](ea_ad.c.md#ea_
 int ea_close(struct ea *ea)
 ```
 
-Defined at lines 864 to 963. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 865 to 964. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 flushes and closes an ea handle
 
@@ -332,7 +332,7 @@ Note: Flushes and then closes and frees all resouces held by ea handle. Pack dat
 
 Calls: [ea_path](ea_ad.c.md#ea_path), [netatalk_unlinkat](unix.c.md#netatalk_unlinkat), [pack_header](ea_ad.c.md#pack_header), [statat](unix.c.md#statat)
 
-Called by: [check_eafiles](../../bin/dbd/cmd_dbd_scanvol.c.md#check_eafiles), [ea_chmod_dir](ea_ad.c.md#ea_chmod_dir), [ea_chmod_file](ea_ad.c.md#ea_chmod_file), [ea_chown](ea_ad.c.md#ea_chown), [ea_copyfile](ea_ad.c.md#ea_copyfile), [ea_deletefile](ea_ad.c.md#ea_deletefile), [ea_renamefile](ea_ad.c.md#ea_renamefile), [get_eacontent](ea_ad.c.md#get_eacontent), [get_easize](ea_ad.c.md#get_easize), [list_eas](ea_ad.c.md#list_eas), [remove_ea](ea_ad.c.md#remove_ea), [set_ea](ea_ad.c.md#set_ea)
+Called by: [check_eafiles](../../bin/dbd/cmd_dbd_scanvol.c.md#check_eafiles), [ea_chmod_dir](ea_ad.c.md#ea_chmod_dir), [ea_chmod_file_impl](ea_ad.c.md#ea_chmod_file_impl), [ea_chown](ea_ad.c.md#ea_chown), [ea_copyfile](ea_ad.c.md#ea_copyfile), [ea_deletefile](ea_ad.c.md#ea_deletefile), [ea_renamefile](ea_ad.c.md#ea_renamefile), [get_eacontent](ea_ad.c.md#get_eacontent), [get_easize](ea_ad.c.md#get_easize), [list_eas](ea_ad.c.md#list_eas), [remove_ea](ea_ad.c.md#remove_ea), [set_ea](ea_ad.c.md#set_ea)
 
 ### ea_absent
 
@@ -340,7 +340,7 @@ Called by: [check_eafiles](../../bin/dbd/cmd_dbd_scanvol.c.md#check_eafiles), [e
 int ea_absent(const struct vol *vol, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 980 to 985. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 981 to 986. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 The reply for an attribute the object lacks: a zero size word.
 
@@ -359,7 +359,7 @@ Called by: [afp_getextattr](../../etc/afpd/extattrs.c.md#afp_getextattr), [get_e
 int get_easize(const struct vol *vol, char *rbuf, size_t *rbuflen, const char *uname, int oflag, const char *attruname, int fd)
 ```
 
-Defined at lines 1002 to 1051. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1003 to 1052. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 get size of an EA
 
@@ -388,7 +388,7 @@ Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 int get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen, const char *uname, int oflag, const char *attruname, int maxreply, int fd)
 ```
 
-Defined at lines 1069 to 1177. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1070 to 1178. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 copy EA into rbuf
 
@@ -418,7 +418,7 @@ Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 int list_eas(const struct vol *vol, char *attrnamebuf, size_t *buflen, const char *uname, int oflag, int fd)
 ```
 
-Defined at lines 1194 to 1255. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1195 to 1256. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 copy names of EAs into attrnamebuf
 
@@ -446,7 +446,7 @@ Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 int set_ea(const struct vol *vol, const char *uname, const char *attruname, const char *ibuf, size_t attrsize, int oflag, int fd)
 ```
 
-Defined at lines 1273 to 1335. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1274 to 1336. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 set a Solaris native EA
 
@@ -475,7 +475,7 @@ Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 int remove_ea(const struct vol *vol, const char *uname, const char *attruname, int oflag, int fd)
 ```
 
-Defined at lines 1350 to 1387. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1351 to 1388. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 remove a EA from a file
 
@@ -502,7 +502,7 @@ Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 int ea_deletefile(const struct vol *vol, int dirfd, const char *file)
 ```
 
-Defined at lines 1408 to 1467. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1409 to 1468. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 Delete every EA of a file together with the EA header file.
 
@@ -527,7 +527,7 @@ Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 int ea_renamefile(const struct vol *vol, int dirfd, const char *src, const char *dst)
 ```
 
-Defined at lines 1488 to 1592. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1489 to 1593. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 Move every AppleDouble EA of src to dst.
 
@@ -553,7 +553,7 @@ Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 int ea_copyfile(const struct vol *vol, int sfd, const char *src, const char *dst)
 ```
 
-Defined at lines 1606 to 1700. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1607 to 1701. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 copy EAs
 
@@ -579,7 +579,7 @@ Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 int ea_chown(const struct vol *vol, const char *path, uid_t uid, gid_t gid)
 ```
 
-Defined at lines 1715 to 1778. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1716 to 1779. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 Give the EA header file and every EA file of path a new owner.
 
@@ -599,29 +599,79 @@ Called through [`vfs_ops::vfs_chown`](../../include/atalk/vfs.h.md#struct-vfs_op
 
 Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 
+### ea_chmod_file_impl
+
+```c
+static int ea_chmod_file_impl(const struct vol *vol, const char *name, mode_t mode, vfs_setfilmode_fn set_mode)
+```
+
+Defined at lines 1796 to 1874.
+
+Apply a new file mode to the EA header file and every EA file.
+
+The header gets ea_header_mode, so the owner keeps read and write access. Each EA file gets ea_mode. The mode setter applies the volume umask. A file without an EA header needs nothing and succeeds. On failure, preserve errno from the operation if closing the EA handle succeeds.
+
+Parameters:
+* `vol`: volume holding the file
+* `name`: file whose EA files to change
+* `mode`: new file mode
+* `set_mode`: mode setter for the EA header and files
+
+Returns: AFP_OK on success, AFPERR_ACCESS when the mode setter reports EPERM or EACCES, or AFPERR_MISC on any other failure
+
+Calls: [ea_close](ea_ad.c.md#ea_close), [ea_header_mode](ea_ad.c.md#ea_header_mode), [ea_mode](ea_ad.c.md#ea_mode), [ea_open](ea_ad.c.md#ea_open), [ea_path](ea_ad.c.md#ea_path)
+
+Called by: [ea_chmod_file](ea_ad.c.md#ea_chmod_file), [ea_chmod_file_strict](ea_ad.c.md#ea_chmod_file_strict)
+
 ### ea_chmod_file
 
 ```c
 int ea_chmod_file(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
 ```
 
-Defined at lines 1794 to 1866. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1889 to 1893. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
-Apply a new file mode to the EA header file and every EA file.
+Apply the EA file modes with EPERM tolerance.
 
-The header gets ea_header_mode, so the owner keeps read and write access. Each EA file gets ea_mode. setfilmode applies the volume umask. A file without an EA header needs nothing and succeeds.
+Derive modes for the EA header and each EA file from the data file mode. A missing EA header or EPERM from a mode change counts as success.
 
 Parameters:
 * `vol`: volume holding the file
 * `name`: file whose EA files to change
-* `mode`: new file mode
-* `st`: unused
+* `mode`: new data file mode
+* `st`: data file stat, unused
 
-Returns: AFP_OK, AFPERR_ACCESS on EPERM or EACCES, or AFPERR_MISC on any other failure
+Returns: AFP_OK on success, AFPERR_ACCESS when a mode change fails with EACCES, or AFPERR_MISC on any other reported failure
 
-Calls: [ea_close](ea_ad.c.md#ea_close), [ea_header_mode](ea_ad.c.md#ea_header_mode), [ea_mode](ea_ad.c.md#ea_mode), [ea_open](ea_ad.c.md#ea_open), [ea_path](ea_ad.c.md#ea_path), [setfilmode](unix.c.md#setfilmode)
+Calls: [ea_chmod_file_impl](ea_ad.c.md#ea_chmod_file_impl), [setfilmode](unix.c.md#setfilmode)
 
-Called through [`vfs_ops::vfs_setfilmode`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_moveandrename](../../etc/afpd/filedir.c.md#afp_moveandrename), [setfilunixmode](../../etc/afpd/unix.c.md#setfilunixmode), [vfs_setfilmode](vfs.c.md#vfs_setfilmode)
+Called through [`vfs_ops::vfs_setfilmode`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [afp_moveandrename](../../etc/afpd/filedir.c.md#afp_moveandrename)
+
+Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
+
+### ea_chmod_file_strict
+
+```c
+int ea_chmod_file_strict(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
+```
+
+Defined at lines 1908 to 1912. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+
+Apply the EA file modes and report EPERM from a mode change.
+
+Derive modes for the EA header and each EA file from the data file mode. A missing EA header counts as success.
+
+Parameters:
+* `vol`: volume holding the file
+* `name`: file whose EA files to change
+* `mode`: new data file mode
+* `st`: data file stat, unused
+
+Returns: AFP_OK on success, AFPERR_ACCESS when the mode setter reports EPERM or EACCES, or AFPERR_MISC on any other failure
+
+Calls: [ea_chmod_file_impl](ea_ad.c.md#ea_chmod_file_impl), [setfilmode_strict](unix.c.md#setfilmode_strict)
+
+Called through [`vfs_ops::vfs_setfilmode_strict`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles)
 
 Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 
@@ -631,7 +681,7 @@ Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 int ea_chmod_dir(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
 ```
 
-Defined at lines 1883 to 1959. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1929 to 2005. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 Apply a new directory mode to the EA header file and every EA file.
 
